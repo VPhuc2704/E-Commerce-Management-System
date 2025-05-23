@@ -1,68 +1,102 @@
-
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import useAuth from '../hooks/useAuth';
-// Import pages
-import HomePage from '../pages/HomePage';
-import AboutPage from '../pages/AboutPage';
-import Login from '../features/auth/Login';
-import Register from '../features/auth/Register';
-import Dashboard from '../pages/Dashboard';
+  import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+  import useAuth from '../hooks/useAuth';
+  import Navbar from '../components/layout/Navbar';
+  import ProtectedRoutes from '../routes/ProtectedRoutes';
+  import ErrorBoundary from '../components/common/ErrorBoundary';
+  import HomePage from '../pages/HomePage';
+  import AboutPage from '../pages/AboutPage';
+  import Login from '../features/auth/Login';
+  import Register from '../features/auth/Register';
+  import ForgotPassword from '../features/auth/ForgotPassword';
+  import LoggedInHomePage from '../pages/LoggedInHomePage';
+  import ProductListing from '../pages/ProductListing';
+  import ProductDetails from '../pages/ProductDetails';
+  import AdminProductManagement from '../pages/AdminProductManagement';
 
-// Protect routes for authenticated users only
-const ProtectedRoute = () => {
-  const { isAuthenticated, checkAuthStatus } = useAuth();
-  const authStatus = checkAuthStatus();
-  
-  // Redirect to homepage first, then to login
-  if (!isAuthenticated && !authStatus) {
-    return <Navigate to="/login" state={{ from: window.location.pathname }} replace />;
+// Placeholder components for new routes
+const ProfilePage = () => <div className="min-h-screen p-4">Profile Page (Placeholder)</div>;
+const CartPage = () => <div className="min-h-screen p-4">Cart Page (Placeholder)</div>;
+const SearchPage = () => <div className="min-h-screen p-4">Search Page (Placeholder)</div>;
+
+// GuestOnlyRoute Component
+const GuestOnlyRoute = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+
+  if (isAuthenticated) {
+    return <Navigate to="/home" replace />;
   }
-  
-  return <Outlet />;
+
+  return children;
 };
 
-// Route for guests only (already logged in users will be redirected to dashboard)
-const GuestOnlyRoute = ({ children }) => {
-  const { isAuthenticated, checkAuthStatus } = useAuth();
-  const authStatus = checkAuthStatus();
-  
-  if (isAuthenticated || authStatus) {
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  return children;
+// Layout Component to conditionally render Navbar
+const Layout = ({ children }) => {
+  const location = useLocation(); // Ensure useLocation is available
+  const hideNavbarRoutes = ['/login', '/register', '/forgot-password'];
+
+  return (
+    <>
+      {!hideNavbarRoutes.includes(location.pathname) && <Navbar />}
+      {children}
+    </>
+  );
 };
 
 const AppRoutes = () => {
   return (
     <Router>
-      <Routes>
-        {/* ✅ Public routes - accessible by anyone */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/about" element={<AboutPage />} />
-        
-        {/* 👥 Guest-only routes - redirect to dashboard if logged in */}
-        <Route path="/login" element={
-          <GuestOnlyRoute>
-            <Login />
-          </GuestOnlyRoute>
-        } />
-        <Route path="/register" element={
-          <GuestOnlyRoute>
-            <Register />
-          </GuestOnlyRoute>
-        } />
-        
-        {/* 🔐 Protected routes - redirect to login if not authenticated */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          {/* Thêm các route cần bảo vệ khác ở đây */}
-        </Route>
-        
-        {/* 🚫 Catch all: chuyển hướng về Home nếu route không hợp lệ */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <ErrorBoundary>
+        <Routes>
+          {/* Public routes for guests */}
+          <Route path="/" element={<Layout><HomePage /></Layout>} />
+          <Route path="/about" element={<Layout><AboutPage /></Layout>} />
+          <Route path="/search" element={<Layout><SearchPage /></Layout>} />
+
+          {/* Guest-only routes (without Navbar) */}
+          <Route
+            path="/login"
+            element={
+              <GuestOnlyRoute>
+                <Login />
+              </GuestOnlyRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <GuestOnlyRoute>
+                <Register />
+              </GuestOnlyRoute>
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <GuestOnlyRoute>
+                <ForgotPassword />
+              </GuestOnlyRoute>
+            }
+          />
+
+          {/* Protected routes for authenticated users */}
+          <Route element={<ErrorBoundary><ProtectedRoutes /></ErrorBoundary>}>
+            <Route path="/home" element={<Layout><LoggedInHomePage /></Layout>} />
+            <Route path="/products" element={<Layout><ProductListing /></Layout>} />
+            <Route path="/product/:id" element={<Layout><ProductDetails /></Layout>} />
+            <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
+            <Route path="/cart" element={<Layout><CartPage /></Layout>} />
+          </Route>
+
+          {/* Admin-only routes */}
+          <Route element={<ErrorBoundary><ProtectedRoutes adminOnly={true} /></ErrorBoundary>}>
+            <Route path="/admin/products" element={<Layout><AdminProductManagement /></Layout>} />
+          </Route>
+
+          {/* Catch-all route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </ErrorBoundary>
     </Router>
   );
 };

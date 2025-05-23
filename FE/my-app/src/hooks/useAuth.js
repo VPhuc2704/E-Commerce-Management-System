@@ -1,5 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+// Giả lập cơ sở dữ liệu tài khoản
+const mockAccounts = [
+  { email: 'user@example.com', password: 'user123', name: 'Regular User', role: 'USER', id: 'user-001' },
+  { email: 'admin@example.com', password: 'admin123', name: 'Admin User', role: 'ADMIN', id: 'admin-001' },
+];
 
 /**
  * Custom hook for handling authentication
@@ -7,7 +13,10 @@ import { useNavigate } from 'react-router-dom';
  */
 const useAuth = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const token = localStorage.getItem('authToken');
+    return token ? JSON.parse(localStorage.getItem('userData') || '{}') : null;
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -16,10 +25,11 @@ const useAuth = () => {
     const token = localStorage.getItem('authToken');
     if (token) {
       try {
-        // In a real app, you would validate the token with your backend
-        // and get the user details
         const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-        setUser(userData);
+        const shouldUpdate = JSON.stringify(user) !== JSON.stringify(userData);
+        if (shouldUpdate) {
+          setUser(userData);
+        }
         return userData;
       } catch (err) {
         console.error('Failed to parse stored user data:', err);
@@ -30,38 +40,41 @@ const useAuth = () => {
     return null;
   };
 
+  useEffect(() => {
+    const currentUser = checkAuthStatus();
+    if (currentUser && ['/login', '/'].includes(window.location.pathname)) {
+      navigate('/home', { replace: true });
+    }
+  }, []);
+
   // Login function
   const login = async (email, password) => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      // Here you would make an API call to your backend
-      // const response = await api.post('/login', { email, password });
-      
-      // Simulating API call for now
-      // In a real app, replace this with actual API call
       return new Promise((resolve, reject) => {
         setTimeout(() => {
-          if (email && password) {
-            // Simulate successful login
+          // Tìm tài khoản trong mockAccounts
+          const account = mockAccounts.find(
+            (acc) => acc.email === email && acc.password === password
+          );
+
+          if (account) {
             const userData = {
-              id: '123',
-              name: 'Test User',
-              email,
-              role: 'USER'
+              id: account.id,
+              name: account.name,
+              email: account.email,
+              role: account.role,
             };
-            
-            // Store auth data
             const token = 'fake-jwt-token-' + Math.random();
             localStorage.setItem('authToken', token);
             localStorage.setItem('userData', JSON.stringify(userData));
-            
             setUser(userData);
             setLoading(false);
+            navigate('/home', { replace: true });
             resolve({ user: userData, token });
           } else {
-            // Simulate failed login
             const error = new Error('Invalid credentials');
             setError(error.message);
             setLoading(false);
@@ -80,36 +93,32 @@ const useAuth = () => {
   const register = async (userData) => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      // Here you would make an API call to your backend
-      // const response = await api.post('/register', userData);
-      
-      // Simulating API call for now
       return new Promise((resolve, reject) => {
         setTimeout(() => {
-          // Check if email is already registered (in a real app this would be done by your backend)
-          if (userData.email === 'taken@example.com') {
+          // Kiểm tra email đã tồn tại
+          if (mockAccounts.some((acc) => acc.email === userData.email)) {
             const error = new Error('Email is already registered');
             setError(error.message);
             setLoading(false);
             reject(error);
             return;
           }
-          
-          // Simulate successful registration
+
           const newUser = {
             id: 'new-' + Math.random().toString(36).substring(2, 9),
             name: userData.name,
             email: userData.email,
-            role: 'USER'
+            password: userData.password,
+            role: 'USER', // Mặc định là USER khi đăng ký
           };
-          
+
+          // Thêm vào mockAccounts (trong thực tế, bạn sẽ gửi API để lưu vào DB)
+          mockAccounts.push(newUser);
+
           setLoading(false);
           resolve({ user: newUser });
-          
-          // In a real app, you might want to automatically log in the user after registration
-          // or redirect them to the login page
           navigate('/login');
         }, 1000);
       });
@@ -125,7 +134,7 @@ const useAuth = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
     setUser(null);
-    navigate('/login');
+    navigate('/', { replace: true });
   };
 
   return {
@@ -136,7 +145,7 @@ const useAuth = () => {
     register,
     logout,
     checkAuthStatus,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
   };
 };
 
