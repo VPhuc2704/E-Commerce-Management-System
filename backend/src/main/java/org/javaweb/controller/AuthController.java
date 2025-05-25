@@ -21,10 +21,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -62,8 +59,13 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> createUser(@Validated @RequestBody AuthRequestDTO authRequestDTO){
         UserEntity userEntity = authUserService.createUser(authRequestDTO);
-        UserDTO userDTO = modelMapper.map(userEntity,UserDTO.class);
-        return  ResponseEntity.ok(userDTO);
+        return  ResponseEntity.ok("Đăng ký thành công, hãy kiểm tra email để xác thực.");
+    }
+
+    @GetMapping("/verify")
+    public ResponseEntity<String> verify(@RequestParam("token") String token) {
+        String result = authUserService.verify(token);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/refreshtoken")
@@ -79,6 +81,5 @@ public class AuthController {
                 })
                 .orElseThrow(() -> new RefreshTokenExceptions(requestRefreshToken,
                         "Refresh token is not in database!"));
-
     }
 }

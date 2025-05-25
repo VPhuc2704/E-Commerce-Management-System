@@ -33,6 +33,9 @@ public class UserEntity extends BaseEntity implements UserDetails {
     @Column(name = "address")
     private String address;
 
+    @Column(name = "isverified", nullable = false)
+    private Boolean isverified = false;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JsonBackReference
     @JoinTable(
@@ -157,6 +160,14 @@ public class UserEntity extends BaseEntity implements UserDetails {
 
     public void setListOrder(List<OrderEntity> listOrder) {
         this.listOrder = listOrder;
+    }
+
+    public Boolean getIsverified() {
+        return isverified;
+    }
+
+    public void setIsverified(Boolean isverified) {
+        this.isverified = isverified;
     }
 
     public UserEntity(){}

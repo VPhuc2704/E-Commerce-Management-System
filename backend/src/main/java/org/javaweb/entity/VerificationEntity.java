@@ -2,20 +2,21 @@ package org.javaweb.entity;
 
 import javax.persistence.*;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "refreshtoken")
-public class RefreshTokenEntity {
+@Table(name = "verification")
+public class VerificationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name ="user_id", referencedColumnName = "id")
     private UserEntity user;
 
-    @Column(name ="refreshtoken",nullable = false, unique = true, length = 200)
-    private String refreshtoken;
+    @Column(name ="verificationtoken",nullable = false, unique = true, length = 200)
+    private String verificationtoken;
 
     @Column(nullable = false, length = 200)
     private Instant expiryDate;
@@ -36,25 +37,17 @@ public class RefreshTokenEntity {
         this.user = user;
     }
 
-    public String getRefreshtoken() {
-        return refreshtoken;
+    public String getVerificationtoken() {
+        return verificationtoken;
     }
 
-    public void setRefreshtoken(String refreshtoken) {
-        this.refreshtoken = refreshtoken;
+    public void setVerificationtoken(String verificationtoken) {
+        this.verificationtoken = verificationtoken;
     }
 
     public Instant getExpiryDate() {
         return expiryDate;
     }
-
-    public RefreshTokenEntity(){
-
-    }
-//    public RefreshTokenEntity(String refreshtoken){
-//        this.refreshtoken = refreshtoken;
-//    }
-
 
     public void setExpiryDate(Instant expiryDate) {
         this.expiryDate = expiryDate;
