@@ -55,6 +55,9 @@ public class SecurityConfig {
                     authorize.antMatchers(String.format("%s/auth/register", apiPrefix)).permitAll();
                     authorize.antMatchers(String.format("%s/auth/refreshtoken", apiPrefix)).permitAll();
                     authorize.antMatchers(String.format("%s/auth/verify", apiPrefix)).permitAll();
+                    authorize.antMatchers(String.format("%s/auth/forgot-password", apiPrefix)).permitAll();
+                    authorize.antMatchers(String.format("%s/auth/reset-password", apiPrefix)).permitAll();
+
                     authorize.antMatchers(HttpMethod.OPTIONS, "/**").permitAll();
                     authorize.anyRequest().authenticated();
                 }).httpBasic(Customizer.withDefaults());

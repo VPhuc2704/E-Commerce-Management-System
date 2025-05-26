@@ -2,7 +2,6 @@ package org.javaweb.service.impl;
 
 import org.javaweb.entity.VerificationEntity;
 import org.javaweb.enums.roleCode;
-import org.javaweb.converter.UserConverter;
 import org.javaweb.entity.RoleEntity;
 import org.javaweb.entity.UserEntity;
 import org.javaweb.model.request.AuthRequestDTO;
@@ -14,11 +13,13 @@ import org.javaweb.service.AuthUserService;
 import org.javaweb.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -74,6 +75,7 @@ public class AuthUserServiceImpl implements AuthUserService {
     }
 
     @Override
+    @Transactional
     public UserEntity createUser(AuthRequestDTO authRequestDTO) {
         String email = authRequestDTO.getEmail();
         if (userRepository.existsByEmail(email)) {
@@ -89,34 +91,68 @@ public class AuthUserServiceImpl implements AuthUserService {
                 .orElseThrow(()-> new DataIntegrityViolationException("Role not exists"));
         userEntity.setRoles(new ArrayList<>(Collections.singletonList(userRole)));
 
-        // Sinh token xác thực
-        String token = UUID.randomUUID().toString();
-        VerificationEntity verificationEntity = new VerificationEntity();
-        verificationEntity.setVerificationtoken(token);
-        verificationEntity.setUser(userEntity);
-        verificationEntity.setExpiryDate(Instant.now().plus(24, ChronoUnit.HOURS));
-        verificationTokenRepository.save(verificationEntity);
+        UserEntity savedUser = userRepository.save(userEntity);
 
-        // Gửi email xác thực
-        emailService.sendEmail(userEntity.getEmail(), token);
+        sendVerifyToEmail(email);
 
-        return userRepository.save(userEntity);
+        return savedUser;
     }
 
     @Override
+    @Transactional
     public String verify(String token){
         VerificationEntity verificationToken = verificationTokenRepository.findByVerificationtoken(token)
-                .orElseThrow(()-> new DataIntegrityViolationException("Token khoong hop le"));
+                .orElseThrow(()-> new DataIntegrityViolationException("Mã OTP không hợp lệ"));
 
         if(verificationToken.getExpiryDate().isBefore(Instant.now())){
             verificationTokenRepository.delete(verificationToken);
-            return "Token đã hết hạn";
+            return "Mã OTP đã hết hạn";
         }
+
         UserEntity userEntity = verificationToken.getUser();
         userEntity.setIsverified(true);
         userRepository.save(userEntity);
+
+        String resetToken = jwtTokenProvider.generateResetToken(verificationToken.getUser().getEmail());
+
         verificationTokenRepository.delete(verificationToken);
-        return "Xác thực thành công, bạn có thể đăng nhập.";
+        return "Xác thực thành công, bạn có thể đăng nhập.\n" + resetToken;
     }
+
+    @Override
+    @Transactional
+    public void sendVerifyToEmail(String email) {
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(()-> new DataIntegrityViolationException("User not found"));
+
+        String otpCode = String.format("%06d", new Random().nextInt(999999));
+
+        // Sinh OTP xác thực
+        VerificationEntity verificationEntity = new VerificationEntity();
+        verificationEntity.setVerificationtoken(otpCode);
+        verificationEntity.setUser(user);
+        verificationEntity.setExpiryDate(Instant.now().plus(5, ChronoUnit.MINUTES));
+        verificationTokenRepository.save(verificationEntity);
+
+        // Gửi email xác thực
+        emailService.sendOtpEmail(email, otpCode);
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<String> resetPassword(String restToken, String newPassword) {
+        if (!jwtTokenProvider.validateToken(restToken) || !jwtTokenProvider.isResetToken(restToken)) {
+            return ResponseEntity.ok("Token không hợp lệ hoặc không phải reset token");
+        }
+
+        String email = jwtTokenProvider.getEmailFromResetToken(restToken);
+
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return ResponseEntity.ok("Đặt lại mật khẩu thành công");
+    }
+
 
 }

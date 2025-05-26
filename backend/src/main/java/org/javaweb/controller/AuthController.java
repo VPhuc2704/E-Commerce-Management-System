@@ -7,6 +7,7 @@ import org.javaweb.model.dto.ErrorDTO;
 import org.javaweb.model.dto.UserDTO;
 import org.javaweb.model.request.AuthRequestDTO;
 import org.javaweb.model.request.RefreshTokenRequestDTO;
+import org.javaweb.model.request.ResetPasswordDTO;
 import org.javaweb.model.response.AuthResponseDTO;
 import org.javaweb.repository.UserRepository;
 import org.javaweb.security.utils.JwtTokenProvider;
@@ -23,10 +24,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -59,7 +57,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> createUser(@Validated @RequestBody AuthRequestDTO authRequestDTO){
         UserEntity userEntity = authUserService.createUser(authRequestDTO);
-        return  ResponseEntity.ok("Đăng ký thành công, hãy kiểm tra email để xác thực.");
+        return  ResponseEntity.ok("Đăng ký thành công, hãy kiểm tra email để xác thực tài khoản.");
     }
 
     @GetMapping("/verify")
@@ -82,4 +80,26 @@ public class AuthController {
                 .orElseThrow(() -> new RefreshTokenExceptions(requestRefreshToken,
                         "Refresh token is not in database!"));
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody AuthRequestDTO authRequestDTO) {
+        authUserService.sendVerifyToEmail(authRequestDTO.getEmail());
+        return ResponseEntity.ok("OTP đã được gửi đến email.");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestHeader("Authorization") String bearerToken,
+                                           @RequestBody ResetPasswordDTO resetPasswordDTO) {
+        String token = bearerToken.replace("Bearer ", "");
+
+        if (!resetPasswordDTO.getNewPassword().equals(resetPasswordDTO.getConfirmPassword())) {
+            return ResponseEntity.badRequest().body("Mật khẩu và xác nhận mật khẩu không khớp.");
+        }
+
+        authUserService.resetPassword(token, resetPasswordDTO.getNewPassword());
+
+        return ResponseEntity.ok("Đổi mật khẩu thành công");
+    }
+
+
 }
