@@ -13,11 +13,14 @@ import React from 'react';
   import ProductListing from '../pages/ProductListing';
   import ProductDetails from '../pages/ProductDetails';
   import AdminProductManagement from '../pages/AdminProductManagement';
+  import CartPage from '../pages/CartPage';
+  import OrderHistory from '../pages/OrderHistory';
+  import AdminOrderManagement from '../pages/AdminOrderManagement';
+  import AdminDashboard from '../pages/AdminDashboard';
 
-// Placeholder components for new routes
+// Placeholder component for ProfilePage
+const PlaceholderPage = () => <div className="min-h-screen p-4">Placeholder Page</div>;
 const ProfilePage = () => <div className="min-h-screen p-4">Profile Page (Placeholder)</div>;
-const CartPage = () => <div className="min-h-screen p-4">Cart Page (Placeholder)</div>;
-const SearchPage = () => <div className="min-h-screen p-4">Search Page (Placeholder)</div>;
 
 // GuestOnlyRoute Component
 const GuestOnlyRoute = ({ children }) => {
@@ -51,7 +54,6 @@ const AppRoutes = () => {
           {/* Public routes for guests */}
           <Route path="/" element={<Layout><HomePage /></Layout>} />
           <Route path="/about" element={<Layout><AboutPage /></Layout>} />
-          <Route path="/search" element={<Layout><SearchPage /></Layout>} />
 
           {/* Guest-only routes (without Navbar) */}
           <Route
@@ -85,12 +87,15 @@ const AppRoutes = () => {
             <Route path="/products" element={<Layout><ProductListing /></Layout>} />
             <Route path="/product/:id" element={<Layout><ProductDetails /></Layout>} />
             <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
-            <Route path="/cart" element={<Layout><CartPage /></Layout>} />
+            <Route path="/cart" element={<Layout><CartPage /></Layout>} /> {/* Sử dụng CartPage thực tế */}
+            <Route path="/orders" element={<Layout><OrderHistory /></Layout>} />
           </Route>
 
           {/* Admin-only routes */}
           <Route element={<ErrorBoundary><ProtectedRoutes adminOnly={true} /></ErrorBoundary>}>
             <Route path="/admin/products" element={<Layout><AdminProductManagement /></Layout>} />
+            <Route path="/admin/orders" element={<Layout><AdminOrderManagement /></Layout>} />
+            <Route path="/admin/dashboard" element={<Layout><AdminDashboard /></Layout>} />
           </Route>
 
           {/* Catch-all route */}

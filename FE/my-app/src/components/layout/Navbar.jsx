@@ -35,7 +35,11 @@ const Navbar = () => {
     }
   };
 
-
+  const handleDashboardClick = () => {
+    if (isAuthenticated && user?.role === 'ADMIN') {
+      navigate('/admin/dashboard');
+    }
+  };
 
   return (
     <nav className="bg-gradient-to-r from-indigo-100 to-coral-100 py-2 px-6 shadow-lg">
@@ -47,7 +51,7 @@ const Navbar = () => {
 
         {/* Navigation */}
         <div className="flex-2 flex justify-center items-center gap-4">
-          <div className="button-container flex bg-black rounded-lg h-10 items-center justify-around w-56 bg-opacity-80 backdrop-blur-md shadow-md">
+          <div className="button-container flex bg-black rounded-lg h-10 items-center justify-around w-72 bg-opacity-80 backdrop-blur-md shadow-md">
             <button
               className="button w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white transition-all duration-300 hover:scale-110 hover:shadow-glow"
               onClick={() => navigate('/')}
@@ -104,6 +108,26 @@ const Navbar = () => {
                 </svg>
               </button>
             )}
+            {isAuthenticated && user?.role === 'ADMIN' && (
+              <button
+                className="button w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white transition-all duration-300 hover:scale-110 hover:shadow-glow"
+                onClick={handleDashboardClick}
+              >
+                <svg
+                  className="icon text-xl"
+                  stroke="currentColor"
+                  fill="currentColor"
+                  strokeWidth="0"
+                  viewBox="0 0 24 24"
+                  height="1em"
+                  width="1em"
+                >
+                  <path
+                    d="M3 3h6v6H3V3zm0 8h6v10H3V11zm8 0h10v10H11V11zm0-8h10v6H11V3z"
+                  ></path>
+                </svg>
+              </button>
+            )}
             <button
               className="button w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white transition-all duration-300 hover:scale-110 hover:shadow-glow"
               onClick={handleCartClick}
@@ -127,7 +151,6 @@ const Navbar = () => {
               </svg>
             </button>
           </div>
-          
         </div>
 
         {/* Login/Logout Button */}
