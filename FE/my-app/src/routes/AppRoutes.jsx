@@ -1,22 +1,23 @@
 import React from 'react';
-  import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-  import useAuth from '../hooks/useAuth';
-  import Navbar from '../components/layout/Navbar';
-  import ProtectedRoutes from '../routes/ProtectedRoutes';
-  import ErrorBoundary from '../components/common/ErrorBoundary';
-  import HomePage from '../pages/HomePage';
-  import AboutPage from '../pages/AboutPage';
-  import Login from '../features/auth/Login';
-  import Register from '../features/auth/Register';
-  import ForgotPassword from '../features/auth/ForgotPassword';
-  import LoggedInHomePage from '../pages/LoggedInHomePage';
-  import ProductListing from '../pages/ProductListing';
-  import ProductDetails from '../pages/ProductDetails';
-  import AdminProductManagement from '../pages/AdminProductManagement';
-  import CartPage from '../pages/CartPage';
-  import OrderHistory from '../pages/OrderHistory';
-  import AdminOrderManagement from '../pages/AdminOrderManagement';
-  import AdminDashboard from '../pages/AdminDashboard';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import useAuth from '../hooks/useAuth';
+import Navbar from '../components/layout/Navbar';
+import ProtectedRoutes from '../routes/ProtectedRoutes';
+import ErrorBoundary from '../components/common/ErrorBoundary';
+import HomePage from '../pages/HomePage';
+import AboutPage from '../pages/AboutPage';
+import Login from '../features/auth/Login';
+import Register from '../features/auth/Register';
+import ForgotPassword from '../features/auth/ForgotPassword';
+import LoggedInHomePage from '../pages/LoggedInHomePage';
+import ProductListing from '../pages/ProductListing';
+import ProductDetails from '../pages/ProductDetails';
+import AdminProductManagement from '../pages/AdminProductManagement';
+import CartPage from '../pages/CartPage';
+import OrderHistory from '../pages/OrderHistory';
+import AdminOrderManagement from '../pages/AdminOrderManagement';
+import AdminDashboard from '../pages/AdminDashboard';
+import VerifyPage from '../pages/VerifyPage';
 
 // Placeholder component for ProfilePage
 const PlaceholderPage = () => <div className="min-h-screen p-4">Placeholder Page</div>;
@@ -36,7 +37,7 @@ const GuestOnlyRoute = ({ children }) => {
 // Layout Component to conditionally render Navbar
 const Layout = ({ children }) => {
   const location = useLocation(); // Ensure useLocation is available
-  const hideNavbarRoutes = ['/login', '/register', '/forgot-password'];
+  const hideNavbarRoutes = ['/login', '/register', '/verify', '/forgot-password'];
 
   return (
     <>
@@ -69,6 +70,14 @@ const AppRoutes = () => {
             element={
               <GuestOnlyRoute>
                 <Register />
+              </GuestOnlyRoute>
+            }
+          />
+          <Route
+            path="/verify"
+            element={
+              <GuestOnlyRoute>
+                <VerifyPage />
               </GuestOnlyRoute>
             }
           />

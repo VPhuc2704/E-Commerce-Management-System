@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth'; // Adjust path if necessary
-
+import { useLocation } from 'react-router-dom';
+import Toast from '../../components/common/Toast';
 const Login = () => {
   const { login, loading } = useAuth();
   const [formData, setFormData] = useState({
@@ -11,6 +12,19 @@ const Login = () => {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+
+  const location = useLocation();
+  const [toastMessage, setToastMessage] = useState(null);
+
+  useEffect(() => {
+    if (location.state?.toastMessage) {
+      setToastMessage(location.state.toastMessage);
+
+      // Xóa message khỏi state để tránh show lại khi reload
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -37,7 +51,7 @@ const Login = () => {
       await login(formData.email, formData.password);
       // Redirection is handled by useAuth
     } catch (error) {
-      setErrors({ form: typeof error === 'string' ? error : 'Invalid email or password' });
+      setErrors({ form: error.message });
     } finally {
       setIsLoading(false);
     }
@@ -176,6 +190,7 @@ const Login = () => {
           </div>
         </div>
       </div>
+      {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
     </div>
   );
 };

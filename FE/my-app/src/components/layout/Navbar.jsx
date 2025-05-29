@@ -4,7 +4,7 @@ import useAuth from '../../hooks/useAuth';
 import logo from '../../assets/images/logo.png';
 
 const Navbar = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, roles, logout } = useAuth();
   const [showLoginAlert, setShowLoginAlert] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
@@ -36,7 +36,7 @@ const Navbar = () => {
   };
 
   const handleDashboardClick = () => {
-    if (isAuthenticated && user?.role === 'ADMIN') {
+    if (isAuthenticated && roles.includes("ROLE_ADMIN")) {
       navigate('/admin/dashboard');
     }
   };
@@ -88,7 +88,7 @@ const Navbar = () => {
                 ></path>
               </svg>
             </button>
-            {isAuthenticated && user?.role === 'ADMIN' && (
+            {isAuthenticated && roles.includes("ROLE_ADMIN") && (
               <button
                 className="button w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white transition-all duration-300 hover:scale-110 hover:shadow-glow"
                 onClick={() => navigate('/admin/products')}
@@ -108,7 +108,7 @@ const Navbar = () => {
                 </svg>
               </button>
             )}
-            {isAuthenticated && user?.role === 'ADMIN' && (
+            {isAuthenticated && roles.includes("ROLE_ADMIN") && (
               <button
                 className="button w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white transition-all duration-300 hover:scale-110 hover:shadow-glow"
                 onClick={handleDashboardClick}
