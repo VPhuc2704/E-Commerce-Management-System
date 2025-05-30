@@ -41,7 +41,13 @@ export const register = async (userData) => {
     body: JSON.stringify(userData)
   });
 
-  return handleResponse(response);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Đăng ký thất bại');
+  }
+
+  return response;
 };
 
 // Logout service
@@ -89,8 +95,11 @@ export const sendForgotPassword = async (email) => {
     body: JSON.stringify({ email })
   });
   if (!response.ok) {
-    const errorMessage = await response.text();
-    throw new Error(errorMessage || "Gửi OTP thất bại");
+    // const errorMessage = await response.text();
+    const errorData = await response.json();
+    const errorMessage = errorData.message || "Gửi OTP thất bại";
+    throw new Error(errorMessage);
+    // throw new Error(errorMessage || "Gửi OTP thất bại");
   }
 
   return true;
@@ -102,8 +111,9 @@ export const verifyToken = async (code) => {
     method: "POST",
   });
   if (!response.ok) {
-    const errorMessage = await response.text();
-    throw new Error(errorMessage || "Mã OTP không hợp lệ");
+    const errorData = await response.json();
+    const errorMessage = errorData.message || "Mã OTP không hợp lệ";
+    throw new Error(errorMessage);
   }
   const data = await response.json();
   return data.token; // trả token cho bước reset mật khẩu

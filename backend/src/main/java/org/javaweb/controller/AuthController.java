@@ -10,9 +10,11 @@ import org.javaweb.model.request.RefreshTokenRequestDTO;
 import org.javaweb.model.request.ResetPasswordDTO;
 import org.javaweb.model.response.AuthResponseDTO;
 import org.javaweb.repository.UserRepository;
+import org.javaweb.security.JwtAuthenticationFilter;
 import org.javaweb.security.utils.JwtTokenProvider;
 import org.javaweb.service.AuthUserService;
 import org.javaweb.service.RefreshTokenService;
+import org.javaweb.utils.TokenUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -24,6 +26,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,8 +36,6 @@ public class AuthController {
     
     @Autowired
     private AuthUserService authUserService;
-    @Autowired
-    private ModelMapper modelMapper;
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
     @Autowired
@@ -55,15 +56,18 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> createUser(@Validated @RequestBody AuthRequestDTO authRequestDTO){
-        UserEntity userEntity = authUserService.createUser(authRequestDTO);
-        return  ResponseEntity.ok("Đăng ký thành công, hãy kiểm tra email để xác thực tài khoản.");
+    public ResponseEntity<Map<String, String>> createUser(@Validated @RequestBody AuthRequestDTO authRequestDTO){
+        authUserService.createUser(authRequestDTO);
+        Map<String, String> response =  new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.");
+        return  ResponseEntity.ok(response);
     }
 
-    @GetMapping("/verify")
-    public ResponseEntity<String> verify(@RequestParam("token") String token) {
-        String result = authUserService.verify(token);
-        return ResponseEntity.ok(result);
+    @PostMapping("/verify")
+    public ResponseEntity<Map<String, String>> verify(@RequestParam("token") String token) {
+        ResponseEntity<Map<String, String>> response =  authUserService.verify(token);
+        return ResponseEntity.ok(response.getBody());
     }
 
     @PostMapping("/refreshtoken")
@@ -101,5 +105,14 @@ public class AuthController {
         return ResponseEntity.ok("Đổi mật khẩu thành công");
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@Validated
+                                        HttpServletRequest request,
+                                        @RequestBody RefreshTokenRequestDTO refreshTokenRequestDTO) {
+        String accessToken = TokenUtils.getTokenFromRequest(request);
+        String requestRefreshToken = refreshTokenRequestDTO.getRefreshToken();
+        authUserService.logout(accessToken, requestRefreshToken);
+        return ResponseEntity.ok("đăng Xuất thành công");
+    }
 
 }

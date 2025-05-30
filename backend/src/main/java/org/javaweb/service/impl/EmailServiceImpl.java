@@ -17,8 +17,7 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendEmail(String toEmail, String token) {
         String subject = "Xác thực tài khoản";
-        String link = "http://localhost:8080/api/auth/verify?token=" + token;
-//        String content = "Nhấn vào link để xác thực tài khoản: \n" + link;
+        String link = "http://localhost:5173/verify?token=" + token;
 
         String content =
                 "<html>" +

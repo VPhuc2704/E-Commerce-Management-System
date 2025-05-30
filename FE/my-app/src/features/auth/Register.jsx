@@ -37,6 +37,7 @@ const Register = () => {
       setErrors(validationErrors);
       return;
     }
+
     setIsLoading(true);
     try {
       console.log('Registration data:', formData);

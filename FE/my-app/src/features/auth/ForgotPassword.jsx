@@ -55,7 +55,7 @@ const ForgotPassword = () => {
     }
     setIsLoading(true);
     try {
-      await sendForgotPassword(formData.email);
+      const res = await sendForgotPassword(formData.email);
       alert("Otp đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư đến.");
       setTimeout(() => {
         setIsLoading(false);

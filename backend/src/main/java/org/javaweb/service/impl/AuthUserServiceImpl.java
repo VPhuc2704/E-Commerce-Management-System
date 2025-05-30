@@ -1,10 +1,14 @@
 package org.javaweb.service.impl;
 
+import org.javaweb.entity.RefreshTokenEntity;
 import org.javaweb.entity.VerificationEntity;
 import org.javaweb.enums.roleCode;
 import org.javaweb.entity.RoleEntity;
 import org.javaweb.entity.UserEntity;
+import org.javaweb.exceptions.InvalidTokenException;
+import org.javaweb.exceptions.UserNotFoundException;
 import org.javaweb.model.request.AuthRequestDTO;
+import org.javaweb.repository.RefreshTokenRepository;
 import org.javaweb.repository.RoleRepository;
 import org.javaweb.repository.UserRepository;
 import org.javaweb.repository.VerificationTokenRepository;
@@ -13,6 +17,7 @@ import org.javaweb.service.AuthUserService;
 import org.javaweb.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -43,6 +48,8 @@ public class AuthUserServiceImpl implements AuthUserService {
     private VerificationTokenRepository verificationTokenRepository;
     @Autowired
     private EmailService  emailService;
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
 
 
     @Override
@@ -74,6 +81,7 @@ public class AuthUserServiceImpl implements AuthUserService {
         return jwtTokenProvider.generateToken(existingUser);
     }
 
+
     @Override
     @Transactional
     public UserEntity createUser(AuthRequestDTO authRequestDTO) {
@@ -93,21 +101,34 @@ public class AuthUserServiceImpl implements AuthUserService {
 
         UserEntity savedUser = userRepository.save(userEntity);
 
-        sendVerifyToEmail(email);
+        String token = String.format("%06d", new Random().nextInt(999999));
+
+        VerificationEntity verificationEntity = new VerificationEntity();
+        verificationEntity.setVerificationtoken(token);
+        verificationEntity.setUser(userEntity);
+        verificationEntity.setExpiryDate(Instant.now().plus(24, ChronoUnit.HOURS));
+        verificationTokenRepository.save(verificationEntity);
+
+        // Gửi email xác thực
+        emailService.sendEmail(userEntity.getEmail(), token);
 
         return savedUser;
     }
 
+
     @Override
     @Transactional
-    public String verify(String token){
+    public ResponseEntity<Map<String, String>> verify(String token){
+        Map<String, String> result = new HashMap<>();
         VerificationEntity verificationToken = verificationTokenRepository.findByVerificationtoken(token)
                 .orElseThrow(()-> new DataIntegrityViolationException("Mã OTP không hợp lệ"));
 
         if(verificationToken.getExpiryDate().isBefore(Instant.now())){
             verificationTokenRepository.delete(verificationToken);
-            return "Mã OTP đã hết hạn";
+            result.put("message", "Mã OTP đã hết hạn");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
         }
+
 
         UserEntity userEntity = verificationToken.getUser();
         userEntity.setIsverified(true);
@@ -116,7 +137,9 @@ public class AuthUserServiceImpl implements AuthUserService {
         String resetToken = jwtTokenProvider.generateResetToken(verificationToken.getUser().getEmail());
 
         verificationTokenRepository.delete(verificationToken);
-        return "Xác thực thành công, bạn có thể đăng nhập.\n" + resetToken;
+        result.put("message", "Xác thực thành công.");
+        result.put("token", resetToken);
+        return ResponseEntity.ok(result);
     }
 
     @Override
@@ -140,11 +163,11 @@ public class AuthUserServiceImpl implements AuthUserService {
     @Override
     @Transactional
     public ResponseEntity<String> resetPassword(String restToken, String newPassword) {
-        if (!jwtTokenProvider.validateToken(restToken) || !jwtTokenProvider.isResetToken(restToken)) {
+        if (!jwtTokenProvider.validateResetToken(restToken) || !jwtTokenProvider.isResetToken(restToken)) {
             return ResponseEntity.ok("Token không hợp lệ hoặc không phải reset token");
         }
 
-        String email = jwtTokenProvider.getEmailFromResetToken(restToken);
+        String email = jwtTokenProvider.getEmail(restToken);
 
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
@@ -152,6 +175,25 @@ public class AuthUserServiceImpl implements AuthUserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         return ResponseEntity.ok("Đặt lại mật khẩu thành công");
+    }
+
+    @Override
+    @Transactional
+    public void logout(String accessToken,String refreshToken) {
+        if (!jwtTokenProvider.validateToken(accessToken)) {
+                throw new InvalidTokenException("Access token không hợp lệ");
+        }
+        String email = jwtTokenProvider.getEmail(accessToken);
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy người dùng"));
+
+        RefreshTokenEntity token = refreshTokenRepository.findByRefreshtoken(refreshToken)
+                .orElseThrow(() -> new InvalidTokenException("RefreshToken không hợp lệ"));
+        if(!token.getUser().getId().equals(user.getId())){
+            throw new InvalidTokenException("Refresh token không thuộc về người dùng này");
+        }
+        refreshTokenRepository.delete(token);
+
     }
 
 

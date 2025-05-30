@@ -1,7 +1,9 @@
 package org.javaweb.customexceptions;
 
 import jdk.nashorn.internal.runtime.regexp.joni.exception.ErrorMessages;
+import org.javaweb.exceptions.InvalidTokenException;
 import org.javaweb.exceptions.RefreshTokenExceptions;
+import org.javaweb.exceptions.UserNotFoundException;
 import org.javaweb.model.dto.ErrorDTO;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,7 @@ import org.springframework.web.context.request.WebRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.crypto.Data;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,7 +43,7 @@ public class GlobalExceptionHandler {
         errorDetais.setMessage(ex.getFieldError().getDefaultMessage());
         errorDetais.setPath(request.getRequestURI());
         errorDetais.setDetails(errors);
-        return new ResponseEntity<>(errorDetais, HttpStatus.OK);
+        return new ResponseEntity<>(errorDetais, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler({DataFormatException.class, BadCredentialsException.class})
@@ -51,7 +54,7 @@ public class GlobalExceptionHandler {
         errorDetais.setError(HttpStatus.UNAUTHORIZED.getReasonPhrase());
         errorDetais.setMessage(ex.getMessage());
         errorDetais.setPath(request.getRequestURI());
-        return new ResponseEntity<>(errorDetais, HttpStatus.OK);
+        return new ResponseEntity<>(errorDetais, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -62,7 +65,7 @@ public class GlobalExceptionHandler {
         errorDetais.setError(HttpStatus.BAD_REQUEST.getReasonPhrase());
         errorDetais.setMessage(ex.getMessage());
         errorDetais.setPath(request.getRequestURI());
-        return new ResponseEntity<>(errorDetais, HttpStatus.OK);
+        return new ResponseEntity<>(errorDetais, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -78,6 +81,18 @@ public class GlobalExceptionHandler {
         errorDetails.setError(HttpStatus.FORBIDDEN.getReasonPhrase());
         errorDetails.setMessage(ex.getMessage());
         return new ResponseEntity<>(errorDetails, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<?> handleInvalidToken(InvalidTokenException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Collections.singletonMap("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<?> handleUserNotFound(UserNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Collections.singletonMap("error", ex.getMessage()));
     }
 }
 

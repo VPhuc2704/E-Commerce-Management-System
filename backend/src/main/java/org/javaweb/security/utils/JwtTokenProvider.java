@@ -130,14 +130,4 @@ public class JwtTokenProvider {
             return false;
         }
     }
-
-    // Lấy email từ reset token
-    public String getEmailFromResetToken(String token) {
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get("email", String.class);
-    }
 }
