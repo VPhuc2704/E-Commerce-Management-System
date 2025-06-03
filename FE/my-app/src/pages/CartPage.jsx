@@ -3,52 +3,6 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Footer from '../components/layout/Footer';
 
-// Dữ liệu giả lập ban đầu
-const initialCartItems = [
-  {
-    id: 1,
-    name: 'Tai nghe Bluetooth Sony',
-    price: 1500000,
-    imageUrl: 'https://via.placeholder.com/150',
-    quantity: 1,
-  },
-  {
-    id: 2,
-    name: 'Áo thun Unisex',
-    price: 250000,
-    imageUrl: 'https://via.placeholder.com/150',
-    quantity: 2,
-  },
-  {
-    id: 3,
-    name: 'Đồng hồ thông minh Apple',
-    price: 5000000,
-    imageUrl: 'https://via.placeholder.com/150',
-    quantity: 1,
-  },
-  {
-    id: 4,
-    name: 'Quần jeans nam',
-    price: 400000,
-    imageUrl: 'https://via.placeholder.com/150',
-    quantity: 3,
-  },
-  {
-    id: 5,
-    name: 'Giày thể thao Nike',
-    price: 2000000,
-    imageUrl: 'https://via.placeholder.com/150',
-    quantity: 1,
-  },
-  {
-    id: 6,
-    name: 'Balô du lịch',
-    price: 800000,
-    imageUrl: 'https://via.placeholder.com/150',
-    quantity: 2,
-  },
-];
-
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -57,73 +11,77 @@ const CartPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Lấy dữ liệu giỏ hàng từ localStorage
+  // Initialize cart from localStorage and listen for updates
   useEffect(() => {
     const fetchCartItems = () => {
       const savedCart = localStorage.getItem('cart');
-      return savedCart ? JSON.parse(savedCart) : initialCartItems;
+      setCartItems(savedCart ? JSON.parse(savedCart) : []);
     };
-    setCartItems(fetchCartItems());
+
+    fetchCartItems();
+
+    // Listen for cart updates from other components
+    window.addEventListener('cartUpdated', fetchCartItems);
+
+    return () => window.removeEventListener('cartUpdated', fetchCartItems);
   }, []);
 
-  // Lưu dữ liệu giỏ hàng vào localStorage khi thay đổi
-  useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+  // Save cart to localStorage and dispatch cartUpdated event
+  const saveCart = (newCart) => {
+    setCartItems(newCart);
+    localStorage.setItem('cart', JSON.stringify(newCart));
+    window.dispatchEvent(new Event('cartUpdated'));
+  };
 
-  // Tính tổng số sản phẩm
-  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  // Calculate total items
+  const totalItems = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
-  // Tính tổng số trang
+  // Calculate total pages
   const totalPages = Math.ceil(cartItems.length / itemsPerPage);
 
-  // Lấy danh sách sản phẩm cho trang hiện tại
+  // Get paginated items
   const paginatedItems = cartItems.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Tính tổng tiền của các sản phẩm được chọn
+  // Calculate total amount for selected items
   const totalAmount = cartItems
     .filter(item => selectedItems.includes(item.id))
-    .reduce((sum, item) => sum + item.price * item.quantity, 0);
+    .reduce((sum, item) => sum + item.price * (item.quantity || 0), 0);
 
-  // Xử lý chọn sản phẩm
+  // Handle item selection
   const handleSelectItem = (id) => {
     setSelectedItems(prev =>
       prev.includes(id) ? prev.filter(itemId => itemId !== id) : [...prev, id]
     );
   };
 
-  // Cập nhật số lượng
-  const updateCartItem = (itemId, quantity) => {
-    setCartItems(prev =>
-      prev.map(item => (item.id === itemId ? { ...item, quantity } : item))
-    );
-  };
-
+  // Update quantity
   const handleQuantityChange = (id, delta) => {
-    const item = cartItems.find(item => item.id === id);
-    const newQuantity = Math.max(1, item.quantity + delta);
-    updateCartItem(id, newQuantity);
+    const newCart = cartItems.map(item => {
+      if (item.id === id) {
+        const newQuantity = Math.max(1, (item.quantity || 0) + delta);
+        return { ...item, quantity: newQuantity };
+      }
+      return item;
+    });
+    saveCart(newCart);
   };
 
-  // Xóa sản phẩm
-  const removeCartItem = (itemId) => {
-    setCartItems(prev => prev.filter(item => item.id !== itemId));
-    setSelectedItems(prev => prev.filter(id => id !== itemId));
-  };
-
+  // Remove item
   const handleRemoveItem = (id) => {
     if (window.confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
-      removeCartItem(id);
+      const newCart = cartItems.filter(item => item.id !== id);
+      saveCart(newCart);
+      setSelectedItems(prev => prev.filter(itemId => itemId !== id));
       if (paginatedItems.length === 1 && currentPage > 1) {
         setCurrentPage(prev => prev - 1);
       }
     }
   };
 
-  // Xử lý thanh toán với VNPAY
+  // Handle checkout with VNPAY
   const handleCheckout = () => {
     if (selectedItems.length === 0) {
       alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!');
@@ -134,18 +92,18 @@ const CartPage = () => {
     setShowPaymentCode(true);
   };
 
-  // Xử lý sao chép mã VNPAY
+  // Handle copying VNPAY code
   const handleCopyCode = () => {
     navigator.clipboard.writeText(vnpayCode);
     alert('Mã VNPAY đã được sao chép!');
   };
 
-  // Cuộn lên đầu trang khi thay đổi trang
+  // Scroll to top on page change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
 
-  // Hiệu ứng 3D cho thẻ sản phẩm
+  // 3D effect for product cards
   const cardVariants = {
     hover: {
       rotateY: 10,
@@ -177,7 +135,7 @@ const CartPage = () => {
                 strokeLinejoin="round"
                 strokeWidth="2"
                 d="M3 3h18l-2 12H5L3 3zm5 12h8m-5 4h2"
-              ></path>
+              />
             </svg>
             <h1 className="text-4xl font-extrabold text-indigo-900">Giỏ Hàng Của Bạn</h1>
           </div>
@@ -210,7 +168,7 @@ const CartPage = () => {
                     className="mr-4 h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                   />
                   <img
-                    src={item.imageUrl}
+                    src={item.imageUrl || '/images/default.jpg'}
                     alt={item.name}
                     className="w-24 h-24 object-cover rounded-lg mr-4"
                   />
@@ -224,7 +182,7 @@ const CartPage = () => {
                       >
                         -
                       </button>
-                      <span className="px-4 py-1 bg-gray-100">{item.quantity}</span>
+                      <span className="px-4 py-1 bg-gray-100">{item.quantity || 1}</span>
                       <button
                         onClick={() => handleQuantityChange(item.id, 1)}
                         className="px-2 py-1 bg-gray-200 rounded-r-lg hover:bg-gray-300 transition-all"
@@ -235,7 +193,7 @@ const CartPage = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-semibold text-indigo-600">
-                      {(item.price * item.quantity).toLocaleString('vi-VN')} VNĐ
+                      {(item.price * (item.quantity || 0)).toLocaleString('vi-VN')} VNĐ
                     </p>
                     <button
                       onClick={() => handleRemoveItem(item.id)}
@@ -253,7 +211,7 @@ const CartPage = () => {
                           strokeLinejoin="round"
                           strokeWidth="2"
                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        ></path>
+                        />
                       </svg>
                     </button>
                   </div>
@@ -296,7 +254,7 @@ const CartPage = () => {
             transition={{ duration: 0.5 }}
             className="bg-gradient-to-r from-indigo-600 to-coral-600 rounded-2xl shadow-2xl p-8 mb-12 relative overflow-hidden mt-12"
           >
-            <div className="absolute inset-0 bg-pattern opacity-20"></div>
+            <div className="absolute inset-0 bg-pattern opacity-20" />
             <div className="relative">
               <div className="flex items-center mb-6">
                 <svg
@@ -311,7 +269,7 @@ const CartPage = () => {
                     strokeLinejoin="round"
                     strokeWidth="2"
                     d="M12 8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 10c-2.2 0-4-1.8-4-4H4v2h4c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2h4v-2h-4c0 2.2-1.8 4-4 4zM4 6h16v2H4z"
-                  ></path>
+                  />
                 </svg>
                 <h2 className="text-3xl font-bold text-white">Tổng Kết Thanh Toán</h2>
               </div>
@@ -330,7 +288,7 @@ const CartPage = () => {
                       strokeLinejoin="round"
                       strokeWidth="2"
                       d="M3 3h18l-2 12H5L3 3zm5 12h8m-5 4h2"
-                    ></path>
+                    />
                   </svg>
                   <div>
                     <p className="text-sm text-white opacity-80">Số sản phẩm đã chọn</p>
@@ -351,7 +309,7 @@ const CartPage = () => {
                       strokeLinejoin="round"
                       strokeWidth="2"
                       d="M12 8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 10c-2.2 0-4-1.8-4-4H4v2h4c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2h4v-2h-4c0 2.2-1.8 4-4 4zM4 6h16v2H4z"
-                    ></path>
+                    />
                   </svg>
                   <div>
                     <p className="text-sm text-white opacity-80">Tổng số tiền</p>
@@ -378,7 +336,7 @@ const CartPage = () => {
                     strokeLinejoin="round"
                     strokeWidth="2"
                     d="M12 11c0-1.1.9-2 2-2h1a2 2 0 012 2v1a2 2 0 01-2 2h-1a2 2 0 01-2-2v-1zm-8 0c0-1.1.9-2 2-2h1a2 2 0 012 2v1a2 2 0 01-2 2H6a2 2 0 01-2-2v-1zm16 6H4v2h16v-2zM4 6h16v2H4V6z"
-                  ></path>
+                  />
                 </svg>
                 Thanh Toán với VNPAY
               </button>
@@ -403,7 +361,7 @@ const CartPage = () => {
                         strokeLinejoin="round"
                         strokeWidth="2"
                         d="M12 4v16m8-8H4"
-                      ></path>
+                      />
                     </svg>
                     Mã Thanh Toán VNPAY
                   </h3>
@@ -427,7 +385,7 @@ const CartPage = () => {
                         strokeLinejoin="round"
                         strokeWidth="2"
                         d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                      ></path>
+                      />
                     </svg>
                     Sao Chép Mã
                   </button>

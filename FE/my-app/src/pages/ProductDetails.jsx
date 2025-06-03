@@ -1,74 +1,536 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import Footer from '../components/layout/Footer';
+
+// Reusable component for related/popular product cards
+const ProductCard = ({ product }) => (
+  <Link to={`/product-details/${product.id}`} className="no-underline hover:no-underline group">
+    <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-5 hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 flex items-center space-x-4 hover:border-indigo-200">
+      <div className="relative overflow-hidden rounded-xl">
+        <img
+          src={product.imageUrl || '/assets/images/default.jpg'}
+          alt={product.name}
+          className="w-20 h-20 object-cover group-hover:scale-110 transition-transform duration-300"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      </div>
+      <div className="flex-grow">
+        <h4 className="text-sm font-bold text-gray-800 group-hover:text-indigo-600 transition-colors duration-300 mb-1">{product.name}</h4>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-indigo-600 font-semibold text-sm">{product.price.toLocaleString('vi-VN')} VNĐ</p>
+            <p className="text-emerald-600 text-xs font-medium">Đã bán: {product.soldCount}</p>
+          </div>
+          <div className="text-amber-400 text-sm">
+            {'★'.repeat(product.rating) + '☆'.repeat(5 - product.rating)}
+          </div>
+        </div>
+      </div>
+    </div>
+  </Link>
+);
+
+// Updated categories with corrected image paths
+const categories = [
+  {
+    name: 'Khai Vị',
+    items: [
+      { id: 1, name: 'Gỏi cuốn tôm thịt', price: 30000, rating: 4, imageUrl: '../src/assets/images/goicuon.jpg', soldCount: 85, description: 'Gỏi cuốn tôm thịt tươi ngon, được làm từ tôm tươi, thịt heo, rau sống và bún, cuốn trong bánh tráng mềm dẻo, ăn kèm nước chấm chua ngọt.' },
+      { id: 2, name: 'Chả giò chiên giòn', price: 25000, rating: 4, imageUrl: '../src/assets/images/chagio.jpg', soldCount: 72, description: 'Chả giò chiên giòn rụm, nhân thịt và rau củ thơm ngon.' },
+      { id: 3, name: 'Salad rau củ', price: 40000, rating: 5, imageUrl: '../src/assets/images/salad.jpg', soldCount: 45, description: 'Salad rau củ tươi mát, ăn kèm sốt mè rang.' },
+      { id: 4, name: 'Súp thập cẩm', price: 35000, rating: 3, imageUrl: '../src/assets/images/sup.jpg', soldCount: 38, description: 'Súp thập cẩm thơm ngon, bổ dưỡng.' },
+    ],
+  },
+  {
+    name: 'Món Chính',
+    items: [
+      { id: 6, name: 'Phở bò tái', price: 55000, rating: 5, imageUrl: '../src/assets/images/pho.jpg', soldCount: 156, description: 'Phở bò tái thơm ngon với nước dùng đậm đà.' },
+      { id: 7, name: 'Bún bò', price: 50000, rating: 5, imageUrl: '../src/assets/images/bunbo.jpg', soldCount: 134, description: 'Bún bò cay nồng, đậm chất miền Trung.' },
+      { id: 8, name: 'Cơm Tấm', price: 40000, rating: 4, imageUrl: '../src/assets/images/comtam.jpg', soldCount: 98, description: 'Cơm Tấm với sườn nướng, trứng ốp la.' },
+      { id: 9, name: 'Lẩu Bò', price: 150000, rating: 4, imageUrl: '../src/assets/images/laubo.jpg', soldCount: 67, description: 'Lẩu Bò thơm ngon, đậm đà.' },
+      { id: 10, name: 'Mì Quảng', price: 45000, rating: 3, imageUrl: '../src/assets/images/mi.jpg', soldCount: 43, description: 'Mì Quảng đặc trưng với nhân tôm, thịt.' },
+    ],
+  },
+  {
+    name: 'Đồ Ăn Nhanh',
+    items: [
+      { id: 11, name: 'Gà rán giòn', price: 70000, rating: 5, imageUrl: '../src/assets/images/garan.jpg', soldCount: 201, description: 'Gà rán giòn rụm, thơm ngon.' },
+      { id: 12, name: 'Pizza kéo sợi', price: 120000, rating: 4, imageUrl: '../src/assets/images/pizza.jpg', soldCount: 89, description: 'Pizza kéo sợi với nhân phô mai béo ngậy.' },
+      { id: 13, name: 'Hamburger bò phô mai', price: 60000, rating: 4, imageUrl: '../src/assets/images/hamburger.jpg', soldCount: 76, description: 'Hamburger bò phô mai béo ngậy.' },
+      { id: 14, name: 'Sandwich thịt nguội', price: 50000, rating: 3, imageUrl: '../src/assets/images/sandwich.jpg', soldCount: 54, description: 'Sandwich thịt nguội tươi ngon.' },
+      { id: 15, name: 'Khoai tây chiên', price: 25000, rating: 4, imageUrl: '../src/assets/images/khoaitaychien.jpg', soldCount: 48, description: 'Khoai tây chiên giòn rụm.' },
+    ],
+  },
+  {
+    name: 'Đồ Nướng',
+    items: [
+      { id: 16, name: 'Bò nướng lá lốt', price: 80000, rating: 4, imageUrl: '../src/assets/images/bonuong_lalot.jpg', soldCount: 92, description: 'Bò nướng lá lốt thơm lừng, đậm đà.' },
+      { id: 17, name: 'Gà nướng muối ớt', price: 70000, rating: 5, imageUrl: '../src/assets/images/ganuong.jpg', soldCount: 87, description: 'Gà nướng muối ớt cay nồng, hấp dẫn.' },
+      { id: 18, name: 'Sườn nướng BBQ', price: 100000, rating: 4, imageUrl: '../src/assets/images/BBQ.jpg', soldCount: 73, description: 'Sườn nướng BBQ đậm vị, mềm thơm.' },
+      { id: 19, name: 'Tôm nướng mọi', price: 90000, rating: 4, imageUrl: '../src/assets/images/tomnuong.jpg', soldCount: 61, description: 'Tôm nướng mọi thơm ngon, tươi ngọt.' },
+      { id: 20, name: 'Mực nướng sa tế', price: 85000, rating: 3, imageUrl: '../src/assets/images/mucnuong.jpg', soldCount: 39, description: 'Mực nướng sa tế cay nồng, dai giòn.' },
+    ],
+  },
+  {
+    name: 'Món Chay',
+    items: [
+      { id: 21, name: 'Cơm chay thập cẩm', price: 35000, rating: 4, imageUrl: '../src/assets/images/comchay.jpg', soldCount: 63, description: 'Cơm chay thập cẩm với rau củ và đậu hũ.' },
+      { id: 22, name: 'Đậu hũ rán giòn', price: 20000, rating: 5, imageUrl: '../src/assets/images/dauhu.jpg', soldCount: 58, description: 'Đậu hũ rán giòn thơm ngon, giòn rụm.' },
+      { id: 23, name: 'Rau củ xào nấm', price: 28000, rating: 4, imageUrl: '../src/assets/images/rauxaonam.jpg', soldCount: 41, description: 'Rau củ xào nấm thanh đạm, bổ dưỡng.' },
+      { id: 25, name: 'Bún chay', price: 30000, rating: 3, imageUrl: '../src/assets/images/bunchay.jpg', soldCount: 24, description: 'Bún chay thanh nhẹ, đậm vị.' },
+    ],
+  },
+  {
+    name: 'Đồ Uống',
+    items: [
+      { id: 26, name: 'Trà sữa trân châu', price: 28000, rating: 4, imageUrl: '../src/assets/images/trasua_TCDD.jpg', soldCount: 178, description: 'Trà sữa trân châu ngọt ngào, thơm béo.' },
+      { id: 27, name: 'Nước ép dưa hấu', price: 25000, rating: 5, imageUrl: '../src/assets/images/nuocep_duahau.jpg', soldCount: 112, description: 'Nước ép dưa hấu tươi mát, nguyên chất.' },
+      { id: 28, name: 'Sinh tố bơ', price: 30000, rating: 4, imageUrl: '../src/assets/images/sinhto_bo.jpg', soldCount: 94, description: 'Sinh tố bơ béo ngậy, thơm ngon.' },
+      { id: 29, name: 'Trà đào cam sả', price: 20000, rating: 4, imageUrl: '../src/assets/images/tra_dao.jpg', soldCount: 86, description: 'Trà đào cam sả thơm mát, dễ uống.' },
+      { id: 30, name: 'Trà sữa Socola', price: 22000, rating: 3, imageUrl: '../src/assets/images/trasua_socola.jpg', soldCount: 52, description: 'Trà sữa socola ngọt dịu, thơm béo.' },
+      { id: 36, name: 'Trà sữa Matcha', price: 22000, rating: 3, imageUrl: '../src/assets/images/trasua_matcha.jpg', soldCount: 52, description: 'Trà sữa matcha thơm lừng, đậm vị.' },
+    ],
+  },
+  {
+    name: 'Tráng Miệng',
+    items: [
+      { id: 31, name: 'Bánh flan caramel', price: 25000, rating: 5, imageUrl: '../src/assets/images/flan.jpg', soldCount: 103, description: 'Bánh flan caramel mềm mịn, ngọt ngào.' },
+      { id: 32, name: 'Chè thái', price: 20000, rating: 4, imageUrl: '../src/assets/images/che_thai.jpg', soldCount: 79, description: 'Chè Thái mát lạnh, hấp dẫn.' },
+      { id: 33, name: 'Kem', price: 30000, rating: 4, imageUrl: '../src/assets/images/kem.jpg', soldCount: 68, description: 'Kem thơm ngon, mát lạnh.' },
+      { id: 34, name: 'Chè bưởi', price: 20000, rating: 4, imageUrl: '../src/assets/images/che_buoi.jpg', soldCount: 45, description: 'Chè bưởi thanh mát, thơm mùi bưởi.' },
+      { id: 35, name: 'Trái cây theo mùa', price: 35000, rating: 3, imageUrl: '../src/assets/images/traicay.jpg', soldCount: 33, description: 'Trái cây theo mùa tươi ngon, đa dạng.' },
+    ],
+  },
+];
+
+// Mock feedback data with corrected image paths
+const mockFeedbacks = [
+  { id: 1, user: 'Nguyen Van A', comment: 'Rất ngon, tôm tươi, rau sạch!', rating: 5, imageUrl: '../src/assets/images/feedback1.jpg', date: '2025-05-20' },
+  { id: 2, user: 'Tran Thi B', comment: 'Nước chấm hơi mặn, nhưng gỏi cuốn thì tuyệt!', rating: 4, imageUrl: '../src/assets/images/feedback2.jpg', date: '2025-05-18' },
+  { id: 3, user: 'Le Van C', comment: 'Phục vụ nhanh, món ăn đẹp mắt.', rating: 4, date: '2025-05-15' },
+];
+
+// Custom notification component
+const Notification = ({ message, isVisible, onClose }) => {
+  useEffect(() => {
+    if (isVisible) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, onClose]);
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="fixed top-20 right-6 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-4 rounded-2xl shadow-2xl z-50 transform transition-all duration-500 animate-pulse">
+      <div className="flex items-center space-x-3">
+        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+        </div>
+        <p className="font-semibold">{message}</p>
+      </div>
+    </div>
+  );
+};
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [quantity, setQuantity] = useState(1);
+  const [hasPurchasedAndConfirmed, setHasPurchasedAndConfirmed] = useState(true);
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackComment, setFeedbackComment] = useState('');
+  const [feedbackImage, setFeedbackImage] = useState(null);
+  const [notification, setNotification] = useState({ message: '', isVisible: false });
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  // Mock dữ liệu sản phẩm
   useEffect(() => {
-    const mockProducts = {
-      1: { id: 1, name: 'Tai nghe Bluetooth Sony', description: 'Tai nghe chất lượng cao', originalPrice: 1500000, stock: 10, category: 'Electronics', imageUrl: 'https://via.placeholder.com/150', specifications: 'Bluetooth 5.0' },
-      2: { id: 2, name: 'Áo thun Unisex', description: 'Áo thun thoải mái', originalPrice: 250000, stock: 20, category: 'Clothing', imageUrl: 'https://via.placeholder.com/150', specifications: 'Cotton 100%' },
-      3: { id: 3, name: 'Đồng hồ thông minh Apple', description: 'Đồng hồ thông minh cao cấp', originalPrice: 5000000, stock: 5, category: 'Electronics', imageUrl: 'https://via.placeholder.com/150', specifications: 'iOS compatible' },
+    const fetchProductDetails = async () => {
+      try {
+        const productId = parseInt(id);
+        let foundProduct = null;
+        for (const category of categories) {
+          const product = category.items.find(item => item.id === productId);
+          if (product) {
+            foundProduct = { ...product, category: category.name, feedbacks: mockFeedbacks };
+            break;
+          }
+        }
+        setProduct(foundProduct);
+        if (!foundProduct) navigate('/');
+      } catch (error) {
+        console.error('Failed to fetch product details:', error);
+        navigate('/');
+      }
     };
-    const productData = mockProducts[id] || null;
-    setProduct(productData || null);
-    if (!productData) navigate('/products');
+
+    const fetchRelatedProducts = async () => {
+      try {
+        const productId = parseInt(id);
+        const currentProduct = categories.flatMap(cat => cat.items).find(item => item.id === productId);
+        let related = [];
+        if (currentProduct) {
+          const sameCategory = categories.find(cat => cat.items.some(item => item.id === currentProduct.id));
+          if (sameCategory) {
+            related = sameCategory.items.filter(item => item.id !== productId).slice(0, 5);
+          }
+          if (related.length < 5) {
+            const allProducts = categories.flatMap(cat => cat.items)
+              .filter(item => item.id !== productId)
+              .sort((a, b) => b.soldCount - a.soldCount);
+            related = [...related, ...allProducts.filter(p => !related.includes(p))].slice(0, 5);
+          }
+        }
+        setRelatedProducts(related);
+      } catch (error) {
+        console.error('Failed to fetch related products:', error);
+      }
+    };
+
+    const checkPurchaseStatus = async () => {
+      try {
+        // Replace with actual API call: GET /api/orders/confirm/${id}
+        setHasPurchasedAndConfirmed(true); // Mocked for demo
+      } catch (error) {
+        console.error('Failed to check purchase status:', error);
+      }
+    };
+
+    fetchProductDetails();
+    fetchRelatedProducts();
+    checkPurchaseStatus();
   }, [id, navigate]);
 
-  if (!product) return <div>Loading...</div>;
-
-  const [quantity, setQuantity] = useState(1);
-
-  // Thêm vào giỏ hàng (mock)
-  const handleAddToCart = () => {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const existingItem = cart.find(item => item.id === product.id);
-    if (existingItem) {
-      existingItem.quantity += quantity;
-    } else {
-      cart.push({ ...product, quantity });
+  const handleAddToCart = async () => {
+    setIsAddingToCart(true);
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const existingItem = cart.find(item => item.id === product.id);
+      if (existingItem) {
+        existingItem.quantity += quantity;
+      } else {
+        cart.push({ ...product, quantity });
+      }
+      localStorage.setItem('cart', JSON.stringify(cart));
+      window.dispatchEvent(new Event('cartUpdated'));
+      setNotification({
+        message: `${product.name} (x${quantity}) đã được thêm vào giỏ hàng!`,
+        isVisible: true
+      });
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+      setNotification({
+        message: 'Có lỗi xảy ra khi thêm vào giỏ hàng!',
+        isVisible: true
+      });
+    } finally {
+      setIsAddingToCart(false);
     }
-    localStorage.setItem('cart', JSON.stringify(cart));
-    alert('Thêm vào giỏ hàng thành công!');
-    navigate('/cart');
   };
 
+  const handleFeedbackSubmit = async (e) => {
+    e.preventDefault();
+    if (feedbackRating < 1 || feedbackRating > 5) {
+      setNotification({
+        message: 'Vui lòng chọn số sao từ 1 đến 5.',
+        isVisible: true
+      });
+      return;
+    }
+    if (!feedbackComment.trim()) {
+      setNotification({
+        message: 'Vui lòng nhập nhận xét.',
+        isVisible: true
+      });
+      return;
+    }
+    try {
+      const newFeedback = {
+        id: mockFeedbacks.length + 1,
+        user: 'Current User', // Replace with actual user data
+        comment: feedbackComment,
+        rating: feedbackRating,
+        imageUrl: feedbackImage ? URL.createObjectURL(feedbackImage) : null,
+        date: new Date().toISOString().split('T')[0],
+      };
+      mockFeedbacks.push(newFeedback);
+      setProduct(prev => ({ ...prev, feedbacks: [...prev.feedbacks, newFeedback] }));
+      setFeedbackRating(0);
+      setFeedbackComment('');
+      setFeedbackImage(null);
+      setNotification({
+        message: 'Cảm ơn bạn đã gửi đánh giá!',
+        isVisible: true
+      });
+    } catch (error) {
+      console.error('Failed to submit feedback:', error);
+      setNotification({
+        message: 'Có lỗi xảy ra khi gửi đánh giá.',
+        isVisible: true
+      });
+    }
+  };
+
+  const handleStarClick = (rating) => {
+    setFeedbackRating(rating);
+  };
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-500 border-t-transparent mx-auto mb-4"></div>
+          <div className="text-xl font-semibold text-gray-700">Đang tải...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-coral-100 flex flex-col">
-      <main className="flex-grow container mx-auto p-6">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="flex flex-col md:flex-row gap-6">
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="w-full md:w-1/2 h-96 object-cover rounded-lg"
-            />
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-indigo-900 mb-4">{product.name}</h1>
-              <p className="text-gray-700 mb-4">{product.description}</p>
-              <p className="text-indigo-600 font-bold text-2xl mb-4">${product.originalPrice.toFixed(2)}</p>
-              <p className="text-gray-600 mb-2"><strong>Stock:</strong> {product.stock} units</p>
-              <p className="text-gray-600 mb-2"><strong>Category:</strong> {product.category}</p>
-              <p className="text-gray-600 mb-4"><strong>Specifications:</strong> {product.specifications || 'N/A'}</p>
-              <input
-                type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                min="1"
-                className="border p-2 mb-4 w-20"
-              />
-              <button
-                onClick={handleAddToCart}
-                className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-all duration-300"
-              >
-                Add to Cart
-              </button>
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 flex flex-col relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-200 to-pink-200 rounded-full opacity-20 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-indigo-200 to-purple-200 rounded-full opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-pink-100 to-purple-100 rounded-full opacity-10 animate-pulse" style={{ animationDelay: '4s' }}></div>
+      </div>
+
+      <Notification
+        message={notification.message}
+        isVisible={notification.isVisible}
+        onClose={() => setNotification(prev => ({ ...prev, isVisible: false }))}
+      />
+
+      <main className="flex-grow container mx-auto px-6 py-8 relative z-10">
+        <div className="flex flex-col xl:flex-row gap-8">
+          {/* Left Frame: Product Details (2/3) */}
+          <section className="xl:w-2/3 bg-white/70 backdrop-blur-lg rounded-3xl shadow-2xl p-8 border border-white/30 hover:shadow-3xl transition-all duration-500">
+            <div className="flex flex-col lg:flex-row gap-8">
+              <div className="lg:w-1/2 relative group">
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+                  <img
+                    src={product.imageUrl || '/assets/images/default.jpg'}
+                    alt={product.name}
+                    className="w-full h-96 object-cover rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
+                </div>
+                <div className="absolute -top-2 -left-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+                  {product.category}
+                </div>
+                <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg">
+                  Bán chạy #{product.soldCount}
+                </div>
+              </div>
+
+              <div className="lg:w-1/2 flex flex-col justify-between">
+                <div className="space-y-6">
+                  <div>
+                    <h1 className="text-4xl font-black text-gray-900 mb-4 tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                      {product.name}
+                    </h1>
+                    <div className="flex items-center space-x-6 mb-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="text-amber-400 text-2xl">
+                          {'★'.repeat(product.rating)}
+                        </div>
+                        <div className="text-gray-300 text-2xl">
+                          {'☆'.repeat(5 - product.rating)}
+                        </div>
+                      </div>
+                      <span className="text-gray-600 font-medium">({product.rating}/5)</span>
+                    </div>
+                    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-2xl shadow-lg mb-6">
+                      <div className="text-3xl font-black mb-2">
+                        {product.price.toLocaleString('vi-VN')} VNĐ
+                      </div>
+                      <div className="text-indigo-100 text-sm">
+                        Giá đã bao gồm VAT
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 p-6 rounded-2xl border-l-4 border-indigo-500">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3">Mô tả sản phẩm</h3>
+                    <p className="text-gray-700 leading-relaxed">{product.description}</p>
+                  </div>
+                </div>
+
+                <div className="mt-8 bg-white p-6 rounded-2xl shadow-inner border border-gray-100">
+                  <div className="flex items-center space-x-4 mb-4">
+                    <label className="text-gray-700 font-semibold">Số lượng:</label>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center font-bold text-gray-700 transition-colors duration-200"
+                        aria-label="Giảm số lượng"
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        value={quantity}
+                        onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                        min="1"
+                        className="border-2 border-gray-300 focus:border-indigo-500 p-3 w-20 rounded-xl text-center font-bold focus:outline-none transition-all duration-200"
+                        aria-label="Số lượng sản phẩm"
+                      />
+                      <button
+                        onClick={() => setQuantity(quantity + 1)}
+                        className="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center font-bold text-gray-700 transition-colors duration-200"
+                        aria-label="Tăng số lượng"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={isAddingToCart}
+                    className={`w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                      isAddingToCart ? 'animate-pulse' : 'hover:from-indigo-700 hover:to-purple-700'
+                    }`}
+                    aria-label="Thêm vào giỏ hàng"
+                  >
+                    {isAddingToCart ? (
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Đang thêm...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center space-x-2">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                        </svg>
+                        <span>Thêm vào giỏ hàng</span>
+                      </div>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
+
+            {/* Feedback Section */}
+            <div className="mt-12 bg-gray-50 p-8 rounded-3xl shadow-inner border border-gray-100">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Phản hồi từ khách hàng ({product.feedbacks.length})</h2>
+              {product.feedbacks.length > 0 ? (
+                <div className="space-y-6">
+                  {product.feedbacks.map((feedback) => (
+                    <div key={feedback.id} className="border-b border-gray-200 pb-6">
+                      <div className="flex items-center space-x-4 mb-3">
+                        <span className="font-semibold text-gray-900">{feedback.user}</span>
+                        <div className="flex items-center space-x-1">
+                          <div className="text-amber-400">
+                            {'★'.repeat(feedback.rating)}
+                          </div>
+                          <div className="text-gray-300">
+                            {'☆'.repeat(5 - feedback.rating)}
+                          </div>
+                        </div>
+                        <span className="text-gray-500 text-sm">{feedback.date}</span>
+                      </div>
+                      <p className="text-gray-700 leading-relaxed">{feedback.comment}</p>
+                      {feedback.imageUrl && (
+                        <img
+                          src={feedback.imageUrl}
+                          alt={`Feedback from ${feedback.user}`}
+                          className="w-24 h-24 object-cover rounded-xl mt-3 shadow-sm hover:scale-105 transition-transform duration-300"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 italic">Chưa có phản hồi nào.</p>
+              )}
+
+              {hasPurchasedAndConfirmed && (
+                <div className="mt-10 bg-white p-8 rounded-3xl shadow-lg">
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">Gửi đánh giá của bạn</h3>
+                  <form onSubmit={handleFeedbackSubmit} className="space-y-6">
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-2">Đánh giá:</label>
+                      <div className="flex space-x-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => handleStarClick(star)}
+                            className={`text-3xl transition-colors duration-200 focus:outline-none ${
+                              feedbackRating >= star ? 'text-amber-400' : 'text-gray-300 hover:text-amber-200'
+                            }`}
+                            aria-label={`Đánh giá ${star} sao`}
+                          >
+                            ★
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-2">Nhận xét:</label>
+                      <textarea
+                        value={feedbackComment}
+                        onChange={(e) => setFeedbackComment(e.target.value)}
+                        className="w-full border-2 border-gray-300 focus:border-indigo-500 p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 resize-none"
+                        rows="5"
+                        placeholder="Nhập nhận xét của bạn..."
+                        aria-label="Nhận xét về sản phẩm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-2">Tải ảnh (tùy chọn):</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setFeedbackImage(e.target.files[0])}
+                        className="border-2 border-gray-300 p-3 rounded-xl file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 transition-all duration-200 w-full"
+                        aria-label="Tải ảnh phản hồi"
+                      />
+                      {feedbackImage && (
+                        <div className="mt-4">
+                          <img
+                            src={URL.createObjectURL(feedbackImage)}
+                            alt="Preview"
+                            className="w-32 h-32 object-cover rounded-xl shadow-sm"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                      aria-label="Gửi đánh giá"
+                    >
+                      Gửi đánh giá
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Right Frame: Related Products (1/3) */}
+          <section className="xl:w-1/3 bg-gradient-to-b from-indigo-100/70 to-purple-100/70 backdrop-blur-lg rounded-3xl shadow-2xl p-8 border border-indigo-200/50 hover:shadow-3xl transition-all duration-500">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">Sản phẩm liên quan</h2>
+            <div className="space-y-4">
+              {relatedProducts.length > 0 ? (
+                relatedProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))
+              ) : (
+                <p className="text-gray-500 italic">Không có sản phẩm liên quan.</p>
+              )}
+            </div>
+          </section>
         </div>
       </main>
       <Footer />

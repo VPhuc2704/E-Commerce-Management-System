@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import useAuth from '../hooks/useAuth';
 import Navbar from '../components/layout/Navbar';
 import ProtectedRoutes from '../routes/ProtectedRoutes';
+import AdminLayout from '../components/common/AdminLayout';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import HomePage from '../pages/HomePage';
 import AboutPage from '../pages/AboutPage';
@@ -20,7 +21,6 @@ import AdminDashboard from '../pages/AdminDashboard';
 import VerifyPage from '../pages/VerifyPage';
 
 // Placeholder component for ProfilePage
-const PlaceholderPage = () => <div className="min-h-screen p-4">Placeholder Page</div>;
 const ProfilePage = () => <div className="min-h-screen p-4">Profile Page (Placeholder)</div>;
 
 // GuestOnlyRoute Component
@@ -36,7 +36,7 @@ const GuestOnlyRoute = ({ children }) => {
 
 // Layout Component to conditionally render Navbar
 const Layout = ({ children }) => {
-  const location = useLocation(); // Ensure useLocation is available
+  const location = useLocation();
   const hideNavbarRoutes = ['/login', '/register', '/verify', '/forgot-password'];
 
   return (
@@ -47,70 +47,81 @@ const Layout = ({ children }) => {
   );
 };
 
+// Component con để xử lý routes
+const RoutesContent = () => {
+  const { user } = useAuth(); // Gọi useAuth trong component con của Router
+
+  return (
+    <ErrorBoundary>
+      <Routes>
+        {/* Public routes for guests */}
+        <Route path="/" element={<Layout><HomePage /></Layout>} />
+        <Route path="/about" element={<Layout><AboutPage /></Layout>} />
+
+        {/* Guest-only routes (without Navbar) */}
+        <Route
+          path="/login"
+          element={
+            <GuestOnlyRoute>
+              <Login />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <GuestOnlyRoute>
+              <Register />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="/verify"
+          element={
+            <GuestOnlyRoute>
+              <VerifyPage />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <GuestOnlyRoute>
+              <ForgotPassword />
+            </GuestOnlyRoute>
+          }
+        />
+
+        {/* Protected routes for authenticated users */}
+        <Route element={<ErrorBoundary><ProtectedRoutes /></ErrorBoundary>}>
+          <Route path="/home" element={<Layout><LoggedInHomePage user={user} /></Layout>} />
+          <Route path="/products" element={<Layout><ProductListing /></Layout>} />
+          <Route path="/product-details/:id" element={<Layout><ProductDetails /></Layout>} /> {/* Updated path */}
+          <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
+          <Route path="/cart" element={<Layout><CartPage /></Layout>} />
+          <Route path="/orders" element={<Layout><OrderHistory /></Layout>} />
+        </Route>
+
+        {/* Admin-only routes with AdminLayout */}
+        <Route element={<ErrorBoundary><ProtectedRoutes adminOnly={true} /></ErrorBoundary>}>
+          <Route element={<AdminLayout user={user} />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/products" element={<AdminProductManagement user={user} />} />
+            <Route path="/admin/orders" element={<AdminOrderManagement />} />
+          </Route>
+        </Route>
+
+        {/* Catch-all route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </ErrorBoundary>
+  );
+};
+
 const AppRoutes = () => {
   return (
     <Router>
-      <ErrorBoundary>
-        <Routes>
-          {/* Public routes for guests */}
-          <Route path="/" element={<Layout><HomePage /></Layout>} />
-          <Route path="/about" element={<Layout><AboutPage /></Layout>} />
-
-          {/* Guest-only routes (without Navbar) */}
-          <Route
-            path="/login"
-            element={
-              <GuestOnlyRoute>
-                <Login />
-              </GuestOnlyRoute>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <GuestOnlyRoute>
-                <Register />
-              </GuestOnlyRoute>
-            }
-          />
-          <Route
-            path="/verify"
-            element={
-              <GuestOnlyRoute>
-                <VerifyPage />
-              </GuestOnlyRoute>
-            }
-          />
-          <Route
-            path="/forgot-password"
-            element={
-              <GuestOnlyRoute>
-                <ForgotPassword />
-              </GuestOnlyRoute>
-            }
-          />
-
-          {/* Protected routes for authenticated users */}
-          <Route element={<ErrorBoundary><ProtectedRoutes /></ErrorBoundary>}>
-            <Route path="/home" element={<Layout><LoggedInHomePage /></Layout>} />
-            <Route path="/products" element={<Layout><ProductListing /></Layout>} />
-            <Route path="/product/:id" element={<Layout><ProductDetails /></Layout>} />
-            <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
-            <Route path="/cart" element={<Layout><CartPage /></Layout>} /> {/* Sử dụng CartPage thực tế */}
-            <Route path="/orders" element={<Layout><OrderHistory /></Layout>} />
-          </Route>
-
-          {/* Admin-only routes */}
-          <Route element={<ErrorBoundary><ProtectedRoutes adminOnly={true} /></ErrorBoundary>}>
-            <Route path="/admin/products" element={<Layout><AdminProductManagement /></Layout>} />
-            <Route path="/admin/orders" element={<Layout><AdminOrderManagement /></Layout>} />
-            <Route path="/admin/dashboard" element={<Layout><AdminDashboard /></Layout>} />
-          </Route>
-
-          {/* Catch-all route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </ErrorBoundary>
+      <RoutesContent />
     </Router>
   );
 };
