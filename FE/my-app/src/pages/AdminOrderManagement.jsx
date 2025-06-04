@@ -31,12 +31,8 @@ const AdminOrderManagement = () => {
     setSelectedStatus('');
   };
 
-  // Kiểm tra vai trò Admin (mock)
-  const isAdmin = true; // Thay bằng logic kiểm tra vai trò thực tế từ token
-  if (!isAdmin) return <p>Bạn không có quyền truy cập trang này!</p>;
-
   return (
-    <div className="p-6">
+    <div>
       <h1 className="text-2xl font-bold mb-4">Quản lý đơn hàng</h1>
       <ul className="space-y-4">
         {orders.map(order => (

@@ -13,10 +13,6 @@ const AdminDashboard = () => {
   const [endDate, setEndDate] = useState('2025-05-27');
   const [filteredData, setFilteredData] = useState({ totalRevenue: 0, orderCount: 0, topProducts: [] });
 
-  // Kiểm tra vai trò Admin (mock)
-  const isAdmin = true;
-  if (!isAdmin) return <p className="text-center text-red-500">Bạn không có quyền truy cập trang này!</p>;
-
   // Lấy dữ liệu đơn hàng từ localStorage
   useEffect(() => {
     const savedOrders = localStorage.getItem('orders');
@@ -74,8 +70,8 @@ const AdminDashboard = () => {
       {
         label: 'Doanh thu (VNĐ)',
         data: orders.map(order => order.total),
-        borderColor: '#4f46e5', // indigo-600
-        backgroundColor: 'rgba(79, 70, 229, 0.2)', // indigo-600 với opacity
+        borderColor: '#4f46e5',
+        backgroundColor: 'rgba(79, 70, 229, 0.2)',
         fill: true,
         tension: 0.4,
         pointRadius: 5,
@@ -131,12 +127,12 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-coral-100 p-6">
+    <div>
       <motion.h1
         initial="hidden"
         animate="visible"
         variants={fadeInVariants}
-        className="text-4xl font-extrabold text-indigo-900 mb-8 text-center flex items-center justify-center gap-3"
+        className="text-4xl font-extrabold text-indigo-900 mb-8 flex items-center gap-3"
       >
         <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h6v6H3V3zm0 8h6v10H3V11zm8 0h10v10H11V11zm0-8h10v6H11V3z" />
