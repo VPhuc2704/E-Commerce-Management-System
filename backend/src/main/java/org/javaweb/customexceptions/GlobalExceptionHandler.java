@@ -95,4 +95,3 @@ public class GlobalExceptionHandler {
                 .body(Collections.singletonMap("error", ex.getMessage()));
     }
 }
-

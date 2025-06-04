@@ -40,6 +40,7 @@ public class JwtTokenProvider {
 
     public String generateToken(UserEntity user) {
         Map<String, Object> claims = new HashMap<>();
+//        claims.put("id", user.getId());
         claims.put("email", user.getEmail());
         claims.put("fullname", user.getFullname());
         claims.put("roles", user.getRoles().stream()
@@ -59,6 +60,14 @@ public class JwtTokenProvider {
         return token;
     }
 
+    public List<String> getRoles(String token){
+        Claims claims = Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        return claims.get("roles", List.class);
+    }
     // Lấy email từ token
     public String getEmail(String token){
         return Jwts.parser()

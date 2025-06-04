@@ -1,7 +1,7 @@
 package org.javaweb.enums;
 
 public enum productStatus {
-    Co_San ("Có-sẵn"),
+    Con_Hang("Còn Hàng"),
     Het_Hang("Hết Hàng"),
     Ngung_San_Xuat ("Ngưng sản xuất");
     private final String name;

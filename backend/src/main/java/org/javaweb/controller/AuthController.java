@@ -112,7 +112,7 @@ public class AuthController {
         String accessToken = TokenUtils.getTokenFromRequest(request);
         String requestRefreshToken = refreshTokenRequestDTO.getRefreshToken();
         authUserService.logout(accessToken, requestRefreshToken);
-        return ResponseEntity.ok("đăng Xuất thành công");
+        return ResponseEntity.ok("Đăng Xuất thành công");
     }
 
 }

@@ -19,6 +19,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.CorsConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -55,11 +56,16 @@ public class SecurityConfig {
 
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests((authorize) -> {
-
-
                     authorize.antMatchers(EndpointAPI.PUBLIC_ENDPOINTS).permitAll();
+                    authorize.antMatchers(EndpointAPI.AUTHENTICATED_ENDPOINTS).authenticated();
+                    authorize.antMatchers(EndpointAPI.ADMIN_ENDPOINTS).hasRole("ADMIN");
                     authorize.anyRequest().authenticated();
+
                 }).httpBasic(Customizer.withDefaults());
 
         http.exceptionHandling( exception -> exception
