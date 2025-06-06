@@ -89,7 +89,7 @@ const Navbar = () => {
           <div className="flex items-center justify-between h-20">
             
             {/* Logo Section */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 flex-shrink-0">
               <div className="relative group">
                 <div className="absolute -inset-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
                 <img 
@@ -101,14 +101,14 @@ const Navbar = () => {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  Thế giơi ẩm thực
+                  Thế giới ẩm thực
                 </h1>
               </div>
             </div>
 
-            {/* Navigation Menu */}
-            <div className="flex-2 flex justify-center items-center gap-4">
-              <div className="button-container flex bg-blue-800 bg-opacity-80 rounded-full h-12 items-center justify-around w-72 backdrop-blur-md shadow-md">
+            {/* Navigation Menu - Centered */}
+            <div className="absolute left-1/2 transform -translate-x-1/2">
+              <div className="button-container flex bg-blue-800 bg-opacity-80 rounded-full h-12 items-center justify-center backdrop-blur-md shadow-md px-3 gap-5">
                 
                 {/* Home Button */}
                 <button
@@ -129,61 +129,60 @@ const Navbar = () => {
                   </svg>
                 </button>
 
-                  {/* Profile Button */}
-                  <button
-                    className="group w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white transition-all duration-300 hover:bg-white hover:shadow-glow"
-                    onClick={handleProfileClick}
-                    title="Profile"
+                {/* Profile Button */}
+                <button
+                  className="group w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white transition-all duration-300 hover:bg-white hover:shadow-glow"
+                  onClick={handleProfileClick}
+                  title="Profile"
+                >
+                  <svg
+                    className="icon text-xl transition-all duration-300 group-hover:text-blue-700"
+                    stroke="currentColor"
+                    fill="currentColor"
+                    strokeWidth="0"
+                    viewBox="0 0 24 24"
+                    height="1em"
+                    width="1em"
                   >
-                    <svg
-                      className="icon text-xl transition-all duration-300 group-hover:text-blue-700"
-                      stroke="currentColor"
-                      fill="currentColor"
-                      strokeWidth="0"
-                      viewBox="0 0 24 24"
-                      height="1em"
-                      width="1em"
-                    >
-                      <path d="M12 2.5a5.5 5.5 0 0 1 3.096 10.047 9.005 9.005 0 0 1 5.9 8.181.75.75 0 1 1-1.499.044 7.5 7.5 0 0 0-14.993 0 .75.75 0 0 1-1.5-.045 9.005 9.005 0 0 1 5.9-8.18A5.5 5.5 0 0 1 12 2.5ZM8 8a4 4 0 1 0 8 0 4 4 0 0 0-8 0Z" />
-                    </svg>
-                  </button>
+                    <path d="M12 2.5a5.5 5.5 0 0 1 3.096 10.047 9.005 9.005 0 0 1 5.9 8.181.75.75 0 1 1-1.499.044 7.5 7.5 0 0 0-14.993 0 .75.75 0 0 1-1.5-.045 9.005 9.005 0 0 1 5.9-8.18A5.5 5.5 0 0 1 12 2.5ZM8 8a4 4 0 1 0 8 0 4 4 0 0 0-8 0Z" />
+                  </svg>
+                </button>
 
-
-                {/* Admin Buttons */}
+                {/* Admin Buttons - Only show when authenticated */}
                 {isAuthenticated && roles.includes('ROLE_ADMIN') && (
                   <>
                     <button
-                    className="button w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white transition-all duration-300 hover:bg-blue-700 hover:shadow-glow"
-                    onClick={() => navigate('/admin/products')}
-                  >
-                    <svg
-                      className="icon text-xl"
-                      stroke="currentColor"
-                      fill="currentColor"
-                      strokeWidth="0"
-                      viewBox="0 0 24 24"
-                      height="1em"
-                      width="1em"
+                      className="group w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white transition-all duration-300 hover:bg-white hover:shadow-glow"
+                      onClick={() => navigate('/admin/products')}
+                      title="Products"
                     >
-                      <path d="M12 2a5 5 0 0 0-5 5v2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2V7a5 5 0 0 0-5-5zm0 2a3 3 0 1 1 3 3v2H9V7a3 3 0 0 1 3-3zm-7 7h14v9H5z" />
-                    </svg>
-                  </button>
+                      <svg
+                        className="icon text-xl transition-all duration-300 group-hover:text-blue-700"
+                        stroke="currentColor"
+                        fill="currentColor"
+                        strokeWidth="0"
+                        viewBox="0 0 24 24"
+                        height="1em"
+                        width="1em"
+                      >
+                        <path d="M12 2a5 5 0 0 0-5 5v2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2V7a5 5 0 0 0-5-5zm0 2a3 3 0 1 1 3 3v2H9V7a3 3 0 0 1 3-3zm-7 7h14v9H5z" />
+                      </svg>
+                    </button>
 
                     <button
-                      className="group relative p-3.5 rounded-xl transition-all duration-300 hover:bg-green-500 hover:shadow-lg hover:shadow-green-500/25 hover:border hover:border-green-300"
+                      className="group w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white transition-all duration-300 hover:bg-white hover:shadow-glow"
                       onClick={handleDashboardClick}
                       title="Dashboard"
                     >
                       <svg
-                        className="w-6 h-6 text-gray-600 group-hover:text-white transition-colors duration-300"
+                        className="icon text-xl transition-all duration-300 group-hover:text-blue-700"
                         fill="currentColor"
                         viewBox="0 0 20 20"
+                        height="1em"
+                        width="1em"
                       >
                         <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                       </svg>
-                      <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                        Dashboard
-                      </div>
                     </button>
                   </>
                 )}
@@ -211,7 +210,7 @@ const Navbar = () => {
                   </svg>
 
                   {cartItemCount > 0 && (
-                    <span className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                       {cartItemCount}
                     </span>
                   )}
@@ -221,7 +220,7 @@ const Navbar = () => {
             </div>
 
             {/* User Authentication Section */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 flex-shrink-0">
               {isAuthenticated && user && (
                 <div className="hidden md:flex items-center space-x-3">
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
