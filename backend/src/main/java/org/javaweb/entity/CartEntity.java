@@ -11,11 +11,11 @@ public class CartEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)   // defauld đã là fetch = FetchType.LAZY
+    @OneToOne(fetch = FetchType.LAZY)   // defauld đã là fetch = FetchType.LAZY
     @JoinColumn(name = "user_id")
     private UserEntity users;
 
-    @OneToMany(mappedBy = "carts", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "carts", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<CartItemEntity> listCartItems = new ArrayList<>();
 
     public Long getId() {

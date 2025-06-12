@@ -1,6 +1,7 @@
 package org.javaweb.controller;
 
 import org.javaweb.constant.ApiResponse;
+import org.javaweb.model.dto.CatogeryDTO;
 import org.javaweb.model.dto.ProductsDTO;
 import org.javaweb.service.ProductService;
 import org.javaweb.utils.TokenUtils;
@@ -42,13 +43,16 @@ public class ProductController {
     }
 
     @PutMapping("/api/admin/products/{id}")
-    public ResponseEntity<ProductsDTO> updateProductsById(@PathVariable("id") Long id,
+    public ResponseEntity<?> updateProductsById(@PathVariable("id") Long id,
                                                           @RequestBody ProductsDTO productsDTO){
         Optional<ProductsDTO> products = productService.updateProductById(id, productsDTO);
         if (products.isPresent()) {
-            return ResponseEntity.ok(products.get());
+            return ResponseEntity.ok(
+                    new ApiResponse<>(200, "Cập nhật sản phẩm thành công", products.get())
+            );
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(404, "Không tìm thấy sản phẩm cần cập nhật", null));
         }
     }
 
@@ -65,6 +69,11 @@ public class ProductController {
     @DeleteMapping("/api/admin/products/{id}")
     public ResponseEntity<?> deleteProducts(@PathVariable Long id ){
         productService.deteleProductById(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new ApiResponse<>(204, "Đã xóa sản phẩm", null));
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @GetMapping("/api/categories/name")
+    public ResponseEntity<List<CatogeryDTO>> getCategoryNames() {
+        return ResponseEntity.ok(productService.getNameCategory());
     }
 }

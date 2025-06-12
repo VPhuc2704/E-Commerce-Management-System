@@ -1,13 +1,13 @@
 package org.javaweb.enums;
 
-public enum paymentStatus {
-    PENDING("Đang chờ xác nhận"),
+public enum PaymentStatus {
+    PENDING("Đang chờ thanh toán"),
     CONFIRMED("Hoàn thành"),
     FAILD("Thất bại");
 
     private final String name;
 
-    paymentStatus(String name){
+    PaymentStatus(String name){
         this.name = name;
     }
 

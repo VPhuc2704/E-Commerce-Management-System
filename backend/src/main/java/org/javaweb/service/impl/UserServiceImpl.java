@@ -9,6 +9,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -28,13 +29,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserDTO updateUser(String email, UserDTO userDTO) {
         UserEntity userEntity =  userRepository.findByEmail(email)
                 .orElseThrow(()->new UsernameNotFoundException("<User Not Found>"));
 
-        userEntity.setFullname(userDTO.getFullname());
-        userEntity.setNumberphone(userDTO.getNumberphone());
-        userEntity.setAddress(userDTO.getAddress());
+//        userEntity.setFullname(userDTO.getFullname());
+//        userEntity.setNumberphone(userDTO.getNumberphone());
+//        userEntity.setAddress(userDTO.getAddress());
+        userConverter.updateUserEntityFromDTO(userDTO, userEntity);
 
         userRepository.save(userEntity);
         return  userConverter.convertToUserDTO(userEntity);

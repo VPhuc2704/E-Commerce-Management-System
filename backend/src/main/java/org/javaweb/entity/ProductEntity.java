@@ -1,6 +1,6 @@
 package org.javaweb.entity;
 
-import org.javaweb.enums.productStatus;
+import org.javaweb.enums.ProductStatus;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -33,7 +33,7 @@ public class ProductEntity extends BaseEntity{
 
     @Enumerated(EnumType.STRING)
     @Column(name="status")
-    private productStatus status;
+    private ProductStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name ="category_id")
@@ -103,11 +103,11 @@ public class ProductEntity extends BaseEntity{
         this.type = type;
     }
 
-    public productStatus getStatus() {
+    public ProductStatus getStatus() {
         return status;
     }
 
-    public void setStatus(productStatus status) {
+    public void setStatus(ProductStatus status) {
         this.status = status;
     }
 

@@ -30,10 +30,11 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService {
             .map(role -> new SimpleGrantedAuthority(role.getCode().getNameCode()))
             .collect(Collectors.toList());
 
-        return new org.springframework.security.core.userdetails.User(
-                email,
-                userEntity.getPassword(),
-                authorities
-        );
+//        return new org.springframework.security.core.userdetails.User(
+//                email,
+//                userEntity.getPassword(),
+//                authorities
+//        );
+        return userEntity;
     }
 }

@@ -1,11 +1,11 @@
 package org.javaweb.enums;
 
-public enum roleCode {
+public enum RoleCode {
     ADMIN("ROLE_ADMIN"),
     USER("ROLE_USER");
     private final String nameCode;
 
-    roleCode(String nameCode) {
+    RoleCode(String nameCode) {
         this.nameCode = nameCode;
     }
     public String getNameCode() {

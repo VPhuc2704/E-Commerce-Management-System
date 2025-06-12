@@ -2,7 +2,7 @@ package org.javaweb.service.impl;
 
 import org.javaweb.entity.RefreshTokenEntity;
 import org.javaweb.entity.VerificationEntity;
-import org.javaweb.enums.roleCode;
+import org.javaweb.enums.RoleCode;
 import org.javaweb.entity.RoleEntity;
 import org.javaweb.entity.UserEntity;
 import org.javaweb.exceptions.InvalidTokenException;
@@ -95,7 +95,7 @@ public class AuthUserServiceImpl implements AuthUserService {
         userEntity.setPassword(passwordEncoder.encode(authRequestDTO.getPassword()));
         userEntity.setIsverified(false);
 
-        RoleEntity userRole = roleRepository.findByCode(roleCode.USER)
+        RoleEntity userRole = roleRepository.findByCode(RoleCode.USER)
                 .orElseThrow(()-> new DataIntegrityViolationException("Role not exists"));
         userEntity.setRoles(new ArrayList<>(Collections.singletonList(userRole)));
 

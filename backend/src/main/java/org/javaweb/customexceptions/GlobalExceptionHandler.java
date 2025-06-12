@@ -1,8 +1,8 @@
 package org.javaweb.customexceptions;
 
-import org.javaweb.exceptions.InvalidTokenException;
-import org.javaweb.exceptions.RefreshTokenExceptions;
-import org.javaweb.exceptions.UserNotFoundException;
+import jdk.nashorn.internal.runtime.regexp.joni.exception.ErrorMessages;
+import org.javaweb.constant.ApiResponse;
+import org.javaweb.exceptions.*;
 import org.javaweb.model.dto.ErrorDTO;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -92,5 +92,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleUserNotFound(UserNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Collections.singletonMap("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler({
+            CartEmptyException.class,
+            NoProductSelectedException.class,
+            OrderException.class,
+            IncompleteUserInfoException.class
+    })
+    public ResponseEntity<?> handleIncompleteUserInfoException(Exception ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(400, ex.getMessage(), Collections.emptyMap()));
     }
 }

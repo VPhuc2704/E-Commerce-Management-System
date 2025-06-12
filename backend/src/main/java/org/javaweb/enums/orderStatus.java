@@ -1,6 +1,6 @@
 package org.javaweb.enums;
 
-public enum orderStatus {
+public enum OrderStatus {
     PENDING("Đang chờ xác nhận"),
     CONFIRMED("Đã xác nhận"),
     SHIPPED("Chờ giao hàng"),
@@ -9,7 +9,7 @@ public enum orderStatus {
 
     private final String name;
 
-    orderStatus(String name) {
+    OrderStatus(String name) {
         this.name = name;
     }
 

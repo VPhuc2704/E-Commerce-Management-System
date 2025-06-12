@@ -1,11 +1,5 @@
 package org.javaweb.model.dto;
 
-import org.javaweb.enums.productStatus;
-
-import javax.persistence.Column;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-
 public class ProductsDTO {
     private Long id;
     private String name;

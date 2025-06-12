@@ -1,16 +1,19 @@
 package org.javaweb.service.impl;
 
 import org.javaweb.converter.ProductConverter;
+import org.javaweb.entity.CategoryEntity;
 import org.javaweb.entity.ProductEntity;
+import org.javaweb.model.dto.CatogeryDTO;
 import org.javaweb.model.dto.ProductsDTO;
+import org.javaweb.repository.CatogeryRepository;
 import org.javaweb.repository.ProductRepository;
-import org.javaweb.security.utils.JwtTokenProvider;
 import org.javaweb.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -19,9 +22,10 @@ public class ProductServiceImpl implements ProductService{
     @Autowired
     private ProductRepository productRepository;
     @Autowired
-    private ProductConverter productConverter;
+    private CatogeryRepository  catogeryRepository;
     @Autowired
-    private JwtTokenProvider  jwtTokenProvider;
+    private ProductConverter productConverter;
+
 
     @Override
     public List<ProductsDTO> getProductsByCategory(Long categoryId) {
@@ -85,6 +89,15 @@ public class ProductServiceImpl implements ProductService{
     public void deteleProductById(Long productId) {
         ProductEntity productEntity = productRepository.findById(productId).orElse(null);
         productRepository.delete(productEntity);
+    }
+
+    @Override
+    public List<CatogeryDTO> getNameCategory() {
+        List<CatogeryDTO> categoryNames = catogeryRepository.findAll()
+                .stream()
+                .map(category -> new CatogeryDTO(category.getId(), category.getName()))
+                .collect(Collectors.toList());
+        return categoryNames;
     }
 
 

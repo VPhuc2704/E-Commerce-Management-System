@@ -8,6 +8,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 
@@ -21,7 +22,7 @@ public class BaseEntity implements Serializable {
 
     @Column(name = "createddate")
     @CreatedDate
-    private Date createdDate;
+    private LocalDateTime createdDate;
 
     @Column(name = "createdby")
     @CreatedBy
@@ -47,11 +48,11 @@ public class BaseEntity implements Serializable {
         this.id = id;
     }
 
-    public Date getCreatedDate() {
+    public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Date createdDate) {
+    public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
 
