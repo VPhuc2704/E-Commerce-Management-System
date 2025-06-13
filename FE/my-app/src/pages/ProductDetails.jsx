@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Footer from '../components/layout/Footer';
 
-// Reusable component for related/popular product cards
 const ProductCard = ({ product }) => (
   <Link to={`/product-details/${product.id}`} className="no-underline hover:no-underline group">
     <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-5 hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 flex items-center space-x-4 hover:border-indigo-200">
@@ -357,7 +356,7 @@ const ProductDetails = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-gray-50 p-6 rounded-2xl border-l-4 border-indigo-500">
                     <h3 className="text-lg font-bold text-gray-900 mb-3">Mô tả sản phẩm</h3>
                     <p className="text-gray-700 leading-relaxed">{product.description}</p>
@@ -392,13 +391,12 @@ const ProductDetails = () => {
                       </button>
                     </div>
                   </div>
-                  
+
                   <button
                     onClick={handleAddToCart}
                     disabled={isAddingToCart}
-                    className={`w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
-                      isAddingToCart ? 'animate-pulse' : 'hover:from-indigo-700 hover:to-purple-700'
-                    }`}
+                    className={`w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${isAddingToCart ? 'animate-pulse' : 'hover:from-indigo-700 hover:to-purple-700'
+                      }`}
                     aria-label="Thêm vào giỏ hàng"
                   >
                     {isAddingToCart ? (
@@ -465,9 +463,8 @@ const ProductDetails = () => {
                             key={star}
                             type="button"
                             onClick={() => handleStarClick(star)}
-                            className={`text-3xl transition-colors duration-200 focus:outline-none ${
-                              feedbackRating >= star ? 'text-amber-400' : 'text-gray-300 hover:text-amber-200'
-                            }`}
+                            className={`text-3xl transition-colors duration-200 focus:outline-none ${feedbackRating >= star ? 'text-amber-400' : 'text-gray-300 hover:text-amber-200'
+                              }`}
                             aria-label={`Đánh giá ${star} sao`}
                           >
                             ★
