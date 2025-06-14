@@ -14,15 +14,27 @@ const AdminProductManagement = () => {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null) // Changed to null instead of DEFAULT_PRODUCT
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-
+  const [selectedCategory, setSelectedCategory] = useState("")
   const {
     products,
     loading,
     addProduct,
     updateProduct,
     deleteProduct,
+    setSearchTerm: setProductSearchTerm,
+    setSelectedCategory: setProductCategory
   } = useProducts()
+
+  // Sync search and category with useProducts
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    setProductSearchTerm(value);
+  }
+
+  const handleCategoryChange = (value) => {
+    setSelectedCategory(value);
+    setProductCategory(value);
+  }
 
   const handleAddProduct = async (productData) => {
     try {
@@ -95,13 +107,13 @@ const AdminProductManagement = () => {
                 type="text"
                 placeholder="Tìm kiếm sản phẩm..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               />
             </div>
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => handleCategoryChange(e.target.value)}
               className="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
             >
               {CATEGORIES.map((category) => (
@@ -143,8 +155,7 @@ const AdminProductManagement = () => {
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
-        </div>
-      ) : (
+        </div>) : (
         <ProductGrid
           products={products}
           onEdit={setEditingProduct}

@@ -6,12 +6,19 @@ export const useProducts = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('all');
-
-    const loadProducts = useCallback(async () => {
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const loadProducts = useCallback(async (categoryId = null) => {
         setLoading(true);
         try {
-            const data = await productService.getAllProducts();
+            let data;
+            if (categoryId && categoryId !== '') {
+                console.log('Loading products for category:', categoryId);
+                data = await productService.getProductsByCategory(categoryId);
+            } else {
+                console.log('Loading all products');
+                data = await productService.getAllProducts();
+            }
+            console.log('Loaded products:', data);
             setProducts(data || []);
         } catch (error) {
             setError(error.message);
@@ -22,17 +29,14 @@ export const useProducts = () => {
     }, []);
 
     useEffect(() => {
-        loadProducts();
-    }, [loadProducts]);
-
-    // Filter products based on search and category
+        loadProducts(selectedCategory);
+    }, [loadProducts, selectedCategory]);    // Filter products based on search term only
     const filteredProducts = products.filter(product => {
-        const matchesSearch =
+        if (!searchTerm.trim()) return true;
+        return (
             product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            product.description?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = selectedCategory === 'all' ||
-            product.categoryId?.toString() === selectedCategory;
-        return matchesSearch && matchesCategory;
+            product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
     });
 
     const handleAddProduct = async (productData) => {
