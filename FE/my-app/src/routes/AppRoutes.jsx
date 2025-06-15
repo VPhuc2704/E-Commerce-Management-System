@@ -19,9 +19,10 @@ import OrderHistory from "../pages/OrderHistory"
 import AdminOrderManagement from "../pages/AdminOrderManagement"
 import AdminDashboard from "../pages/AdminDashboard"
 import VerifyPage from "../pages/VerifyPage"
+import ProfilePage from "../pages/ProfilePage" // Sử dụng ProfilePage thật thay vì Profile
 
-// Placeholder component for ProfilePage
-const ProfilePage = () => <div className="min-h-screen p-4">Profile Page (Placeholder)</div>
+// Xóa placeholder component này vì chúng ta đã có ProfilePage thật
+// const ProfilePage = () => <div className="min-h-screen p-4">Profile Page (Placeholder)</div>
 
 // GuestOnlyRoute Component
 const GuestOnlyRoute = ({ children }) => {
@@ -159,7 +160,7 @@ const RoutesContent = () => {
                 path="/profile"
                 element={
                   <Layout>
-                    <ProfilePage />
+                    <ProfilePage user={user} />
                   </Layout>
                 }
               />
@@ -179,6 +180,7 @@ const RoutesContent = () => {
                   </Layout>
                 }
               />
+              
             </>
           )}
         </Route>
