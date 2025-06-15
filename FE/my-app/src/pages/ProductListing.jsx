@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import Footer from '../components/layout/Footer';
 import { useProductListing } from '../hooks/useProductListing';
 import { useProductListingPage } from '../hooks/useProductListingPage';
-import { productService } from '../services/productService';
+import { productService } from '../services/productService.js';
 
 const ProductListing = () => {
   const {
@@ -132,18 +132,11 @@ const ProductListing = () => {
             <option value="200-500">$500 - $1000</option>
           </select>
           <select
-            onChange={handleCategoryFilter}
-            value={category}
+            onChange={handleCategoryClick(categories.id)}
+            value={categorys}
             className="p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
-            <option value="">Tất cả danh mục</option>
-            <option value="Khai Vị">Khai Vị</option>
-            <option value="Món Chính">Món Chính</option>
-            <option value="Đồ Ăn Nhanh">Đồ Ăn Nhanh</option>
-            <option value="Đồ Nướng">Đồ Nướng</option>
-            <option value="Món Chay">Món Chay</option>
-            <option value="Đồ Uống">Đồ Uống</option>
-            <option value="Tráng Miệng">Tráng Miệng</option>
+
           </select>
         </div>
 
