@@ -4,10 +4,11 @@ import { motion } from 'framer-motion';
 import Footer from '../components/layout/Footer';
 import { useProductListing } from '../hooks/useProductListing';
 import { useProductListingPage } from '../hooks/useProductListingPage';
+import { productService } from '../services/productService';
 
 const ProductListing = () => {
   const {
-    products,
+    // products,
     currentPage,
     setCurrentPage,
     totalPages,
@@ -36,6 +37,12 @@ const ProductListing = () => {
     handlePlaceOrder,
   } = useProductListingPage();
 
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
@@ -54,6 +61,51 @@ const ProductListing = () => {
 
   // Debug: Kiểm tra products
   console.log('Products:', products);
+
+
+  // Fetch categories and products
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Fetch categories
+        const categoryData = await productService.getAllCategories();
+        setCategories(categoryData);
+
+        // Fetch initial products (all products)
+        const productData = await productService.getAllProducts();
+        setProducts(productData);
+      } catch (err) {
+        setError('Không thể tải dữ liệu');
+        console.error('Error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Handle category selection
+  const handleCategoryClick = async (categoryId) => {
+    try {
+      setLoading(true);
+      setSelectedCategory(categoryId);
+
+      if (categoryId) {
+        const categoryProducts = await productService.getProductsByCategory(categoryId);
+        setProducts(categoryProducts);
+      } else {
+        const allProducts = await productService.getAllProducts();
+        setProducts(allProducts);
+      }
+    } catch (err) {
+      setError('Không thể tải sản phẩm');
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-coral-100 flex flex-col">

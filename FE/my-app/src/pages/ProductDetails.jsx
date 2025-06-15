@@ -5,7 +5,6 @@ import Footer from '../components/layout/Footer';
 import { useProductDetails } from '../hooks/useProductDetails';
 import { mockFeedbacks } from '../mockdata/productData';
 
-// Reusable component for related/popular product cards
 const ProductCard = ({ product }) => (
   <Link to={`/product-details/${product.id}`} className="no-underline hover:no-underline group">
     <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-5 hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 flex items-center space-x-4 hover:border-indigo-200">
@@ -167,7 +166,7 @@ const ProductDetails = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-gray-50 p-6 rounded-2xl border-l-4 border-indigo-500">
                     <h3 className="text-lg font-bold text-gray-900 mb-3">Mô tả sản phẩm</h3>
                     <p className="text-gray-700 leading-relaxed">{product.description}</p>
@@ -202,7 +201,7 @@ const ProductDetails = () => {
                       </button>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-4">
                     <button
                       onClick={handleAddToCart}
