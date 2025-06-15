@@ -21,10 +21,13 @@ export const fetchProductDetails = async (productId, navigate) => {
         foundProduct = {
           id: product.id,
           name: product.name,
-          price: (product.originalPrice || 0) * 1000, // Xử lý undefined, mặc định 0
+          price: product.price || 10000, // Fallback 10,000 VNĐ nếu giá không hợp lệ
           imageUrl: product.imageUrl || '/img/default.jpg',
           category: category.name,
           feedbacks: mockFeedbacks,
+          description: product.description,
+          rating: product.rating,
+          soldCount: product.soldCount,
         };
         break;
       }
@@ -36,10 +39,13 @@ export const fetchProductDetails = async (productId, navigate) => {
         foundProduct = {
           id: product.id,
           name: product.name,
-          price: product.originalPrice || 0, // Giá từ mockProductListing đã là VNĐ
+          price: (product.originalPrice || 10) * 1000, // Nhân lại 1000 để chuyển về VNĐ
           imageUrl: product.imageUrl || '/img/default.jpg',
           category: product.category,
           feedbacks: mockFeedbacks,
+          description: product.description,
+          rating: product.rating || 4, // Fallback rating
+          soldCount: product.soldCount || 0, // Fallback soldCount
         };
       }
     }
@@ -73,14 +79,14 @@ export const fetchRelatedProducts = async (productId) => {
       if (related.length < 5) {
         const allProducts = categories.flatMap(cat => cat.items)
           .filter(item => item.id !== id)
-          .sort((a, b) => b.soldCount - a.soldCount);
+          .sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
         related = [...related, ...allProducts.filter(p => !related.includes(p))].slice(0, 5);
       }
     }
     console.log('Sản phẩm liên quan:', related);
     return related.map(p => ({
       ...p,
-      price: (p.originalPrice || 0) * 1000, // Đảm bảo giá hợp lệ
+      price: p.price || 10000, // Fallback giá
     }));
   } catch (error) {
     console.error('Lỗi khi lấy sản phẩm liên quan:', error);
@@ -102,10 +108,9 @@ export const fetchProducts = async (currentPage, productsPerPage, searchTerm, pr
     console.log('Lấy sản phẩm với tham số:', { currentPage, productsPerPage, searchTerm, priceRange, category });
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    console.log('Dữ liệu mockProductListing:', mockProductListing);
     let filteredProducts = mockProductListing.map(product => ({
       ...product,
-      originalPrice: product.originalPrice || 0, // Xử lý undefined
+      originalPrice: (product.originalPrice || 10) * 1000, // Nhân lại 1000 để chuyển về VNĐ
     }));
     
     if (searchTerm) {
@@ -115,7 +120,8 @@ export const fetchProducts = async (currentPage, productsPerPage, searchTerm, pr
     }
     
     filteredProducts = filteredProducts.filter(product =>
-      product.originalPrice >= priceRange[0] * 1000 && product.originalPrice <= priceRange[1] * 1000
+      ((product.originalPrice || 10) * 1000) >= priceRange[0] * 1000 && 
+      ((product.originalPrice || 10) * 1000) <= priceRange[1] * 1000
     );
     
     if (category) {

@@ -20,6 +20,7 @@ const ProductListing = () => {
     productsPerPage,
   } = useProductListing();
 
+
   const {
     buyNowModal,
     setBuyNowModal,

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion'; // Thêm framer-motion
 import Footer from '../components/layout/Footer';
 import { useProductDetails } from '../hooks/useProductDetails';
 import { mockFeedbacks } from '../mockdata/productData';
@@ -79,6 +80,15 @@ const ProductDetails = () => {
     setFeedbackImage,
     handleFeedbackSubmit,
     isAddingToCart,
+    buyNowModal,
+    setBuyNowModal,
+    paymentMethod,
+    setPaymentMethod,
+    userInfo,
+    setUserInfo,
+    isUserInfoValid,
+    handlePlaceOrder,
+    handleBuyNow,
   } = useProductDetails(id, navigate);
 
   const handleStarClick = (rating) => {
@@ -193,26 +203,40 @@ const ProductDetails = () => {
                     </div>
                   </div>
                   
-                  <button
-                    onClick={handleAddToCart}
-                    disabled={isAddingToCart}
-                    className={`w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${isAddingToCart ? 'animate-pulse' : 'hover:from-indigo-700 hover:to-purple-700'}`}
-                    aria-label="Thêm vào giỏ hàng"
-                  >
-                    {isAddingToCart ? (
-                      <div className="flex items-center justify-center space-x-2">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        <span>Đang thêm...</span>
-                      </div>
-                    ) : (
+                  <div className="flex gap-4">
+                    <button
+                      onClick={handleAddToCart}
+                      disabled={isAddingToCart}
+                      className={`flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${isAddingToCart ? 'animate-pulse' : 'hover:from-indigo-700 hover:to-purple-700'}`}
+                      aria-label="Thêm vào giỏ hàng"
+                    >
+                      {isAddingToCart ? (
+                        <div className="flex items-center justify-center space-x-2">
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <span>Đang thêm...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center space-x-2">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                          </svg>
+                          <span>Thêm vào giỏ hàng</span>
+                        </div>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleBuyNow}
+                      className="flex-1 bg-green-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105"
+                      aria-label="Mua ngay"
+                    >
                       <div className="flex items-center justify-center space-x-2">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0c-2.761 0-5 2.239-5 5s2.239 5 5 5 5-2.239 5-5-2.239-5-5-5zm0 0c-3.866 0-7 3.134-7 7s3.134 7 7 7 7-3.134 7-7-3.134-7-7-7z" />
                         </svg>
-                        <span>Thêm vào giỏ hàng</span>
+                        <span>Mua ngay</span>
                       </div>
-                    )}
-                  </button>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -327,6 +351,103 @@ const ProductDetails = () => {
           </section>
         </div>
       </main>
+
+      {buyNowModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl p-6 max-w-md w-full"
+          >
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Đặt hàng ngay</h3>
+            <div className="flex items-center gap-4 mb-4">
+              <img
+                src={buyNowModal.imageUrl}
+                alt={buyNowModal.name}
+                className="w-16 h-16 object-cover rounded-lg"
+              />
+              <div>
+                <p className="font-semibold">{buyNowModal.name}</p>
+                <p>{buyNowModal.price.toLocaleString('vi-VN')} VNĐ</p>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-1">Số lượng</label>
+              <input
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={handleQuantityChange}
+                className="w-full border rounded-lg p-2"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-1">Phương thức thanh toán</label>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full border rounded-lg p-2"
+              >
+                <option value="VNPAY">VNPAY</option>
+                <option value="COD">COD</option>
+              </select>
+            </div>
+
+            <div className="mb-4">
+              <h4 className="font-semibold text-gray-900 mb-2">Thông tin người dùng</h4>
+              {!isUserInfoValid && (
+                <p className="text-red-600 text-sm mb-2">Vui lòng điền đầy đủ thông tin!</p>
+              )}
+              <input
+                type="text"
+                placeholder="Họ tên"
+                value={userInfo.fullname}
+                onChange={(e) => setUserInfo({ ...userInfo, fullname: e.target.value })}
+                className="w-full border rounded-lg p-2 mb-2"
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={userInfo.email}
+                onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
+                className="w-full border rounded-lg p-2 mb-2"
+              />
+              <input
+                type="text"
+                placeholder="Số điện thoại"
+                value={userInfo.numberphone}
+                onChange={(e) => setUserInfo({ ...userInfo, numberphone: e.target.value })}
+                className="w-full border rounded-lg p-2 mb-2"
+              />
+              <input
+                type="text"
+                placeholder="Địa chỉ"
+                value={userInfo.address}
+                onChange={(e) => setUserInfo({ ...userInfo, address: e.target.value })}
+                className="w-full border rounded-lg p-2 mb-2"
+              />
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setBuyNowModal(null)}
+                className="bg-gray-300 text-gray-900 px-4 py-2 rounded-lg"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handlePlaceOrder}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg"
+              >
+                Đặt hàng
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       <Footer />
     </div>
   );
