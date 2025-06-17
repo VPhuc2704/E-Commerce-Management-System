@@ -14,7 +14,8 @@ public class EndpointAPI {
             "/api/categories/name",
             "/api/cart/**",
             "/api/vnpayment/return",
-            "/api/orders/**"
+            "/api/orders/**",
+            "/img/*"
 
 //            "/**" // Cho phép OPTIONS cho CORS
     };
