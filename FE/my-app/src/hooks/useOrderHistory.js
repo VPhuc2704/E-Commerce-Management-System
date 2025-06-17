@@ -1,60 +1,66 @@
-import { useState, useEffect } from 'react';
+"use client";
+
+import { useState, useEffect } from "react";
+import orderService from "../services/orderService";
 
 export const useOrderHistory = () => {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Lấy danh sách đơn hàng từ localStorage
   useEffect(() => {
-    const fetchOrders = () => {
-      const savedOrders = localStorage.getItem('orders');
-      if (savedOrders) {
-        setOrders(JSON.parse(savedOrders));
-      } else {
-        // Mock dữ liệu đơn hàng
-        const mockOrders = [
-          {
-            id: 7,
-            createdDate: '2025-06-09T13:14:10.468',
-            totalAmount: 64000.0,
-            status: 'PENDING',
-            user: {
-              email: '2251120103@ut.edu.vn',
-              fullname: 'VanPhuc',
-              numberphone: '0355308724',
-              address: '39/11a Duong 102, Tang Nhon Phu A, TP.HCM',
-            },
-            items: [
-              {
-                id: 8,
-                productId: 6,
-                productName: 'Chả giò hải sản',
-                imageUrl: '/img/cha_gio_6.jpg',
-                quantity: 2,
-                price: 32000.0,
-              },
-            ],
-          },
-        ];
-        setOrders(mockOrders);
-        localStorage.setItem('orders', JSON.stringify(mockOrders));
+    const fetchOrders = async () => {
+      console.log("Starting to fetch orders...");
+      setLoading(true);
+      try {
+        const orderData = await orderService.getOrders();
+        console.log("Orders fetched:", orderData);
+        setOrders(orderData);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching orders:", err);
+        setError("Không thể tải danh sách đơn hàng");
+      } finally {
+        console.log("Setting loading to false...");
+        setLoading(false);
       }
     };
+
     fetchOrders();
   }, []);
 
-  // Lắng nghe sự kiện storage để cập nhật
   useEffect(() => {
     const handleStorageChange = (e) => {
-      if (e.key === 'orders') {
-        const savedOrders = localStorage.getItem('orders');
+      if (e.key === "orders") {
+        const savedOrders = localStorage.getItem("orders");
         if (savedOrders) {
           setOrders(JSON.parse(savedOrders));
         }
       }
     };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  return { orders };
+  const refreshOrders = async () => {
+    try {
+      setLoading(true);
+      const orderData = await orderService.getOrders();
+      setOrders(orderData);
+      setError(null);
+    } catch (err) {
+      setError("Không thể tải danh sách đơn hàng");
+      console.error("Error refreshing orders:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  console.log("Returning useOrderHistory:", { orders, loading, error });
+  return {
+    orders,
+    loading,
+    error,
+    refreshOrders,
+  };
 };

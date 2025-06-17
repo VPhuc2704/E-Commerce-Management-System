@@ -60,7 +60,7 @@ const ProductListing = () => {
       <main className="flex-grow container mx-auto p-6">
         <h1 className="text-3xl font-bold text-indigo-900 mb-6">Danh sách sản phẩm</h1>
 
-        {/* Search and Filters */}
+        {/* Search and Filters
         <div className="mb-6 flex flex-col md:flex-row gap-4">
           <input
             type="text"
@@ -93,10 +93,10 @@ const ProductListing = () => {
             <option value="Đồ Uống">Đồ Uống</option>
             <option value="Tráng Miệng">Tráng Miệng</option>
           </select>
-        </div>
+        </div> */}
 
         {/* Product Grid */}
-        {products.length > 0 ? (
+        {/* {products.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products.map((product) => {
               console.log('Rendering product:', product); // Debug mỗi sản phẩm
@@ -136,7 +136,7 @@ const ProductListing = () => {
           </div>
         ) : (
           <p className="text-center text-gray-600">Không tìm thấy sản phẩm nào.</p>
-        )}
+        )} */}
 
         {/* Pagination */}
         <div className="flex justify-center mt-6 gap-2">

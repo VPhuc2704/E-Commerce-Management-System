@@ -9,11 +9,6 @@ const CartPage = () => {
     cartItems,
     selectedItems,
     currentPage,
-    paymentMethod,
-    showPaymentOptions,
-    showPaymentCode,
-    showUserInfoModal,
-    vnpayCode,
     isLoading,
     itemsPerPage,
     totalQuantity,
@@ -23,23 +18,23 @@ const CartPage = () => {
     cartTotalPrice,
     userInfo,
     isUserInfoValid,
+    showPaymentModal,
+    paymentMethod,
+    setPaymentMethod,
+    setShowPaymentModal,
+    addItemToCart,
     handleSelectItem,
     handleSelectAll,
     handleQuantityChange,
     handleRemoveItem,
     handleCheckout,
-    handlePaymentMethod,
-    handleConfirmVnpayPayment,
-    handleCopyCode,
+    handlePayment,
+    handleSaveUserInfo,
     containerVariants,
     itemVariants,
     cardHoverVariants,
     setCurrentPage,
-    setShowPaymentOptions,
-    setShowPaymentCode,
-    setShowUserInfoModal,
     setUserInfo,
-    setIsUserInfoValid,
   } = useCart();
 
   const formatPrice = (price) => {
@@ -48,21 +43,6 @@ const CartPage = () => {
       return 'Không hợp lệ';
     }
     return price.toLocaleString('vi-VN') + ' VNĐ';
-  };
-
-  const validateUserInfo = () => {
-    const { email, fullname, numberphone, address } = userInfo;
-    return email && fullname && numberphone && address;
-  };
-
-  const handleSaveUserInfo = () => {
-    if (!validateUserInfo()) {
-      setIsUserInfoValid(false);
-      return;
-    }
-    localStorage.setItem('userInfo', JSON.stringify(userInfo));
-    setShowUserInfoModal(false);
-    setShowPaymentOptions(true);
   };
 
   return (
@@ -347,32 +327,38 @@ const CartPage = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleCheckout}
-                disabled={selectedItems.length === 0}
+                disabled={selectedItems.length === 0 || isLoading}
                 className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all duration-300"
                 aria-label="Thanh toán"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
-                Thanh Toán
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                    Thanh Toán
+                  </>
+                )}
               </motion.button>
             </div>
           </motion.section>
         )}
 
         <AnimatePresence>
-          {showUserInfoModal && (
+          {showPaymentModal && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
-              onClick={() => setShowUserInfoModal(false)}
+              onClick={() => setShowPaymentModal(false)}
             >
               <motion.div
                 initial={{ opacity: 0, scale: 0.8, y: 50 }}
@@ -383,43 +369,66 @@ const CartPage = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="p-8">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Thông tin người dùng</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Xác nhận thanh toán</h3>
                   {!isUserInfoValid && (
                     <p className="text-red-600 text-sm mb-4">Vui lòng điền đầy đủ thông tin!</p>
                   )}
-                  <input
-                    type="text"
-                    placeholder="Họ tên"
-                    value={userInfo.fullname}
-                    onChange={(e) => setUserInfo({ ...userInfo, fullname: e.target.value })}
-                    className="w-full border rounded-lg p-2 mb-2"
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    value={userInfo.email}
-                    onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
-                    className="w-full border rounded-lg p-2 mb-2"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Số điện thoại"
-                    value={userInfo.numberphone}
-                    onChange={(e) => setUserInfo({ ...userInfo, numberphone: e.target.value })}
-                    className="w-full border rounded-lg p-2 mb-2"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Địa chỉ"
-                    value={userInfo.address}
-                    onChange={(e) => setUserInfo({ ...userInfo, address: e.target.value })}
-                    className="w-full border rounded-lg p-2 mb-4"
-                  />
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-2">Họ và tên</label>
+                      <input
+                        type="text"
+                        value={userInfo.fullname}
+                        onChange={(e) => setUserInfo({ ...userInfo, fullname: e.target.value })}
+                        className="w-full border rounded-lg p-2 mb-2 bg-gray-100 cursor-not-allowed"
+                        disabled
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-2">Email</label>
+                      <input
+                        type="email"
+                        value={userInfo.email}
+                        onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
+                        className="w-full border rounded-lg p-2 mb-2 bg-gray-100 cursor-not-allowed"
+                        disabled
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-2">Số điện thoại</label>
+                      <input
+                        type="text"
+                        value={userInfo.numberphone}
+                        onChange={(e) => setUserInfo({ ...userInfo, numberphone: e.target.value })}
+                        className="w-full border rounded-lg p-2 mb-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-2">Địa chỉ giao hàng</label>
+                      <input
+                        type="text"
+                        value={userInfo.address}
+                        onChange={(e) => setUserInfo({ ...userInfo, address: e.target.value })}
+                        className="w-full border rounded-lg p-2 mb-4"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-semibold mb-2">Phương thức thanh toán</label>
+                      <select
+                        value={paymentMethod}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="w-full border rounded-lg p-2 mb-4"
+                      >
+                        <option value="VNPAY">VNPAY</option>
+                        <option value="COD">COD (Thanh toán khi nhận hàng)</option>
+                      </select>
+                    </div>
+                  </div>
                   <div className="flex gap-4">
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowUserInfoModal(false)}
+                      onClick={() => setShowPaymentModal(false)}
                       className="flex-1 bg-gray-100 text-gray-900 px-4 py-3 rounded-xl font-medium hover:bg-gray-200"
                     >
                       Hủy
@@ -427,211 +436,10 @@ const CartPage = () => {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={handleSaveUserInfo}
+                      onClick={handlePayment}
                       className="flex-1 bg-indigo-600 text-white px-4 py-3 rounded-xl font-medium hover:bg-indigo-700"
                     >
-                      Lưu
-                    </motion.button>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showPaymentOptions && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
-              onClick={() => setShowPaymentOptions(false)}
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 50 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: 50 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="p-8">
-                  <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                        />
-                      </svg>
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Chọn phương thức thanh toán</h3>
-                    <p className="text-gray-500">
-                      Tổng tiền: <span className="font-bold text-indigo-600">{formatPrice(totalAmount)}</span>
-                    </p>
-                  </div>
-
-                  <div className="grid gap-4 mb-8">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handlePaymentMethod('VNPAY')}
-                      disabled={isLoading}
-                      className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 hover:border-blue-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                      aria-label="Thanh toán qua VNPAY"
-                    >
-                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                          />
-                        </svg>
-                      </div>
-                      <div className="text-left flex-grow">
-                        <h4 className="font-bold text-gray-900">VNPAY</h4>
-                        <p className="text-sm text-gray-500">Thanh toán qua QR code, nhanh chóng và bảo mật</p>
-                      </div>
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </motion.button>
-
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handlePaymentMethod('COD')}
-                      disabled={isLoading}
-                      className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-green-50 to-lime-50 border-2 border-green-200 hover:border-green-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                      aria-label="Thanh toán khi nhận hàng"
-                    >
-                      <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
-                      <div className="text-left flex-grow">
-                        <h4 className="font-bold text-gray-900">Thanh toán khi nhận hàng (COD)</h4>
-                        <p className="text-sm text-gray-500">Thanh toán bằng tiền mặt khi nhận được hàng</p>
-                      </div>
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </motion.button>
-                  </div>
-
-                  {isLoading && (
-                    <div className="text-center p-4">
-                      <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                      <p className="text-gray-500">Đang xử lý thanh toán...</p>
-                    </div>
-                  )}
-
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowPaymentOptions(false)}
-                    className="w-full bg-gray-100 text-gray-900 px-4 py-3 rounded-xl font-medium hover:bg-gray-200 transition-all duration-300"
-                    aria-label="Hủy chọn phương thức thanh toán"
-                  >
-                    Hủy
-                  </motion.button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showPaymentCode && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
-              onClick={() => setShowPaymentCode(false)}
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 50 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: 50 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="bg-white rounded-3xl shadow-2xl max-w-sm w-full max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="p-6">
-                  <div className="text-center mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-
-                    <h4 className="font-bold text-gray-900">Thanh toán VNPAY</h4>
-                    <p className="text-sm text-gray-500">Quét mã QR bên dưới để hoàn tất thanh toán</p>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 shadow-md border border-blue-200 mb-6">
-                    <div className="w-48 h-48 bg-white rounded-xl mx-auto mb-4 flex items-center justify-center border-2 border-dashed border-blue-300 relative overflow-hidden">
-                      <img src="/assets/images/qr-placeholder.svg" alt="VNPAY QR Code" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm text-blue-600 font-medium">
-                        QR Code VNPAY
-                      </div>
-                    </div>
-                    <p className="text-xl font-mono font-bold text-gray-900 bg-white p-3 rounded-xl border border-gray-200 mb-2">{vnpayCode}</p>
-                    <p className="text-sm text-gray-500 mb-4">Mã giao dịch của bạn</p>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleCopyCode}
-                      className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-xl font-medium shadow-md hover:shadow-lg flex items-center gap-2 mx-auto transition-all duration-300"
-                      aria-label="Sao chép mã VNPAY"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                        />
-                      </svg>
-                      Sao Chép Mã
-                    </motion.button>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowPaymentCode(false)}
-                      className="flex-1 bg-gray-100 text-gray-900 px-4 py-3 rounded-xl font-medium hover:bg-gray-200 transition-all duration-300"
-                      aria-label="Hủy thanh toán"
-                    >
-                      Hủy
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleConfirmVnpayPayment}
-                      className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-300"
-                      aria-label="Xác nhận đã thanh toán"
-                    >
-                      Đã thanh toán
+                      Xác nhận
                     </motion.button>
                   </div>
                 </div>

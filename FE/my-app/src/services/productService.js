@@ -1,6 +1,6 @@
 import { categories, mockProductListing, mockFeedbacks } from '../mockdata/productData';
 import { addToCart as cartAddToCart } from './cartService';
-import { placeOrder as orderPlaceOrder } from './orderService';
+import orderService from './orderService';
 
 export const fetchProductDetails = async (productId, navigate) => {
   try {

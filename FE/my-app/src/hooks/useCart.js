@@ -1,15 +1,12 @@
 import { useState, useEffect } from 'react';
 import { processPayment, fetchCartItems, saveCart } from '../services/cartService';
+import { useNavigate } from 'react-router-dom';
+import profileService from '../services/profileService';
 
 export const useCart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState('VNPAY');
-  const [showPaymentOptions, setShowPaymentOptions] = useState(false);
-  const [showPaymentCode, setShowPaymentCode] = useState(false);
-  const [showUserInfoModal, setShowUserInfoModal] = useState(false);
-  const [vnpayCode, setVnpayCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [userInfo, setUserInfo] = useState({
     email: '',
@@ -18,9 +15,11 @@ export const useCart = () => {
     address: '',
   });
   const [isUserInfoValid, setIsUserInfoValid] = useState(true);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('VNPAY');
+  const navigate = useNavigate();
   const itemsPerPage = 4;
 
-  // Kiểm tra mục hợp lệ
   const isValidItem = (item) => {
     const valid = (
       item &&
@@ -40,7 +39,6 @@ export const useCart = () => {
     return valid;
   };
 
-  // Load cart
   const loadCart = () => {
     try {
       const validCart = fetchCartItems().filter(isValidItem);
@@ -58,15 +56,29 @@ export const useCart = () => {
     }
   };
 
-  // Load user info
   useEffect(() => {
-    const savedUser = localStorage.getItem('userInfo');
-    if (savedUser) {
-      setUserInfo(JSON.parse(savedUser));
-    }
+    const fetchUserInfo = async () => {
+      try {
+        const profile = await profileService.getUserInfo();
+        setUserInfo({
+          email: profile.email || '',
+          fullname: profile.name || '',
+          numberphone: profile.phone || '',
+          address: profile.address || '',
+        });
+      } catch (error) {
+        console.error('Lỗi khi tải thông tin người dùng:', error);
+        setUserInfo({
+          email: '',
+          fullname: '',
+          numberphone: '',
+          address: '',
+        });
+      }
+    };
+    fetchUserInfo();
   }, []);
 
-  // Load cart initially and listen for changes
   useEffect(() => {
     loadCart();
     const handleStorageChange = (e) => {
@@ -87,7 +99,6 @@ export const useCart = () => {
     };
   }, []);
 
-  // Add item to cart
   const addItemToCart = (product) => {
     if (!isValidItem(product)) {
       console.error('Không thể thêm sản phẩm không hợp lệ:', product);
@@ -124,7 +135,6 @@ export const useCart = () => {
     return true;
   };
 
-  // Calculate derived values
   const totalQuantity = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
   const totalPages = Math.ceil(cartItems.length / itemsPerPage);
   const paginatedItems = cartItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -133,7 +143,6 @@ export const useCart = () => {
     .reduce((sum, item) => sum + (item.totalPrice || 0), 0);
   const cartTotalPrice = cartItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
 
-  // Handle item selection
   const handleSelectItem = (productId) => {
     setSelectedItems((prev) => {
       const newSelected = prev.includes(productId)
@@ -144,7 +153,6 @@ export const useCart = () => {
     });
   };
 
-  // Select all items
   const handleSelectAll = () => {
     if (selectedItems.length === cartItems.length) {
       setSelectedItems([]);
@@ -156,7 +164,6 @@ export const useCart = () => {
     }
   };
 
-  // Update quantity
   const handleQuantityChange = (productId, delta) => {
     const newCart = cartItems.map((item) => {
       if (item.productId === productId) {
@@ -173,7 +180,6 @@ export const useCart = () => {
     loadCart();
   };
 
-  // Remove item
   const handleRemoveItem = (productId) => {
     if (window.confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
       const newCart = cartItems.filter((item) => item.productId !== productId);
@@ -186,85 +192,63 @@ export const useCart = () => {
     }
   };
 
-  // Validate user info
   const validateUserInfo = () => {
     const { email, fullname, numberphone, address } = userInfo;
     return email && fullname && numberphone && address;
   };
 
-  // Handle checkout
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (selectedItems.length === 0) {
       alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!');
       return;
     }
     if (!validateUserInfo()) {
-      setShowUserInfoModal(true);
-      setIsUserInfoValid(false);
+      alert('Vui lòng cập nhật thông tin cá nhân trước khi thanh toán!');
+      navigate('/profile?redirect=/cart');
       return;
     }
-    setShowPaymentOptions(true);
+    setShowPaymentModal(true);
   };
 
-  // Handle payment
-  const handlePaymentMethod = async (method) => {
-    setPaymentMethod(method);
-    setShowPaymentOptions(false);
+  const handlePayment = async () => {
+    if (!validateUserInfo()) {
+      alert('Vui lòng cập nhật thông tin cá nhân trước khi thanh toán!');
+      navigate('/profile?redirect=/cart');
+      return;
+    }
     setIsLoading(true);
-
     try {
-      const { success, vnpayCode, error, redirectUrl } = await processPayment(method, selectedItems, cartItems);
-      if (success) {
-        if (method === 'VNPAY' && redirectUrl) {
-          setVnpayCode(vnpayCode);
-          setShowPaymentCode(true);
-          window.location.href = redirectUrl;
-        } else {
-          alert('Đặt hàng thành công! Chờ xác nhận.');
-          setSelectedItems([]);
-          loadCart();
+      const validCartItems = Array.isArray(cartItems) ? cartItems : [];
+      const response = await processPayment(paymentMethod, selectedItems, validCartItems);
+      if (response.success) {
+        if (paymentMethod === 'COD') {
+          alert('Đặt hàng thành công! Chờ xác nhận từ cửa hàng.');
+        } else if (response.redirectUrl) {
+          window.location.href = response.redirectUrl;
         }
+        const newCart = validCartItems.filter((item) => !selectedItems.includes(item.productId));
+        saveCart(newCart);
+        setSelectedItems([]);
+        loadCart();
       } else {
-        alert(`Thanh toán thất bại: ${error}`);
+        alert(`Thanh toán thất bại: ${response.error}`);
       }
     } catch (err) {
       alert('Đã xảy ra lỗi khi xử lý thanh toán.');
     } finally {
       setIsLoading(false);
+      setShowPaymentModal(false);
     }
   };
 
-  // Handle confirm VNPAY payment
-  const handleConfirmVnpayPayment = () => {
-    alert('Thanh toán VNPAY thành công!');
-    const newCart = cartItems.filter((item) => !selectedItems.includes(item.productId));
-    saveCart(newCart);
-    setSelectedItems([]);
-    setShowPaymentCode(false);
-    loadCart();
-  };
-
-  // Handle copying VNPAY code
-  const handleCopyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(vnpayCode);
-      const toast = document.createElement('div');
-      toast.className =
-        'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
-      toast.textContent = 'Mã VNPAY đã được sao chép!';
-      document.body.appendChild(toast);
-
-      setTimeout(() => toast.classList.remove('translate-x-full'), 100);
-      setTimeout(() => {
-        toast.classList.add('translate-x-full');
-        setTimeout(() => document.body.removeChild(toast), 300);
-      }, 2000);
-    } catch (err) {
-      alert('Không thể sao chép mã. Vui lòng thử lại!');
+  const handleSaveUserInfo = () => {
+    if (!validateUserInfo()) {
+      setIsUserInfoValid(false);
+      return;
     }
+    setShowPaymentModal(false);
   };
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -304,11 +288,6 @@ export const useCart = () => {
     cartItems,
     selectedItems,
     currentPage,
-    paymentMethod,
-    showPaymentOptions,
-    showPaymentCode,
-    showUserInfoModal,
-    vnpayCode,
     isLoading,
     itemsPerPage,
     totalQuantity,
@@ -318,23 +297,22 @@ export const useCart = () => {
     cartTotalPrice,
     userInfo,
     isUserInfoValid,
+    showPaymentModal,
+    paymentMethod,
+    setPaymentMethod,
+    setShowPaymentModal,
     addItemToCart,
     handleSelectItem,
     handleSelectAll,
     handleQuantityChange,
     handleRemoveItem,
     handleCheckout,
-    handlePaymentMethod,
-    handleConfirmVnpayPayment,
-    handleCopyCode,
+    handlePayment,
+    handleSaveUserInfo,
     containerVariants,
     itemVariants,
     cardHoverVariants,
     setCurrentPage,
-    setShowPaymentOptions,
-    setShowPaymentCode,
-    setShowUserInfoModal,
     setUserInfo,
-    setIsUserInfoValid,
   };
 };

@@ -21,7 +21,7 @@ export const categories = [
   {
     name: 'Đồ Ăn Nhanh',
     items: [
-      { id: 11, name: 'Gà rán giòn', price: 70000, rating: 5, imageUrl: '../src/assets/images/garan.jpg', soldCount: 201, description: 'Gà rán giòn rụm, thơm ngon.' },
+      {id: 11, name: 'Gà rán giòn', price: 70000, rating: 5, imageUrl: '../src/assets/images/garan.jpg', soldCount: 201, description: 'Gà rán giòn rụm, thơm ngon.' },
       { id: 12, name: 'Pizza kéo sợi', price: 120000, rating: 4, imageUrl: '../src/assets/images/pizza.jpg', soldCount: 89, description: 'Pizza kéo sợi với nhân phô mai béo ngậy.' },
       { id: 13, name: 'Hamburger bò phô mai', price: 60000, rating: 4, imageUrl: '../src/assets/images/hamburger.jpg', soldCount: 76, description: 'Hamburger bò phô mai béo ngậy.' },
       { id: 14, name: 'Sandwich thịt nguội', price: 50000, rating: 3, imageUrl: '../src/assets/images/sandwich.jpg', soldCount: 54, description: 'Sandwich thịt nguội tươi ngon.' },
@@ -74,16 +74,183 @@ export const mockFeedbacks = [
   { id: 1, user: 'Nguyen Van A', comment: 'Rất ngon, tôm tươi, rau sạch!', rating: 5, imageUrl: '../src/assets/images/feedback1.jpg', date: '2025-05-20' },
   { id: 2, user: 'Tran Thi B', comment: 'Nước chấm hơi mặn, nhưng gỏi cuốn thì tuyệt!', rating: 4, imageUrl: '../src/assets/images/feedback2.jpg', date: '2025-05-18' },
   { id: 3, user: 'Le Van C', comment: 'Phục vụ nhanh, món ăn đẹp mắt.', rating: 4, imageUrl: '../src/assets/images/feedback3.jpg', date: '2025-05-15' },
+  { id: 4, user: 'Pham Thi D', comment: 'Gỏi cuốn rất tươi, nước chấm ngon.', rating: 5, date: '2025-05-12' },
+  { id: 5, user: 'Hoang Van E', comment: 'Món ăn ổn, nhưng giao hàng hơi chậm.', rating: 3, imageUrl: '../src/assets/images/feedback4.jpg', date: '2025-05-10' },
+  { id: 6, user: 'Nguyen Thi F', comment: 'Hương vị tuyệt vời, sẽ quay lại!', rating: 5, date: '2025-05-08' },
 ];
 
+
+
 // Mock API response for product listing
-export const mockProductListing = categories.flatMap(category => 
-  category.items.map(item => ({
+export const mockProductListing = categories.flatMap((category) =>
+  category.items.map((item) => ({
     id: item.id,
     name: item.name,
     originalPrice: item.price / 1000, // Convert VNĐ to USD for ProductListing
     description: item.description,
     imageUrl: item.imageUrl,
     category: category.name,
-  }))
-);
+  })),
+)
+
+// Mock user data
+export const mockUserData = {
+  name: "Nguyễn Văn Phúc",
+  email: "2251120103@ut.edu.vn",
+  phone: "0355308724",
+  address: "39/11a Duong 102, Tang Nhon Phu A, TP.HCM",
+  avatar: "/placeholder.svg?height=96&width=96",
+  bio: "Yêu thích ẩm thực Việt Nam và các món ăn đường phố châu Á.",
+  joinDate: "25/05/2023",
+  totalOrders: 3,
+  loyaltyPoints: 2450,
+}
+
+// Mock addresses data
+export const mockAddresses = [
+  {
+    id: 1,
+    name: "Địa chỉ chính",
+    recipient: "Nguyễn Văn Phúc",
+    phone: "0355308724",
+    address: "39/11a Duong 102, Tang Nhon Phu A, TP.HCM",
+    city: "TP. Hồ Chí Minh",
+    isDefault: true,
+  },
+  {
+    id: 2,
+    name: "Văn phòng",
+    recipient: "Nguyễn Văn Phúc",
+    phone: "0355308724",
+    address: "123 Đường Lê Lợi, Phường Bến Nghé, Quận 1",
+    city: "TP. Hồ Chí Minh",
+    isDefault: false,
+  },
+]
+
+// Mock orders data
+export const mockOrders = [
+  {
+    id: 7,
+    createdDate: "2025-06-09T13:14:10.468",
+    totalAmount: 64000.0,
+    status: "PENDING",
+    user: {
+      email: "2251120103@ut.edu.vn",
+      fullname: "VanPhuc",
+      numberphone: "0355308724",
+      address: "39/11a Duong 102, Tang Nhon Phu A, TP.HCM",
+    },
+    items: [
+      {
+        id: 8,
+        productId: 6,
+        productName: "Chả giò hải sản",
+        imageUrl: "/placeholder.svg?height=80&width=80",
+        quantity: 2,
+        price: 32000.0,
+      },
+    ],
+  },
+  {
+    id: 8,
+    createdDate: "2025-06-08T10:30:00.000",
+    totalAmount: 120000.0,
+    status: "COMPLETED",
+    user: {
+      email: "2251120103@ut.edu.vn",
+      fullname: "VanPhuc",
+      numberphone: "0355308724",
+      address: "39/11a Duong 102, Tang Nhon Phu A, TP.HCM",
+    },
+    items: [
+      {
+        id: 9,
+        productId: 5,
+        productName: "Phở bò tái",
+        imageUrl: "/placeholder.svg?height=80&width=80",
+        quantity: 1,
+        price: 55000.0,
+      },
+      {
+        id: 10,
+        productId: 7,
+        productName: "Bún bò Huế",
+        imageUrl: "/placeholder.svg?height=80&width=80",
+        quantity: 1,
+        price: 65000.0,
+      },
+    ],
+  },
+  {
+    id: 9,
+    createdDate: "2025-06-07T15:45:00.000",
+    totalAmount: 85000.0,
+    status: "CANCELLED",
+    user: {
+      email: "2251120103@ut.edu.vn",
+      fullname: "VanPhuc",
+      numberphone: "0355308724",
+      address: "39/11a Duong 102, Tang Nhon Phu A, TP.HCM",
+    },
+    items: [
+      {
+        id: 11,
+        productId: 11,
+        productName: "Gà rán giòn",
+        imageUrl: "/placeholder.svg?height=80&width=80",
+        quantity: 1,
+        price: 70000.0,
+      },
+      {
+        id: 12,
+        productId: 15,
+        productName: "Khoai tây chiên",
+        imageUrl: "/placeholder.svg?height=80&width=80",
+        quantity: 1,
+        price: 15000.0,
+      },
+    ],
+  },
+]
+
+// Helper function to get product by ID
+export const getProductById = (productId) => {
+  for (const category of categories) {
+    const product = category.items.find((item) => item.id === productId)
+    if (product) {
+      return product
+    }
+  }
+  return null
+}
+
+// Helper function to get products by category
+export const getProductsByCategory = (categoryName) => {
+  const category = categories.find((cat) => cat.name === categoryName)
+  return category ? category.items : []
+}
+
+// Helper function to search products
+export const searchProducts = (query) => {
+  const allProducts = categories.flatMap((category) => category.items)
+  return allProducts.filter(
+    (product) =>
+      product.name.toLowerCase().includes(query.toLowerCase()) ||
+      product.description.toLowerCase().includes(query.toLowerCase()),
+  )
+}
+
+
+
+// Mock API response for product listing
+// export const mockProductListing = categories.flatMap(category => 
+//   category.items.map(item => ({
+//     id: item.id,
+//     name: item.name,
+//     originalPrice: item.price / 1000, // Convert VNĐ to USD for ProductListing
+//     description: item.description,
+//     imageUrl: item.imageUrl,
+//     category: category.name,
+//   }))
+// );

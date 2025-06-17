@@ -1,5 +1,5 @@
 import { fetchProductDetails } from './productService';
-
+import orderService from './orderService';
 export const fetchCartItems = () => {
   try {
     const cart = localStorage.getItem('cart');
