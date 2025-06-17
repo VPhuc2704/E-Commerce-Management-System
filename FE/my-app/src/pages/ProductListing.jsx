@@ -8,7 +8,7 @@ import { productService } from '../services/productService.js';
 
 const ProductListing = () => {
   const {
-    // products,
+    products,
     currentPage,
     setCurrentPage,
     totalPages,
@@ -37,12 +37,6 @@ const ProductListing = () => {
     handlePlaceOrder,
   } = useProductListingPage();
 
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
@@ -63,6 +57,12 @@ const ProductListing = () => {
   console.log('Products:', products);
 
 
+  // const [setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   // Fetch categories and products
   useEffect(() => {
     const fetchData = async () => {
@@ -73,8 +73,8 @@ const ProductListing = () => {
         setCategories(categoryData);
 
         // Fetch initial products (all products)
-        const productData = await productService.getAllProducts();
-        setProducts(productData);
+        // const productData = await productService.getAllProducts();
+        // setProducts(productData);
       } catch (err) {
         setError('Không thể tải dữ liệu');
         console.error('Error:', err);
@@ -88,23 +88,9 @@ const ProductListing = () => {
 
   // Handle category selection
   const handleCategoryClick = async (categoryId) => {
-    try {
-      setLoading(true);
-      setSelectedCategory(categoryId);
-
-      if (categoryId) {
-        const categoryProducts = await productService.getProductsByCategory(categoryId);
-        setProducts(categoryProducts);
-      } else {
-        const allProducts = await productService.getAllProducts();
-        setProducts(allProducts);
-      }
-    } catch (err) {
-      setError('Không thể tải sản phẩm');
-      console.error('Error:', err);
-    } finally {
-      setLoading(false);
-    }
+    setCategory(categoryId);
+    setSelectedCategory(categoryId);
+    setCurrentPage(1);
   };
 
   return (
@@ -131,58 +117,95 @@ const ProductListing = () => {
             <option value="100-200">$100 - $200</option>
             <option value="200-500">$500 - $1000</option>
           </select>
-          <select
-            onChange={handleCategoryClick(categories.id)}
-            value={categorys}
-            className="p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          <button
+            onClick={() => handleCategoryClick('')}
+            className={`px-4 py-2 rounded-full transition-all duration-200 ${selectedCategory === ''
+              ? 'bg-indigo-600 text-white shadow-lg'
+              : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
           >
-
-          </select>
+            Tất cả sản phẩm
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => handleCategoryClick(cat.id)}
+              className={`px-4 py-2 rounded-full transition-all duration-200 ${selectedCategory === cat.id
+                ? 'bg-indigo-600 text-white shadow-lg'
+                : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+            >
+              {cat.name}
+            </button>
+          ))}
         </div>
 
-        {/* Product Grid */}
-        {products.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((product) => {
-              console.log('Rendering product:', product); // Debug mỗi sản phẩm
-              return (
-                <motion.div
-                  key={product.id}
-                  whileHover={{ scale: 1.05 }}
-                  className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-all duration-300"
-                >
-                  <Link to={`/product-details/${product.id}`}>
-                    <img
-                      src={product.imageUrl || '/img/default.jpg'}
-                      alt={product.name}
-                      className="w-full h-40 object-cover rounded-lg mb-4"
-                    />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{product.name}</h3>
-                    <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.description || 'Không có mô tả'}</p>
-                    <p className="text-indigo-600 font-bold">{product.originalPrice.toLocaleString('vi-VN')} VNĐ</p>
-                  </Link>
-                  <div className="flex gap-4 mt-4">
-                    <button
-                      onClick={() => handleAddToCart(product.id)}
-                      className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-                    >
-                      Thêm vào giỏ
-                    </button>
-                    <button
-                      onClick={() => handleBuyNow(product)}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-                    >
-                      Mua ngay
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })}
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
           </div>
-        ) : (
-          <p className="text-center text-gray-600">Không tìm thấy sản phẩm nào.</p>
         )}
 
+        {/* Error State */}
+        {error && (
+          <div className="text-red-500 text-center py-8">
+            {error}
+          </div>
+        )}
+
+        {/* Product Grid */}
+        {!loading && !error && (
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {products.length > 0 ? (
+
+              products.map((product) => {
+                console.log('Rendering product:', product); // Debug mỗi sản phẩm
+                return (
+                  <motion.div
+                    key={product.id}
+                    whileHover={{ scale: 1.05 }}
+                    className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-all duration-300"
+                  >
+                    <Link
+                      to={`/product-details/${product.id}`}
+                      key={product.id}
+                      className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
+                    >
+                      <div className="aspect-w-1 aspect-h-1">
+                        <img
+                          src={product.imageUrl || '/assets/images/default.jpg'}
+                          alt={product.name}
+                          className="w-full h-48 object-cover"
+                        />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{product.name}</h3>
+                      <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.description || 'Không có mô tả'}</p>
+                      <p className="text-indigo-600 font-bold">{product.originalPrice.toLocaleString('vi-VN')} VNĐ</p>
+                    </Link>
+                    <div className="flex gap-4 mt-4">
+                      <button
+                        onClick={() => handleAddToCart(product.id)}
+                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+                      >
+                        Thêm vào giỏ
+                      </button>
+                      <button
+                        onClick={() => handleBuyNow(product)}
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                      >
+                        Mua ngay
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })
+
+            ) : (
+              <p className="text-center text-gray-600">Không tìm thấy sản phẩm nào.</p>
+            )}
+          </div>
+        )}
         {/* Pagination */}
         <div className="flex justify-center mt-6 gap-2">
           <button

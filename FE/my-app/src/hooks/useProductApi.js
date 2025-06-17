@@ -1,130 +1,39 @@
+// src/hooks/useProductApi.js
 import { useState } from 'react';
-import { API_BASE_URL } from '../constants/productConstants';
+
+import { productService } from '../services/productService';
 
 export const useProductApi = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-
-    const getProducts = async () => {
+    const wrapApiCall = async (apiFn) => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No authentication token found');
-            }
-
-            const response = await fetch(`${API_BASE_URL}/products`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                throw new Error(errorData?.message || 'Failed to fetch products');
-            }
-
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Error fetching products:', error);
-            setError(error.message);
-            return [];
+            setLoading(true);
+            setError(null);
+            return await apiFn();
+        } catch (err) {
+            setError(err.message || 'Unexpected error');
+            throw err;
+        } finally {
+            setLoading(false);
         }
     };
 
-    const addProduct = async (product) => {
-        try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No authentication token found');
-            }
+    const getAllProducts = () => wrapApiCall(() => productService.getAllProducts());
 
-            const response = await fetch(`${API_BASE_URL}/products`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(product)
-            });
+    const addProduct = (product, imageFile) =>
+        wrapApiCall(() => productService.addProduct(product, imageFile));
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                throw new Error(errorData?.message || 'Failed to add product');
-            }
+    const updateProduct = (id, product, imageFile) =>
+        wrapApiCall(() => productService.updateProduct(id, product, imageFile));
 
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Error adding product:', error);
-            setError(error.message);
-            throw error;
-        }
-    };
-
-    const updateProduct = async (productId, product) => {
-        try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No authentication token found');
-            }
-
-            const response = await fetch(`${API_BASE_URL}/products/${productId}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(product)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                throw new Error(errorData?.message || 'Failed to update product');
-            }
-
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Error updating product:', error);
-            setError(error.message);
-            throw error;
-        }
-    };
-
-    const deleteProduct = async (productId) => {
-        try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No authentication token found');
-            }
-
-            const response = await fetch(`${API_BASE_URL}/products/${productId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                throw new Error(errorData?.message || 'Failed to delete product');
-            }
-
-            return true;
-        } catch (error) {
-            console.error('Error deleting product:', error);
-            setError(error.message);
-            return false;
-        }
-    };
+    const deleteProduct = (id) =>
+        wrapApiCall(() => productService.deleteProduct(id));
 
     return {
         loading,
         error,
-        getProducts,
+        getAllProducts,
         addProduct,
         updateProduct,
         deleteProduct

@@ -1,19 +1,40 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import { CATEGORIES } from "../../constants/productConstants"
+import { useProductApi } from '../../hooks/useProductApi';
 
 const EditProduct = ({ product, onClose, onUpdate }) => {
+  const { updateProduct } = useProductApi();
   const [editedProduct, setEditedProduct] = useState(product)
+  const [imagePreview, setImagePreview] = useState(product.image)
+  const [selectedImageFile, setSelectedImageFile] = useState(null)
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
+
+    if (product.image) {
+      const isAbsoluteUrl = product.image.startsWith("http") || product.image.startsWith("blob:")
+      const imageUrl = isAbsoluteUrl ? product.image : `http://localhost:8081${product.image}`
+      setImagePreview(imageUrl)
+    }
     setEditedProduct(product)
   }, [product])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    onUpdate(editedProduct)
+    // onUpdate(editedProduct, selectedImageFile);
+    const file = fileInputRef.current.files[0];
+
+    try {
+      const result = await updateProduct(product.id, product, file);
+      alert("Cập nhật sản phẩm thành công!");
+      onUpdate(result.data);
+      onClose();
+    } catch (error) {
+      alert("Cập nhật sản phẩm thất bại: " + error.message);
+    }
   }
 
   const handleChange = (e) => {
@@ -25,6 +46,19 @@ const EditProduct = ({ product, onClose, onUpdate }) => {
           ? Number(value)
           : value,
     }))
+  }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const previewUrl = URL.createObjectURL(file)
+      setImagePreview(previewUrl)
+      const relativePath = `/img/${file.name}`
+      setEditedProduct((prev) => ({
+        ...prev,
+        image: relativePath,
+      }))
+    }
   }
 
   return (
@@ -114,16 +148,51 @@ const EditProduct = ({ product, onClose, onUpdate }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Hình ảnh URL</label>
-              <input
-                type="text"
-                name="image"
-                value={editedProduct.image}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">Hình ảnh</label>
+              <div className="space-y-4">
+                {/* Preview ảnh */}
+                {imagePreview && (
+                  <div className="w-40 h-40 rounded-lg overflow-hidden">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Input chọn file ẩn */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+
+                {/* Nút chọn ảnh */}
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current.click()}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Chọn ảnh từ máy tính
+                  </button>
+
+                  {/* Input URL ảnh */}
+                  <input
+                    type="text"
+                    name="image"
+                    value={editedProduct.image || ''}
+                    onChange={handleChange}
+                    placeholder="Hoặc nhập đường dẫn ảnh"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
             </div>
+
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Loại món</label>

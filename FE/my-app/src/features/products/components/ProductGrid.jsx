@@ -36,7 +36,7 @@ const ProductCard = ({ product, index, onEdit, onDelete }) => (
     >
         <div className="relative">
             <img
-                src={product.imageUrl || "/placeholder.svg"}
+                src={`http://localhost:8081${product.image}` || "/placeholder.svg"}
                 alt={product.name}
                 className="w-full h-48 object-cover"
             />
@@ -78,8 +78,8 @@ const StatusBadge = ({ status }) => (
     <div className="absolute top-3 right-3">
         <span
             className={`px-3 py-1 rounded-full text-xs font-medium ${status === "Con_Hang" ? "bg-green-100 text-green-800" :
-                    status === "Het_Hang" ? "bg-yellow-100 text-yellow-800" :
-                        "bg-red-100 text-red-800"
+                status === "Het_Hang" ? "bg-yellow-100 text-yellow-800" :
+                    "bg-red-100 text-red-800"
                 }`}
         >
             {status === "Con_Hang" ? "Còn hàng" :

@@ -3,34 +3,41 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion'; // Thêm framer-motion
 import Footer from '../components/layout/Footer';
 import { useProductDetails } from '../hooks/useProductDetails';
-import { mockFeedbacks } from '../mockdata/productData';
+// import { mockFeedbacks } from '../mockdata/productData';
 
-const ProductCard = ({ product }) => (
-  <Link to={`/product-details/${product.id}`} className="no-underline hover:no-underline group">
-    <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-5 hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 flex items-center space-x-4 hover:border-indigo-200">
-      <div className="relative overflow-hidden rounded-xl">
-        <img
-          src={product.imageUrl || '/assets/images/default.jpg'}
-          alt={product.name}
-          className="w-20 h-20 object-cover group-hover:scale-110 transition-transform duration-300"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-      </div>
-      <div className="flex-grow">
-        <h4 className="text-sm font-bold text-gray-800 group-hover:text-indigo-600 transition-colors duration-300 mb-1">{product.name}</h4>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-indigo-600 font-semibold text-sm">{product.price.toLocaleString('vi-VN')} VNĐ</p>
-            <p className="text-emerald-600 text-xs font-medium">Đã bán: {product.soldCount}</p>
-          </div>
-          <div className="text-amber-400 text-sm">
-            {'★'.repeat(product.rating) + '☆'.repeat(5 - product.rating)}
+const ProductCard = ({ product }) => {
+  const formatPrice = (price) => {
+    if (!price) return '0';
+    return price.toLocaleString('vi-VN');
+  };
+
+  return (
+    <Link to={`/product-details/${product.id}`} className="no-underline hover:no-underline group">
+      <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-5 hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 flex items-center space-x-4 hover:border-indigo-200">
+        <div className="relative overflow-hidden rounded-xl">
+          <img
+            src={product.imageUrl || '/assets/images/default.jpg'}
+            alt={product.name}
+            className="w-20 h-20 object-cover group-hover:scale-110 transition-transform duration-300"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
+        <div className="flex-grow">
+          <h4 className="text-sm font-bold text-gray-800 group-hover:text-indigo-600 transition-colors duration-300 mb-1">{product.name}</h4>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-indigo-600 font-semibold text-sm">{formatPrice(product.price)} VNĐ</p>
+              <p className="text-emerald-600 text-xs font-medium">Đã bán: {product.soldCount || 0}</p>
+            </div>
+            <div className="text-amber-400 text-sm">
+              {'★'.repeat(product.rating || 0) + '☆'.repeat(5 - (product.rating || 0))}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </Link>
-);
+    </Link>
+  );
+};
 
 // Custom notification component
 const Notification = ({ message, isVisible, onClose }) => {
@@ -92,6 +99,12 @@ const ProductDetails = () => {
 
   const handleStarClick = (rating) => {
     setFeedbackRating(rating);
+  };
+
+  const formatPrice = (price) => {
+    const number = Number(price);
+    if (isNaN(number)) return '0';
+    return number.toLocaleString('vi-VN');
   };
 
   if (!product) {
@@ -159,8 +172,13 @@ const ProductDetails = () => {
                     </div>
                     <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-2xl shadow-lg mb-6">
                       <div className="text-3xl font-black mb-2">
-                        {product.price.toLocaleString('vi-VN')} VNĐ
+                        {formatPrice(product.price)} VNĐ
                       </div>
+                      {product.originalPrice && product.originalPrice !== product.price && (
+                        <div className="text-sm line-through text-indigo-200 mb-1">
+                          {formatPrice(product.originalPrice)} VNĐ
+                        </div>
+                      )}
                       <div className="text-indigo-100 text-sm">
                         Giá đã bao gồm VAT
                       </div>
@@ -239,10 +257,9 @@ const ProductDetails = () => {
                 </div>
               </div>
             </div>
-
             <div className="mt-12 bg-gray-50 p-8 rounded-3xl shadow-inner border border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Phản hồi từ khách hàng ({product.feedbacks.length})</h2>
-              {product.feedbacks.length > 0 ? (
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Phản hồi từ khách hàng ({product.feedbacks?.length || 0})</h2>
+              {product.feedbacks?.length > 0 ? (
                 <div className="space-y-6">
                   {product.feedbacks.map((feedback) => (
                     <div key={feedback.id} className="border-b border-gray-200 pb-6">
@@ -367,7 +384,7 @@ const ProductDetails = () => {
               />
               <div>
                 <p className="font-semibold">{buyNowModal.name}</p>
-                <p>{buyNowModal.price.toLocaleString('vi-VN')} VNĐ</p>
+                <p>{formatPrice(buyNowModal.price)} VNĐ</p>
               </div>
             </div>
 

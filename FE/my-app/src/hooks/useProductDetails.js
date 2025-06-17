@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addToCart, placeOrder } from '../services/productService'; // Thêm placeOrder
 import { fetchProductDetails, fetchRelatedProducts, checkPurchaseStatus } from '../services/productService';
-import { mockFeedbacks } from '../mockdata/productData';
+import { ORDER_STATUS } from '../constants/orderConstants';
+// import { mockFeedbacks } from '../mockdata/productData';
 
 export const useProductDetails = (id, navigate) => {
   const [product, setProduct] = useState(null);
@@ -26,23 +27,36 @@ export const useProductDetails = (id, navigate) => {
 
   useEffect(() => {
     const loadProductDetails = async () => {
-      const productData = await fetchProductDetails(id, navigate);
-      if (productData) {
-        setProduct(productData);
+      try {
+        const productData = await fetchProductDetails(id, navigate);
+        console.log("Product data: ", productData);
+        if (!productData) {
+          console.error('Không lấy được chi tiết sản phẩm!');
+          return;
+        }
+        setProduct(productData.data);
+
         const related = await fetchRelatedProducts(id);
         setRelatedProducts(related);
-        const purchased = await checkPurchaseStatus();
+
+        const purchased = await checkPurchaseStatus(ORDER_STATUS.CONFIRMED);
         setHasPurchasedAndConfirmed(purchased);
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (error) {
+        console.error('Lỗi khi loadProductDetails:', error);
       }
     };
-    // Tải thông tin người dùng từ localStorage
+
+    // Đúng: gọi ở đây, KHÔNG gọi bên trong chính `loadProductDetails`
     const savedUser = localStorage.getItem('userInfo');
     if (savedUser) {
       setUserInfo(JSON.parse(savedUser));
     }
+
     loadProductDetails();
   }, [id, navigate]);
+
 
   const handleQuantityChange = (e) => {
     const value = e.target.value;

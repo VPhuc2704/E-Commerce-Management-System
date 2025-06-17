@@ -8,7 +8,7 @@ import Stats from "../features/products/components/Stats"
 import ProductGrid from "../features/products/components/ProductGrid"
 import { CATEGORIES } from "../constants/productConstants"
 import { useProducts } from "../hooks/useProducts"
-import { DEFAULT_PRODUCT } from "../types/product"
+
 
 const AdminProductManagement = () => {
   const [showAddForm, setShowAddForm] = useState(false)
@@ -46,13 +46,13 @@ const AdminProductManagement = () => {
     }
   }
 
-  const handleUpdateProduct = async (productData) => {
+  const handleUpdateProduct = async (id, product, imageFile) => {
     try {
-      await updateProduct(productData)
-      setEditingProduct(null) // Changed from DEFAULT_PRODUCT to null
-      alert("Cập nhật sản phẩm thành công!")
+      await updateProduct(id, product, imageFile);
+      setEditingProduct(null);
+      alert("Cập nhật sản phẩm thành công!");
     } catch (error) {
-      alert("Không thể cập nhật sản phẩm: " + error.message)
+      alert("Không thể cập nhật sản phẩm: " + error.message);
     }
   }
 
