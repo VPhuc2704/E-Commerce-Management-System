@@ -44,10 +44,12 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new RuntimeException("User not found")));
         reviewEntity.setProduct(productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("User not found")));
+
         reviewEntity.setRating(review.getRating());
         reviewEntity.setComment(review.getComment());
         reviewEntity.setImageUrl(review.getImageUrl()); // Đã upload và lấy link
         reviewEntity.setCreatedDate(LocalDateTime.now());
+
         ReviewEntity saved = reviewRepository.save(reviewEntity);
         ReviewDTO responseDto = new ReviewDTO(saved);
         return Optional.of(responseDto);

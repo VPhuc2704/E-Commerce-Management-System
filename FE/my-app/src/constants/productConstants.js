@@ -6,7 +6,11 @@ export const CATEGORIES = [
     { value: "", label: "Tất cả danh mục" },
     { value: "1", label: "Khai Vị" },
     { value: "2", label: "Món Chính" },
-    { value: "3", label: "Tráng Miệng" },
+    { value: "3", label: "Đồ Ăn Nhanh" },
+    { value: "4", label: "Đồ Nướng" },
+    { value: "5", label: "Món Chay" },
+    { value: "6", label: "Đồ Uống" },
+    { value: "7", label: "Tráng Miệng" }
 ]
 
 export const STATUS_MAPPING = {

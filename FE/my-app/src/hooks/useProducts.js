@@ -30,7 +30,8 @@ export const useProducts = () => {
 
     useEffect(() => {
         loadProducts(selectedCategory);
-    }, [loadProducts, selectedCategory]);    // Filter products based on search term only
+    }, [loadProducts, selectedCategory]);
+
     const filteredProducts = products.filter(product => {
         if (!searchTerm.trim()) return true;
         return (

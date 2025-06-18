@@ -17,7 +17,10 @@ const DishItem = ({ id, name, price, rating, imageUrl, soldCount }) => {
       className="flex items-center bg-white rounded-lg shadow-md p-4 mb-2 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
       onClick={handleClick}
     >
-      <img src={imageUrl || 'src/assets/images/default.jpg'} alt={name} className="w-24 h-24 object-cover rounded mr-4" />
+      <img
+        src={imageUrl || 'src/assets/images/default.jpg'}
+        alt={name} className="w-24 h-24 object-cover rounded mr-4"
+      />
       <div className="flex-grow">
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-lg font-semibold text-gray-900">{name}</h4>
@@ -79,8 +82,9 @@ const HomePage = () => {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const itemsPerPage = 5;
   const navigate = useNavigate();
+
+
 
   // Quality badges that rotate with images
   const qualityBadges = ['CHẤT LƯỢNG', 'VỆ SINH', 'TƯƠI NGON'];
@@ -155,14 +159,17 @@ const HomePage = () => {
   }, []);
 
   // Pagination logic
-  const sortedItems = selectedCategory ? [selectedCategory].filter(Boolean) : [];
-  const paginatedItems = sortedItems;
-  const totalPages = 1;
+  const itemsPerPage = 5;
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedProducts = products.slice(startIndex, endIndex);
+
 
   const handleCategoryClick = (category) => {
     console.log('Category clicked:', category);
     setSelectedCategory(category);
-    setCurrentPage(2);
+    setCurrentPage(1);
   };
 
   const handleDotClick = (index) => {
@@ -285,16 +292,30 @@ const HomePage = () => {
               <h2 className="text-2xl font-bold text-coral-600">{selectedCategory.name}</h2>
             </div>
             <div className="space-y-2">
-              {products.map((item) => (
+              {paginatedProducts.map((item) => (
                 <DishItem
                   key={item.id}
                   id={item.id}
                   name={item.name}
                   price={item.price}
                   rating={item.rating || 0}
-                  imageUrl={item.imageUrl}
+                  imageUrl={`http://localhost:8081${item.image}`}
                   soldCount={item.soldCount || 0}
                 />
+              ))}
+            </div>
+            <div className="flex justify-center mt-6 space-x-2">
+              {Array.from({ length: totalPages }, (_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentPage(index + 1)}
+                  className={`px-4 py-2 rounded-full font-semibold text-sm ${currentPage === index + 1
+                    ? 'bg-indigo-600 text-white shadow'
+                    : 'bg-white text-gray-800 border hover:bg-indigo-100'
+                    }`}
+                >
+                  {index + 1}
+                </button>
               ))}
             </div>
           </section>

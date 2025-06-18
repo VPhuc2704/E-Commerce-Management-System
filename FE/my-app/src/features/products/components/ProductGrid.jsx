@@ -58,12 +58,14 @@ const ProductCard = ({ product, index, onEdit, onDelete }) => (
 
             <div className="flex gap-2">
                 <ActionButton
+                    type="button"
                     onClick={() => onEdit(product)}
                     icon={EditIcon}
                     text="Sửa"
                     className="from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
                 />
                 <ActionButton
+                    type="button"
                     onClick={() => onDelete(product.id)}
                     icon={DeleteIcon}
                     text="Xóa"

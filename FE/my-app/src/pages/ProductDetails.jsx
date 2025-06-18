@@ -3,20 +3,24 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion'; // Thêm framer-motion
 import Footer from '../components/layout/Footer';
 import { useProductDetails } from '../hooks/useProductDetails';
-// import { mockFeedbacks } from '../mockdata/productData';
+import { useProductFeedbacks } from '../hooks/useProductFeedbacks';
+import { useCart } from '../hooks/useCart';
+
+
 
 const ProductCard = ({ product }) => {
   const formatPrice = (price) => {
     if (!price) return '0';
     return price.toLocaleString('vi-VN');
   };
-
+  const baseUrl = "http://localhost:8081";
+  const imageUrl = `${baseUrl}${product.image}`;
   return (
     <Link to={`/product-details/${product.id}`} className="no-underline hover:no-underline group">
       <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-5 hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 flex items-center space-x-4 hover:border-indigo-200">
         <div className="relative overflow-hidden rounded-xl">
           <img
-            src={product.imageUrl || '/assets/images/default.jpg'}
+            src={imageUrl || '/assets/images/default.jpg'}
             alt={product.name}
             className="w-20 h-20 object-cover group-hover:scale-110 transition-transform duration-300"
           />
@@ -97,6 +101,10 @@ const ProductDetails = () => {
     handleBuyNow,
   } = useProductDetails(id, navigate);
 
+  const { feedbacks, loading, fetchReviews } = useProductFeedbacks(product?.id);
+
+  const { addItemToCart } = useCart();
+
   const handleStarClick = (rating) => {
     setFeedbackRating(rating);
   };
@@ -139,7 +147,7 @@ const ProductDetails = () => {
               <div className="lg:w-1/2 relative group">
                 <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 p-4">
                   <img
-                    src={product.imageUrl || '/assets/images/default.jpg'}
+                    src={`http://localhost:8081${product.image}` || '/assets/images/default.jpg'}
                     alt={product.name}
                     className="w-full h-96 object-cover rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-500"
                   />
@@ -222,7 +230,7 @@ const ProductDetails = () => {
 
                   <div className="flex gap-4">
                     <button
-                      onClick={handleAddToCart}
+                      onClick={() => addItemToCart(product, quantity)}
                       disabled={isAddingToCart}
                       className={`flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${isAddingToCart ? 'animate-pulse' : 'hover:from-indigo-700 hover:to-purple-700'}`}
                       aria-label="Thêm vào giỏ hàng"
@@ -258,13 +266,13 @@ const ProductDetails = () => {
               </div>
             </div>
             <div className="mt-12 bg-gray-50 p-8 rounded-3xl shadow-inner border border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Phản hồi từ khách hàng ({product.feedbacks?.length || 0})</h2>
-              {product.feedbacks?.length > 0 ? (
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Phản hồi từ khách hàng ({feedbacks.length})</h2>
+              {feedbacks.length > 0 ? (
                 <div className="space-y-6">
-                  {product.feedbacks.map((feedback) => (
+                  {feedbacks.map((feedback) => (
                     <div key={feedback.id} className="border-b border-gray-200 pb-6">
                       <div className="flex items-center space-x-4 mb-3">
-                        <span className="font-semibold text-gray-900">{feedback.user}</span>
+                        <span className="font-semibold text-gray-900">{feedback.userName}</span>
                         <div className="flex items-center space-x-1">
                           <div className="text-amber-400">
                             {'★'.repeat(feedback.rating)}
@@ -273,12 +281,12 @@ const ProductDetails = () => {
                             {'☆'.repeat(5 - feedback.rating)}
                           </div>
                         </div>
-                        <span className="text-gray-500 text-sm">{feedback.date}</span>
+                        <span className="text-gray-500 text-sm">{feedback.create}</span>
                       </div>
                       <p className="text-gray-700 leading-relaxed">{feedback.comment}</p>
                       {feedback.imageUrl && (
                         <img
-                          src={feedback.imageUrl}
+                          src={`http://localhost:8081${feedback.imageUrl}`}
                           alt={`Feedback from ${feedback.user}`}
                           className="w-24 h-24 object-cover rounded-xl mt-3 shadow-sm hover:scale-105 transition-transform duration-300"
                         />

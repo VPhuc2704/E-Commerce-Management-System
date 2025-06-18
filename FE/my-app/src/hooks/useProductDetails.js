@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { addToCart, placeOrder } from '../services/productService'; // Thêm placeOrder
 import { fetchProductDetails, fetchRelatedProducts, checkPurchaseStatus } from '../services/productService';
 import { ORDER_STATUS } from '../constants/orderConstants';
+import { feedbackService } from '../services/feedbackService';
+import { useProductFeedbacks } from './useProductFeedbacks';
+
 // import { mockFeedbacks } from '../mockdata/productData';
 
 export const useProductDetails = (id, navigate) => {
@@ -24,6 +27,8 @@ export const useProductDetails = (id, navigate) => {
     address: '',
   });
   const [isUserInfoValid, setIsUserInfoValid] = useState(true);
+
+  const { feedbacks, loading, fetchReviews } = useProductFeedbacks(id);
 
   useEffect(() => {
     const loadProductDetails = async () => {
@@ -74,7 +79,7 @@ export const useProductDetails = (id, navigate) => {
     }
     setIsAddingToCart(true);
     try {
-      const result = await addToCart(product.id.toString(), quantity, navigate);
+      const result = await addToCart(product.id, quantity, navigate);
       if (result.success) {
         setNotification({
           message: `${product.name} (x${quantity}) đã được thêm vào giỏ hàng!`,
@@ -152,49 +157,29 @@ export const useProductDetails = (id, navigate) => {
       });
     }
   };
-
   const handleFeedbackSubmit = async (e) => {
     e.preventDefault();
-    if (feedbackRating < 1 || feedbackRating > 5) {
-      setNotification({
-        message: 'Vui lòng chọn số sao từ 1 đến 5.',
-        isVisible: true,
-      });
-      return;
-    }
-    if (!feedbackComment.trim()) {
-      setNotification({
-        message: 'Vui lòng nhập nhận xét.',
-        isVisible: true,
-      });
-      return;
-    }
     try {
-      const newFeedback = {
-        id: mockFeedbacks.length + 1,
-        user: 'Current User',
-        comment: feedbackComment,
+
+      await feedbackService.postFeedback(product.id, {
         rating: feedbackRating,
-        imageUrl: feedbackImage ? URL.createObjectURL(feedbackImage) : null,
-        date: new Date().toISOString().split('T')[0],
-      };
-      mockFeedbacks.push(newFeedback);
-      setProduct(prev => ({ ...prev, feedbacks: [...prev.feedbacks, newFeedback] }));
+        comment: feedbackComment,
+        imageFile: feedbackImage,
+      });
+
+      alert('Gửi phản hồi thành công!');
       setFeedbackRating(0);
       setFeedbackComment('');
       setFeedbackImage(null);
-      setNotification({
-        message: 'Cảm ơn bạn đã gửi đánh giá!',
-        isVisible: true,
-      });
-    } catch (error) {
-      console.error('Lỗi khi gửi đánh giá:', error);
-      setNotification({
-        message: 'Có lỗi xảy ra khi gửi đánh giá.',
-        isVisible: true,
-      });
+
+      fetchReviews();
+
+    } catch (err) {
+      console.error(err);
+      alert('Lỗi khi gửi phản hồi');
     }
   };
+
 
   return {
     product,

@@ -389,12 +389,6 @@ const LoggedInHomePage = ({ user }) => {
         </section>
         {selectedCategory && (
           <section className="bg-gradient-to-r from-indigo-200 to-coral-200 rounded-2xl shadow-2xl p-8 mb-12">
-            <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6 rounded">
-              <p className="text-green-700 text-sm">
-                <strong>Backend Integration:</strong> API endpoint cần hỗ trợ pagination và sorting.
-                Ví dụ: GET /api/dishes?category={selectedCategory}&page={currentPage}&sort=soldCount&limit={itemsPerPage}
-              </p>
-            </div>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-coral-600">{selectedCategory}</h2>
               <p className="text-sm text-gray-600">Sắp xếp theo: Độ phổ biến</p>
@@ -410,7 +404,7 @@ const LoggedInHomePage = ({ user }) => {
                     name={item.name}
                     price={item.price}
                     rating={item.rating}
-                    imageUrl={item.image}
+                    imageUrl={`http://localhost:8081${item.image}`}
                     soldCount={item.soldCount}
                     id={item.id}
                   />

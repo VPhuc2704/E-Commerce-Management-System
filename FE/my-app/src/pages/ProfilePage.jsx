@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import OrderList from "./orderList";
 
 // Mock useAuth hook for demo
 const useAuth = () => ({
@@ -9,34 +10,6 @@ const useAuth = () => ({
   logout: () => console.log("Logged out")
 });
 
-// Mock OrderList component
-const OrderList = () => (
-  <div className="space-y-6">
-    <h3 className="text-2xl font-bold text-gray-900">Lịch sử đơn hàng</h3>
-    <div className="grid gap-6">
-      {[1, 2, 3].map((order) => (
-        <motion.div
-          key={order}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100/50 hover:shadow-xl transition-all duration-300"
-        >
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h4 className="font-semibold text-gray-900">Đơn hàng #{order}001</h4>
-              <p className="text-sm text-gray-500">15/06/2025</p>
-            </div>
-            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-              Đã giao
-            </span>
-          </div>
-          <p className="text-gray-600 mb-2">Tổng: 450.000₫</p>
-          <p className="text-sm text-gray-500">3 món • Giao đến Quận 1</p>
-        </motion.div>
-      ))}
-    </div>
-  </div>
-);
 
 // Enhanced Notification component
 const Notification = ({ show, message, type }) => (
@@ -46,15 +19,13 @@ const Notification = ({ show, message, type }) => (
         initial={{ opacity: 0, y: 100, scale: 0.8 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 100, scale: 0.8 }}
-        className={`fixed bottom-6 right-6 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-xl z-50 ${
-          type === "success" 
-            ? "bg-emerald-500/90 text-white border border-emerald-400/50" 
-            : "bg-red-500/90 text-white border border-red-400/50"
-        }`}
+        className={`fixed bottom-6 right-6 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-xl z-50 ${type === "success"
+          ? "bg-emerald-500/90 text-white border border-emerald-400/50"
+          : "bg-red-500/90 text-white border border-red-400/50"
+          }`}
       >
-        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-          type === "success" ? "bg-white/20" : "bg-white/20"
-        }`}>
+        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${type === "success" ? "bg-white/20" : "bg-white/20"
+          }`}>
           {type === "success" ? (
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -183,27 +154,27 @@ const ProfilePage = () => {
   };
 
   const tabItems = [
-    { 
-      tab: "profile", 
-      icon: "M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z", 
+    {
+      tab: "profile",
+      icon: "M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z",
       label: "Hồ sơ",
       gradient: "from-blue-500 to-cyan-500"
     },
-    { 
-      tab: "orders", 
-      icon: "M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z", 
+    {
+      tab: "orders",
+      icon: "M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z",
       label: "Đơn hàng",
       gradient: "from-emerald-500 to-teal-500"
     },
-    { 
-      tab: "addresses", 
-      icon: "M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z", 
+    {
+      tab: "addresses",
+      icon: "M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z",
       label: "Địa chỉ",
       gradient: "from-purple-500 to-pink-500"
     },
-    { 
-      tab: "security", 
-      icon: "M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z", 
+    {
+      tab: "security",
+      icon: "M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z",
       label: "Bảo mật",
       gradient: "from-red-500 to-orange-500"
     }
@@ -246,7 +217,7 @@ const ProfilePage = () => {
         <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 overflow-hidden">
           <div className="lg:flex">
             {/* Sidebar */}
-            <motion.div 
+            <motion.div
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.2 }}
@@ -257,7 +228,7 @@ const ProfilePage = () => {
                 <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full transform -translate-x-20 -translate-y-20"></div>
                 <div className="absolute bottom-0 right-0 w-32 h-32 bg-white rounded-full transform translate-x-16 translate-y-16"></div>
               </div>
-              
+
               <div className="relative z-10 p-8">
                 {/* User Profile Card */}
                 <div className="text-center mb-8">
@@ -291,18 +262,16 @@ const ProfilePage = () => {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setActiveTab(tab)}
-                      className={`w-full group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 ${
-                        activeTab === tab
-                          ? "bg-white/15 text-white shadow-lg"
-                          : "text-indigo-200 hover:bg-white/5 hover:text-white"
-                      }`}
+                      className={`w-full group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 ${activeTab === tab
+                        ? "bg-white/15 text-white shadow-lg"
+                        : "text-indigo-200 hover:bg-white/5 hover:text-white"
+                        }`}
                     >
                       <div className="flex items-center gap-4 relative z-10">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                          activeTab === tab 
-                            ? `bg-gradient-to-r ${gradient} shadow-lg` 
-                            : "bg-white/10 group-hover:bg-white/20"
-                        }`}>
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${activeTab === tab
+                          ? `bg-gradient-to-r ${gradient} shadow-lg`
+                          : "bg-white/10 group-hover:bg-white/20"
+                          }`}>
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={icon} />
                           </svg>
@@ -359,11 +328,10 @@ const ProfilePage = () => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => (isEditing ? handleSaveProfile() : setIsEditing(true))}
-                        className={`px-6 py-3 rounded-2xl font-semibold shadow-lg transition-all duration-300 ${
-                          isEditing
-                            ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
-                            : "bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
-                        }`}
+                        className={`px-6 py-3 rounded-2xl font-semibold shadow-lg transition-all duration-300 ${isEditing
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+                          : "bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
+                          }`}
                       >
                         {isEditing ? "💾 Lưu thông tin" : "✏️ Chỉnh sửa"}
                       </motion.button>
@@ -527,7 +495,7 @@ const ProfilePage = () => {
                               📍 Mặc định
                             </div>
                           )}
-                          
+
                           <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center gap-3">
                               <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
@@ -542,13 +510,13 @@ const ProfilePage = () => {
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="space-y-2 mb-6">
                             <p className="text-gray-800 font-medium">{address.address}</p>
                             <p className="text-gray-600">{address.city}</p>
                             <p className="text-gray-600">📞 {address.phone}</p>
                           </div>
-                          
+
                           <div className="flex gap-3">
                             {!address.isDefault && (
                               <button
@@ -603,7 +571,7 @@ const ProfilePage = () => {
                         </div>
                         Đổi mật khẩu
                       </h4>
-                      
+
                       <div className="space-y-6">
                         <div className="space-y-2">
                           <label className="block text-sm font-semibold text-gray-700">Mật khẩu hiện tại</label>
@@ -617,7 +585,7 @@ const ProfilePage = () => {
                             required
                           />
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-2">
                             <label className="block text-sm font-semibold text-gray-700">Mật khẩu mới</label>
@@ -631,7 +599,7 @@ const ProfilePage = () => {
                               required
                             />
                           </div>
-                          
+
                           <div className="space-y-2">
                             <label className="block text-sm font-semibold text-gray-700">Xác nhận mật khẩu</label>
                             <input
@@ -645,7 +613,7 @@ const ProfilePage = () => {
                             />
                           </div>
                         </div>
-                        
+
                         <motion.button
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
@@ -672,7 +640,7 @@ const ProfilePage = () => {
                         </div>
                         Cài đặt bảo mật
                       </h4>
-                      
+
                       <div className="space-y-6">
                         <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-200/50">
                           <div className="flex items-center gap-4">
@@ -693,7 +661,7 @@ const ProfilePage = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center">
@@ -713,7 +681,7 @@ const ProfilePage = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-2xl border border-gray-200/50">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-gradient-to-r from-gray-500 to-slate-500 rounded-2xl flex items-center justify-center">
@@ -742,12 +710,12 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Notification */}
-      <Notification 
-        show={notification.show} 
-        message={notification.message} 
-        type={notification.type} 
+      <Notification
+        show={notification.show}
+        message={notification.message}
+        type={notification.type}
       />
     </div>
   );
