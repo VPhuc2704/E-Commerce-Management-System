@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import useOrderHistory from '../hooks/useOrderHistory';
+import { useOrderHistory } from '../hooks/useOrderHistory';
 
 const OrderList = () => {
   const { orders } = useOrderHistory();
-
+  const Host = "http://localhost:8081";
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -42,13 +42,12 @@ const OrderList = () => {
                     </p>
                   </div>
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      order.status === 'PENDING'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : order.status === 'COMPLETED'
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${order.status === 'PENDING'
+                      ? 'bg-yellow-100 text-yellow-700'
+                      : order.status === 'COMPLETED'
                         ? 'bg-green-100 text-green-700'
                         : 'bg-red-100 text-red-700'
-                    }`}
+                      }`}
                   >
                     {order.status === 'PENDING' ? 'Chờ xác nhận' : order.status === 'COMPLETED' ? 'Đã hoàn thành' : order.status}
                   </span>
@@ -67,7 +66,7 @@ const OrderList = () => {
                     {order.items.map((item) => (
                       <div key={item.id} className="flex items-center gap-4 mb-3">
                         <img
-                          src={item.imageUrl || '/assets/images/default.jpg'}
+                          src={`${Host}${item.imageUrl}` || '/assets/images/default.jpg'}
                           alt={item.productName}
                           className="w-16 h-16 object-cover rounded-lg shadow-sm"
                           onError={(e) => { e.target.src = '/assets/images/default.jpg'; }}

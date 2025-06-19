@@ -4,7 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Footer from '../components/layout/Footer';
 import { useCart } from '../hooks/useCart';
 
+
 const CartPage = () => {
+
+  const Host = "http://localhost:8081";
+
   const {
     cartItems,
     selectedItems,
@@ -36,6 +40,7 @@ const CartPage = () => {
     setCurrentPage,
     setUserInfo,
   } = useCart();
+
 
   const formatPrice = (price) => {
     if (typeof price !== 'number' || isNaN(price) || price < 0) {
@@ -147,7 +152,7 @@ const CartPage = () => {
 
                         <div className="relative flex-shrink-0">
                           <img
-                            src={item.productImage || '/assets/images/default.jpg'}
+                            src={`${Host}${item.productImage || '/assets/images/default.jpg'}`}
                             alt={item.productName}
                             className="w-24 h-24 rounded-2xl object-cover shadow-md transition-transform duration-300 group-hover:scale-110"
                           />
@@ -238,11 +243,10 @@ const CartPage = () => {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setCurrentPage(page)}
-                        className={`w-10 h-10 flex items-center justify-center rounded-xl font-semibold transition-all duration-300 ${
-                          currentPage === page
-                            ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg'
-                            : 'bg-white/80 backdrop-blur-md text-gray-700 hover:shadow-md'
-                        }`}
+                        className={`w-10 h-10 flex items-center justify-center rounded-xl font-semibold transition-all duration-300 ${currentPage === page
+                          ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg'
+                          : 'bg-white/80 backdrop-blur-md text-gray-700 hover:shadow-md'
+                          }`}
                         aria-label={`Trang ${page}`}
                       >
                         {page}

@@ -1,18 +1,27 @@
 package org.javaweb.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.javaweb.constant.ApiResponse;
 import org.javaweb.model.dto.CatogeryDTO;
 import org.javaweb.model.dto.ProductsDTO;
 import org.javaweb.service.ProductService;
-import org.javaweb.utils.TokenUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 
 @RestController
@@ -44,25 +53,91 @@ public class ProductController {
 
     @PutMapping("/api/admin/products/{id}")
     public ResponseEntity<?> updateProductsById(@PathVariable("id") Long id,
-                                                          @RequestBody ProductsDTO productsDTO){
-        Optional<ProductsDTO> products = productService.updateProductById(id, productsDTO);
-        if (products.isPresent()) {
-            return ResponseEntity.ok(
-                    new ApiResponse<>(200, "Cập nhật sản phẩm thành công", products.get())
-            );
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(404, "Không tìm thấy sản phẩm cần cập nhật", null));
+                                                @RequestPart(value = "productsDTO", required = false) String productsJson,
+                                                @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) {
+        try {
+            ProductsDTO productsDTO;
+
+            // Nếu có dữ liệu JSON thì parse ra object
+            if (productsJson != null) {
+                productsDTO = new ObjectMapper().readValue(productsJson, ProductsDTO.class);
+            } else {
+                // Không có dữ liệu JSON → lấy sản phẩm từ DB để giữ lại thông tin cũ
+                Optional<ProductsDTO> existing = productService.getProductById(id);
+                if (!existing.isPresent()) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(new ApiResponse<>(404, "Không tìm thấy sản phẩm", null));
+                }
+                productsDTO = existing.get();
+            }
+
+            // Nếu có file ảnh thì xử lý lưu và cập nhật lại đường dẫn ảnh
+            if (imageFile != null && !imageFile.isEmpty()) {
+                String newFileName = UUID.randomUUID() + "_" + imageFile.getOriginalFilename();
+                String uploadPath = System.getProperty("user.dir") + "/uploads/img/";
+                File uploadDir = new File(uploadPath);
+                if (!uploadDir.exists()) uploadDir.mkdirs();
+
+                Path filePath = Paths.get(uploadPath, newFileName);
+                try (InputStream is = imageFile.getInputStream()) {
+                    Files.copy(is, filePath, StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                productsDTO.setImage("/img/" + newFileName); // Giả sử frontend dùng đường dẫn này
+            }
+
+            Optional<ProductsDTO> updated = productService.updateProductById(id, productsDTO);
+            if (updated.isPresent()) {
+                return ResponseEntity.ok(new ApiResponse<>(200, "Cập nhật sản phẩm thành công", updated.get()));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(404, "Không tìm thấy sản phẩm để cập nhật", null));
+            }
+
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(400, "Lỗi định dạng JSON: " + e.getMessage(), null));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(500, "Lỗi xử lý file ảnh: " + e.getMessage(), null));
         }
     }
 
+
     @PostMapping("/api/admin/products")
-    public ResponseEntity<?> createProducts(@RequestBody ProductsDTO productsDTO){
-        Optional<ProductsDTO> products = productService.addProduct(productsDTO);
-        if (products.isPresent()) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(201, "Thêm sản phẩm thành công", products));
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(400, "Thêm sản phẩm thất bại", null));
+    public ResponseEntity<?> createProducts(
+                                            @RequestPart("productsDTO") String productsJson,
+                                            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) {
+        try {
+            ProductsDTO productsDTO = new ObjectMapper().readValue(productsJson, ProductsDTO.class);
+
+            // xử lý ảnh nếu có
+            if (imageFile != null && !imageFile.isEmpty()) {
+                String uploadPath = System.getProperty("user.dir") + "/uploads/img/";
+                File uploadDir = new File(uploadPath);
+                if (!uploadDir.exists()) uploadDir.mkdirs();
+
+                String originalFilename = imageFile.getOriginalFilename();
+                String newFileName = UUID.randomUUID() + "_" + originalFilename;
+
+                Path filePath = Paths.get(uploadPath, newFileName);
+                try (InputStream is = imageFile.getInputStream()) {
+                    Files.copy(is, filePath, StandardCopyOption.REPLACE_EXISTING);
+                }
+                productsDTO.setImage("/img/" + newFileName);
+            }
+
+            Optional<ProductsDTO> saved = productService.addProduct(productsDTO);
+            if (saved.isPresent()) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                        .body(new ApiResponse<>(201, "Thêm sản phẩm thành công", saved.get()));
+            } else {
+                return ResponseEntity.badRequest()
+                        .body(new ApiResponse<>(400, "Thêm sản phẩm thất bại", null));
+            }
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(500, "Lỗi xử lý file ảnh", null));
         }
     }
 

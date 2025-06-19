@@ -1,11 +1,13 @@
 import React from 'react';
 import { useOrderHistory } from '../hooks/useOrderHistory';
 
+const Host = "http://localhost:8081";
+
 // Component hiển thị một sản phẩm trong đơn hàng
 const OrderItem = ({ item }) => (
   <div className="flex items-center space-x-4 mb-3">
     <img
-      src={item.imageUrl}
+      src={`${Host}${item.imageUrl}`}
       alt={item.productName}
       className="w-16 h-16 object-cover rounded-lg shadow-sm"
     />
@@ -48,13 +50,12 @@ const OrderCard = ({ order }) => (
         </p>
       </div>
       <span
-        className={`text-sm font-medium px-3 py-1 rounded-full ${
-          order.status === 'PENDING'
-            ? 'bg-yellow-100 text-yellow-700'
-            : order.status === 'COMPLETED'
+        className={`text-sm font-medium px-3 py-1 rounded-full ${order.status === 'PENDING'
+          ? 'bg-yellow-100 text-yellow-700'
+          : order.status === 'COMPLETED'
             ? 'bg-green-100 text-green-700'
             : 'bg-red-100 text-red-700'
-        }`}
+          }`}
       >
         {order.status === 'PENDING' ? 'Chờ xác nhận' : order.status === 'COMPLETED' ? 'Đã hoàn thành' : order.status}
       </span>

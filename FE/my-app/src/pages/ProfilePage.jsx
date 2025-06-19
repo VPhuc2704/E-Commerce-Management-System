@@ -1,9 +1,7 @@
-"use client";
-
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from "framer-motion";
-
+import OrderList from "./orderList";
 import { useProfileData } from "../hooks/useProfileData";
 import { useProfileForm } from "../hooks/useProfileForm";
 import { useNotification } from "../hooks/useNotification";

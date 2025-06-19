@@ -120,6 +120,14 @@ const RoutesContent = () => {
             </GuestOnlyRoute>
           }
         />
+        <Route
+          path="/product-details/:id"
+          element={
+            <Layout>
+              <ProductDetails />
+            </Layout>
+          }
+        />
 
         {/* Protected routes for authenticated users */}
         <Route
@@ -148,14 +156,7 @@ const RoutesContent = () => {
                   </Layout>
                 }
               />
-              <Route
-                path="/product-details/:id"
-                element={
-                  <Layout>
-                    <ProductDetails />
-                  </Layout>
-                }
-              />
+
               <Route
                 path="/profile"
                 element={
@@ -180,7 +181,7 @@ const RoutesContent = () => {
                   </Layout>
                 }
               />
-              
+
             </>
           )}
         </Route>
