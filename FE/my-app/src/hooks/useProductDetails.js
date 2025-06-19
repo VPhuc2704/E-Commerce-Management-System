@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { addToCart, placeOrder } from '../services/productService'; // Thêm placeOrder
-import { fetchProductDetails, fetchRelatedProducts, checkPurchaseStatus } from '../services/productService';
+import { addToCart, placeOrder, fetchProductDetails, fetchRelatedProducts, checkPurchaseStatus } from '../services/productService';
 import { ORDER_STATUS } from '../constants/orderConstants';
 import { feedbackService } from '../services/feedbackService';
 import { useProductFeedbacks } from './useProductFeedbacks';
 import { processPayment } from '../services/cartService';
 import profileService from '../services/profileService';
 
-export const useProductDetails = (id, navigate) => {
+export const useProductDetails = (id) => {
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [hasPurchasedAndConfirmed, setHasPurchasedAndConfirmed] = useState(false);
@@ -25,16 +25,40 @@ export const useProductDetails = (id, navigate) => {
     numberphone: '',
     address: '',
   });
-  const [isUserInfoValid, setIsUserInfoValid] = useState(true);
-
-  const { feedbacks, loading, fetchReviews } = useProductFeedbacks(id);
+  const [isUserInfoValid, setIsUserInfoValid] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('VNPAY');
 
+  const { feedbacks, loading, fetchReviews } = useProductFeedbacks(id);
+
+  // Tải thông tin người dùng
+  const fetchUserInfo = async () => {
+    try {
+      const savedUser = localStorage.getItem('userInfo');
+      if (savedUser) {
+        setUserInfo(JSON.parse(savedUser));
+      }
+      const profile = await profileService.getUserInfo();
+      const updatedUserInfo = {
+        email: profile.email || '',
+        fullname: profile.name || '',
+        numberphone: profile.phone || '',
+        address: profile.address || '',
+      };
+      setUserInfo(updatedUserInfo);
+      localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
+      setIsUserInfoValid(validateUserInfo());
+    } catch (error) {
+      console.error('Lỗi khi tải thông tin người dùng:', error);
+      setUserInfo({ email: '', fullname: '', numberphone: '', address: '' });
+      setIsUserInfoValid(false);
+    }
+  };
+
+  // Tải chi tiết sản phẩm
   useEffect(() => {
     const loadProductDetails = async () => {
       try {
         const productData = await fetchProductDetails(id, navigate);
-        console.log("Product data: ", productData);
         if (!productData) {
           console.error('Không lấy được chi tiết sản phẩm!');
           return;
@@ -53,16 +77,9 @@ export const useProductDetails = (id, navigate) => {
       }
     };
 
-    // Đúng: gọi ở đây, KHÔNG gọi bên trong chính `loadProductDetails`
-    const savedUser = localStorage.getItem('userInfo');
-    if (savedUser) {
-      setUserInfo(JSON.parse(savedUser));
-    }
-
     loadProductDetails();
     fetchUserInfo();
   }, [id, navigate]);
-
 
   const handleQuantityChange = (e) => {
     const value = e.target.value;
@@ -149,32 +166,21 @@ export const useProductDetails = (id, navigate) => {
         }
         setBuyNowModal(null);
       } else {
-        setNotification({
-          message: `Lỗi: ${response.error}`,
-          isVisible: true,
-        });
+        setNotification({ message: `Lỗi: ${response.error}`, isVisible: true });
       }
     } catch (error) {
-      setNotification({
-        message: `Lỗi khi đặt hàng: ${error.message}`,
-        isVisible: true,
-      });
+      setNotification({ message: `Lỗi khi đặt hàng: ${error.message}`, isVisible: true });
     }
   };
+
   const handleFeedbackSubmit = async (e) => {
     e.preventDefault();
     if (feedbackRating < 1 || feedbackRating > 5) {
-      setNotification({
-        message: 'Vui lòng chọn số sao từ 1 đến 5.',
-        isVisible: true,
-      });
+      setNotification({ message: 'Vui lòng chọn số sao từ 1 đến 5.', isVisible: true });
       return;
     }
     if (!feedbackComment.trim()) {
-      setNotification({
-        message: 'Vui lòng nhập nhận xét.',
-        isVisible: true,
-      });
+      setNotification({ message: 'Vui lòng nhập nhận xét.', isVisible: true });
       return;
     }
     try {
@@ -190,31 +196,23 @@ export const useProductDetails = (id, navigate) => {
         date: new Date().toISOString().split('T')[0],
       });
 
-      // (Tùy chọn) Xóa URL.createObjectURL sau khi gửi thành công để tránh rò rỉ bộ nhớ
+      // Xóa URL.createObjectURL để tránh rò rỉ bộ nhớ
       if (feedbackImage) {
         URL.revokeObjectURL(URL.createObjectURL(feedbackImage));
       }
 
-      // (Tùy chọn) Thông báo thành công hoặc cập nhật state
-      console.log('Feedback submitted successfully:', newFeedback);
-    } catch (error) {
-      console.error('Error submitting feedback:', error);
-      // Xử lý lỗi (ví dụ: hiển thị thông báo lỗi cho người dùng)
-    }
-      mockFeedbacks.push(newFeedback);
-      setProduct(prev => ({ ...prev, feedbacks: [...prev.feedbacks, newFeedback] }));
+      // Cập nhật state hoặc fetch lại reviews
       setFeedbackRating(0);
       setFeedbackComment('');
       setFeedbackImage(null);
-
       fetchReviews();
 
-    } catch (err) {
-      console.error(err);
-      alert('Lỗi khi gửi phản hồi');
+      setNotification({ message: 'Phản hồi đã được gửi thành công!', isVisible: true });
+    } catch (error) {
+      console.error('Lỗi khi gửi phản hồi:', error);
+      setNotification({ message: 'Lỗi khi gửi phản hồi. Vui lòng thử lại!', isVisible: true });
     }
   };
-
 
   return {
     product,

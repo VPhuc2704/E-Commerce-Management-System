@@ -2,14 +2,18 @@
 
 import { useState, useEffect } from "react";
 import orderService from "../services/orderService";
+import { useOrderApi } from '../hooks/useOrderApi';
 
 export const useOrderHistory = () => {
   const [orders, setOrders] = useState([]);
+  const { getAllOrders } = useOrderApi();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
+      const data = await getAllOrders();
+      setOrders(data);
       console.log("Starting to fetch orders...");
       setLoading(true);
       try {
@@ -24,6 +28,7 @@ export const useOrderHistory = () => {
         console.log("Setting loading to false...");
         setLoading(false);
       }
+      
     };
 
     fetchOrders();

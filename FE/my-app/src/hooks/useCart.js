@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import profileService from '../services/profileService';
 
 export const useCart = () => {
-
-  const [currentPage, setCurrentPage] = useState(1);
+  const [cartItems, setCartItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [paymentMethod, setPaymentMethod] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [paymentMethod, setPaymentMethod] = useState('VNPAY'); // Chỉ khai báo một lần
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [showPaymentCode, setShowPaymentCode] = useState(false);
   const [showUserInfoModal, setShowUserInfoModal] = useState(false);
@@ -17,64 +17,14 @@ export const useCart = () => {
     email: '',
     fullname: '',
     numberphone: '',
-    address: ''
+    address: '',
   });
-  const [isUserInfoValid, setIsUserInfoValid] = useState(true);
+  const [isUserInfoValid, setIsUserInfoValid] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('VNPAY');
   const navigate = useNavigate();
   const itemsPerPage = 4;
 
-  const [cartItems, setCartItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const fetchCart = async () => {
-    setLoading(true);
-    try {
-      const items = await fetchCartItems();
-      setCartItems(items);
-    } catch (err) {
-      console.error('Lỗi load giỏ hàng:', err);
-      setCartItems([]);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchCart();
-  }, []);
-
-
-  const addItemToCart = async (productId, quantity) => {
-    await addToCart(productId, quantity);
-    fetchCart();
-  };
-
-  const handleQuantityChange = async (productId, delta) => {
-    const item = cartItems.find(i => i.productId === productId);
-    const newQty = item.quantity + delta;
-    if (newQty < 1) return;
-    await updateCartQuantity(productId, newQty);
-    fetchCart();
-  };
-
-  const handleRemoveItem = async (productId) => {
-    await removeFromCart(productId);
-    fetchCart();
-  };
-
-
-
-  // Kiểm tra mục hợp lệ
-
-  // Load user info
-  useEffect(() => {
-    const savedUser = localStorage.getItem('userInfo');
-    if (savedUser) {
-      setUserInfo(JSON.parse(savedUser));
-    }
-  }, []);
-
+  // Hàm kiểm tra mục hợp lệ
   const isValidItem = (item) => {
     const valid = (
       item &&
@@ -88,63 +38,67 @@ export const useCart = () => {
       item.totalPrice >= 0 &&
       (item.productImage === undefined || typeof item.productImage === 'string')
     );
-    if (!valid) {
-      console.warn('Mục không hợp lệ bị lọc bỏ:', item);
-    }
+    if (!valid) console.warn('Mục không hợp lệ bị lọc bỏ:', item);
     return valid;
   };
 
-  const loadCart = () => {
+  // Tải giỏ hàng
+  const fetchCart = async () => {
+    setIsLoading(true);
     try {
-      const validCart = fetchCartItems().filter(isValidItem);
-      console.log('Đã tải giỏ hàng:', validCart);
+      const items = await fetchCartItems();
+      const validCart = items.filter(isValidItem);
       setCartItems(validCart);
       setSelectedItems((prev) => prev.filter((id) => validCart.some((item) => item.productId === id)));
-      if (validCart.length !== fetchCartItems().length) {
-        saveCart(validCart);
-      }
-    } catch (error) {
-      console.error('Lỗi khi tải giỏ hàng:', error);
+      if (validCart.length !== items.length) saveCart(validCart);
+    } catch (err) {
+      console.error('Lỗi load giỏ hàng:', err);
       setCartItems([]);
       setSelectedItems([]);
       saveCart([]);
     }
+    setIsLoading(false);
   };
 
+  // Tải thông tin người dùng
+  const fetchUserInfo = async () => {
+    try {
+      const profile = await profileService.getUserInfo();
+      const updatedUserInfo = {
+        email: profile.email || '',
+        fullname: profile.name || '',
+        numberphone: profile.phone || '',
+        address: profile.address || '',
+      };
+      setUserInfo(updatedUserInfo);
+      localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
+      setIsUserInfoValid(validateUserInfo());
+    } catch (error) {
+      console.error('Lỗi khi tải thông tin người dùng:', error);
+      setUserInfo({ email: '', fullname: '', numberphone: '', address: '' });
+      setIsUserInfoValid(false);
+    }
+  };
+
+  // useEffect để tải dữ liệu ban đầu
   useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        const profile = await profileService.getUserInfo();
-        setUserInfo({
-          email: profile.email || '',
-          fullname: profile.name || '',
-          numberphone: profile.phone || '',
-          address: profile.address || '',
-        });
-      } catch (error) {
-        console.error('Lỗi khi tải thông tin người dùng:', error);
-        setUserInfo({
-          email: '',
-          fullname: '',
-          numberphone: '',
-          address: '',
-        });
-      }
-    };
+    const savedUser = localStorage.getItem('userInfo');
+    if (savedUser) setUserInfo(JSON.parse(savedUser));
+    fetchCart();
     fetchUserInfo();
   }, []);
 
+  // Xử lý sự kiện thay đổi localStorage hoặc custom event
   useEffect(() => {
-    loadCart();
     const handleStorageChange = (e) => {
       if (e.key === 'cart') {
         console.log('localStorage "cart" thay đổi:', e.newValue);
-        loadCart();
+        fetchCart();
       }
     };
     const handleCartUpdated = () => {
       console.log('Sự kiện cartUpdated được kích hoạt');
-      loadCart();
+      fetchCart();
     };
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('cartUpdated', handleCartUpdated);
@@ -154,71 +108,40 @@ export const useCart = () => {
     };
   }, []);
 
+  // Thêm sản phẩm vào giỏ hàng
   const addItemToCart = (product) => {
     if (!isValidItem(product)) {
       console.error('Không thể thêm sản phẩm không hợp lệ:', product);
       return false;
     }
     const existingItem = cartItems.find((item) => item.productId === product.productId);
-    let newCart;
-    if (existingItem) {
-      newCart = cartItems.map((item) =>
-        item.productId === product.productId
-          ? {
-              ...item,
-              quantity: item.quantity + product.quantity,
-              totalPrice: (item.quantity + product.quantity) * item.pricePerUnit,
-            }
-          : item
-      );
-    } else {
-      newCart = [
-        ...cartItems,
-        {
-          id: null,
-          productId: product.productId,
-          productName: product.productName,
-          productImage: product.productImage,
-          quantity: product.quantity,
-          pricePerUnit: product.pricePerUnit,
-          totalPrice: product.quantity * product.pricePerUnit,
-        },
-      ];
-    }
+    const newCart = existingItem
+      ? cartItems.map((item) =>
+          item.productId === product.productId
+            ? {
+                ...item,
+                quantity: item.quantity + product.quantity,
+                totalPrice: (item.quantity + product.quantity) * item.pricePerUnit,
+              }
+            : item
+        )
+      : [
+          ...cartItems,
+          {
+            productId: product.productId,
+            productName: product.productName,
+            productImage: product.productImage,
+            quantity: product.quantity,
+            pricePerUnit: product.pricePerUnit,
+            totalPrice: product.quantity * product.pricePerUnit,
+          },
+        ];
     saveCart(newCart);
-    loadCart();
+    fetchCart();
     return true;
   };
 
-  const totalQuantity = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
-  const totalPages = Math.ceil(cartItems.length / itemsPerPage);
-  const paginatedItems = cartItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  const totalAmount = cartItems
-    .filter((item) => selectedItems.includes(item.productId))
-    .reduce((sum, item) => sum + (item.totalPrice || 0), 0);
-  const cartTotalPrice = cartItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
-
-  const handleSelectItem = (productId) => {
-    setSelectedItems((prev) => {
-      const newSelected = prev.includes(productId)
-        ? prev.filter((id) => id !== productId)
-        : [...prev, productId];
-      console.log('Selected items updated:', newSelected);
-      return newSelected;
-    });
-  };
-
-  const handleSelectAll = () => {
-    if (selectedItems.length === cartItems.length) {
-      setSelectedItems([]);
-      console.log('Deselected all items');
-    } else {
-      const newSelected = cartItems.map((item) => item.productId);
-      setSelectedItems(newSelected);
-      console.log('Selected all items:', newSelected);
-    }
-  };
-
+  // Xử lý thay đổi số lượng
   const handleQuantityChange = (productId, delta) => {
     const newCart = cartItems.map((item) => {
       if (item.productId === productId) {
@@ -232,27 +155,28 @@ export const useCart = () => {
       return item;
     });
     saveCart(newCart);
-    loadCart();
+    fetchCart();
   };
 
+  // Xóa sản phẩm
   const handleRemoveItem = (productId) => {
     if (window.confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
       const newCart = cartItems.filter((item) => item.productId !== productId);
       saveCart(newCart);
       setSelectedItems((prev) => prev.filter((id) => id !== productId));
-      if (paginatedItems.length === 1 && currentPage > 1) {
-        setCurrentPage((prev) => prev - 1);
-      }
-      loadCart();
+      if (paginatedItems.length === 1 && currentPage > 1) setCurrentPage((prev) => prev - 1);
+      fetchCart();
     }
   };
 
+  // Xác thực thông tin người dùng
   const validateUserInfo = () => {
     const { email, fullname, numberphone, address } = userInfo;
     return email && fullname && numberphone && address;
   };
 
-  const handleCheckout = async () => {
+  // Xử lý thanh toán
+  const handleCheckout = () => {
     if (selectedItems.length === 0) {
       alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!');
       return;
@@ -284,7 +208,7 @@ export const useCart = () => {
         const newCart = validCartItems.filter((item) => !selectedItems.includes(item.productId));
         saveCart(newCart);
         setSelectedItems([]);
-        loadCart();
+        fetchCart();
       } else {
         alert(`Thanh toán thất bại: ${response.error}`);
       }
@@ -295,17 +219,17 @@ export const useCart = () => {
     }
   };
 
-  // Handle confirm VNPAY payment
+  // Xử lý xác nhận thanh toán VNPAY
   const handleConfirmVnpayPayment = async () => {
     alert('Thanh toán VNPAY thành công!');
     const newCart = cartItems.filter((item) => !selectedItems.includes(item.productId));
     await fetchCart();
     setSelectedItems([]);
     setShowPaymentCode(false);
-    loadCart();
+    fetchCart();
   };
 
-  // Handle copying VNPAY code
+  // Sao chép mã VNPAY
   const handleCopyCode = async () => {
     try {
       await navigator.clipboard.writeText(vnpayCode);
@@ -328,37 +252,46 @@ export const useCart = () => {
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: 'spring',
-        stiffness: 100,
-      },
-    },
-    exit: {
-      x: -100,
-      opacity: 0,
-      transition: { duration: 0.3 },
-    },
+    visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100 } },
+    exit: { x: -100, opacity: 0, transition: { duration: 0.3 } },
   };
 
   const cardHoverVariants = {
-    hover: {
-      y: -8,
-      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-      transition: { duration: 0.3 },
-    },
+    hover: { y: -8, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', transition: { duration: 0.3 } },
+  };
+
+  // Tính toán các giá trị
+  const totalQuantity = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  const totalPages = Math.ceil(cartItems.length / itemsPerPage);
+  const paginatedItems = cartItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalAmount = cartItems
+    .filter((item) => selectedItems.includes(item.productId))
+    .reduce((sum, item) => sum + (item.totalPrice || 0), 0);
+  const cartTotalPrice = cartItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
+
+  // Hàm xử lý chọn sản phẩm
+  const handleSelectItem = (productId) => {
+    setSelectedItems((prev) =>
+      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    setSelectedItems((prev) =>
+      prev.length === cartItems.length ? [] : cartItems.map((item) => item.productId)
+    );
+  };
+
+  // Hàm lưu thông tin người dùng (giả định)
+  const handleSaveUserInfo = (newUserInfo) => {
+    setUserInfo(newUserInfo);
+    localStorage.setItem('userInfo', JSON.stringify(newUserInfo));
+    setIsUserInfoValid(validateUserInfo());
   };
 
   return {
@@ -386,10 +319,16 @@ export const useCart = () => {
     handleCheckout,
     handlePayment,
     handleSaveUserInfo,
+    handleConfirmVnpayPayment,
+    handleCopyCode,
     containerVariants,
     itemVariants,
     cardHoverVariants,
     setCurrentPage,
     setUserInfo,
+    setShowPaymentOptions,
+    setShowPaymentCode,
+    setShowUserInfoModal,
+    setVnpayCode,
   };
 };
