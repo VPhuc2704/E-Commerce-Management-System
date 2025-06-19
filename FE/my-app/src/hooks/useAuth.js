@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { jwtDecode } from "jwt-decode"
@@ -69,6 +68,9 @@ const useAuth = () => {
       const userData = {
         email: decoded.email || "",
         roles: decoded.roles || [],
+        fullname: decoded.fullname || "",
+        numberphone: decoded.numberphone || "",
+        address: decoded.address || "",
       }
 
       localStorage.setItem("accessToken", data.accessToken)
@@ -133,3 +135,6 @@ const useAuth = () => {
   }
 }
 export default useAuth
+// Changed from: export default useAuth
+// To: export { useAuth }
+// export { useAuth }

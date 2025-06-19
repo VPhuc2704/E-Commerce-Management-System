@@ -1,38 +1,34 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import orderService from "../services/orderService";
 import { useOrderApi } from '../hooks/useOrderApi';
 
 export const useOrderHistory = () => {
   const [orders, setOrders] = useState([]);
-  const { getAllOrders } = useOrderApi();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Get the function but don't put it in dependencies
+  const { getAllOrders } = useOrderApi();
 
+  // ✅ Fix: Remove getAllOrders from dependencies to prevent infinite loop
   useEffect(() => {
     const fetchOrders = async () => {
-      const data = await getAllOrders();
-      setOrders(data);
-      console.log("Starting to fetch orders...");
-      setLoading(true);
       try {
-        const orderData = await orderService.getOrders();
-        console.log("Orders fetched:", orderData);
-        setOrders(orderData);
+        const data = await getAllOrders();
+        setOrders(data);
         setError(null);
       } catch (err) {
         console.error("Error fetching orders:", err);
         setError("Không thể tải danh sách đơn hàng");
       } finally {
-        console.log("Setting loading to false...");
         setLoading(false);
       }
-      
     };
 
     fetchOrders();
-  }, []);
+  }, []); // ✅ Empty dependency array - only run once on mount
 
   useEffect(() => {
     const handleStorageChange = (e) => {
@@ -47,11 +43,13 @@ export const useOrderHistory = () => {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  const refreshOrders = async () => {
+  // ✅ Use useCallback to prevent recreation and use getAllOrders directly
+  const refreshOrders = useCallback(async () => {
     try {
       setLoading(true);
-      const orderData = await orderService.getOrders();
-      setOrders(orderData);
+      // Use getAllOrders instead of orderService.getOrders for consistency
+      const data = await getAllOrders();
+      setOrders(data);
       setError(null);
     } catch (err) {
       setError("Không thể tải danh sách đơn hàng");
@@ -59,9 +57,8 @@ export const useOrderHistory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAllOrders]); // ✅ Now it's safe to include getAllOrders here since refreshOrders is called manually
 
-  console.log("Returning useOrderHistory:", { orders, loading, error });
   return {
     orders,
     loading,

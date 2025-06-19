@@ -6,8 +6,6 @@ import { useProductDetails } from '../hooks/useProductDetails';
 import { useProductFeedbacks } from '../hooks/useProductFeedbacks';
 import { useCart } from '../hooks/useCart';
 
-
-
 const ProductCard = ({ product }) => {
   const formatPrice = (price) => {
     if (!price) return '0';
@@ -45,13 +43,17 @@ const ProductCard = ({ product }) => {
 
 const Notification = ({ message, isVisible, onClose }) => {
   React.useEffect(() => {
+    let timer;
     if (isVisible) {
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         onClose();
-      }, 3000);
-      return () => clearTimeout(timer);
+        console.log('Notification auto-closed at:', new Date().toISOString());
+      }, 3000); // 3 giây
     }
-  }, [isVisible, onClose]);
+    return () => {
+      if (timer) clearTimeout(timer); // Dọn dẹp timer khi unmount hoặc isVisible thay đổi
+    };
+  }, [isVisible, onClose]); // Dependency array chỉ phụ thuộc vào isVisible và onClose
 
   if (!isVisible) return null;
 
@@ -98,13 +100,15 @@ const ProductDetails = () => {
     handleBuyNow,
     paymentMethod,
     setPaymentMethod,
-  } = useProductDetails(id, navigate);
-  
-  // const [showAllFeedbacks, setShowAllFeedbacks] = useState(false);
+    feedbacks,
+    loading,
+    error,
+  } = useProductDetails(id);
 
-  const { feedbacks, loading, fetchReviews } = useProductFeedbacks(product?.id);
+  const [showAllFeedbacks, setShowAllFeedbacks] = useState(false);
+  const toggleShowAllFeedbacks = () => setShowAllFeedbacks(!showAllFeedbacks);
 
-  const { addItemToCart } = useCart();
+  const displayedFeedbacks = showAllFeedbacks ? feedbacks : feedbacks.slice(0, 3);
 
   const handleStarClick = (rating) => {
     setFeedbackRating(rating);
@@ -127,8 +131,6 @@ const ProductDetails = () => {
     );
   }
 
-  const displayedFeedbacks = showAllFeedbacks ? product.feedbacks : product.feedbacks.slice(0, 3);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 flex flex-col relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -140,7 +142,7 @@ const ProductDetails = () => {
       <Notification
         message={notification.message}
         isVisible={notification.isVisible}
-        onClose={() => setNotification(prev => ({ ...prev, isVisible: false }))}
+        onClose={() => setNotification(prev => ({ ...prev, isVisible: false, message: '' }))} // Xóa thông điệp khi đóng
       />
 
       <main className="flex-grow container mx-auto px-6 py-8 relative z-10">
@@ -160,7 +162,7 @@ const ProductDetails = () => {
                   Bán chạy #{product.soldCount}
                 </div>
                 <div className="absolute -top-2 -left-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-300">
-                  {product.category}
+                  {product.type}
                 </div>
               </div>
 
@@ -173,10 +175,10 @@ const ProductDetails = () => {
                     <div className="flex items-center space-x-6 mb-4">
                       <div className="flex items-center space-x-2">
                         <div className="text-amber-400 text-2xl">
-                          {'★'.repeat(product.rating)}
+                          {'★'.repeat(Math.round(product.rating || 0))}
                         </div>
                         <div className="text-gray-300 text-2xl">
-                          {'☆'.repeat(5 - product.rating)}
+                          {'☆'.repeat(5 - Math.round(product.rating || 0))}
                         </div>
                       </div>
                       <span className="text-gray-600 font-medium">({product.rating}/5)</span>
@@ -201,7 +203,6 @@ const ProductDetails = () => {
                     <p className="text-gray-700 leading-relaxed">{product.description}</p>
                   </div>
 
-                  {/* Khung điều khiển đã chuyển sang bên trái */}
                   <div className="mt-8 bg-white p-5 rounded-2xl shadow-inner border border-gray-100">
                     <div className="flex items-center space-x-3 mb-4">
                       <label className="text-gray-700 font-semibold text-sm">Số lượng:</label>
@@ -285,13 +286,15 @@ const ProductDetails = () => {
           </section>
 
           <section className="xl:col-span-2 bg-gray-50 p-8 rounded-3xl shadow-inner border border-gray-100 mt-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Phản hồi từ khách hàng ({product.feedbacks.length})</h2>
-            {product.feedbacks.length > 0 ? (
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Phản hồi từ khách hàng ({feedbacks.length})</h2>
+            {loading && <p className="text-center">Đang tải phản hồi...</p>}
+            {error && <p className="text-center text-red-600">{error}</p>}
+            {!loading && !error && feedbacks.length > 0 && (
               <div className="space-y-6">
                 {displayedFeedbacks.map((feedback) => (
                   <div key={feedback.id} className="border-b border-gray-200 pb-6">
                     <div className="flex items-center space-x-4 mb-3">
-                      <span className="font-semibold text-gray-900">{feedback.user}</span>
+                      <span className="font-semibold text-gray-900">{feedback.fullname}</span>
                       <div className="flex items-center space-x-1">
                         <div className="text-amber-400">
                           {'★'.repeat(feedback.rating)}
@@ -300,7 +303,7 @@ const ProductDetails = () => {
                           {'☆'.repeat(5 - feedback.rating)}
                         </div>
                       </div>
-                      <span className="text-gray-500 text-sm">{feedback.date}</span>
+                      <span className="text-gray-500 text-sm">{new Date(feedback.createdDate).toLocaleString()}</span>
                     </div>
                     <p className="text-gray-700 leading-relaxed">{feedback.comment}</p>
                     {feedback.imageUrl && (
@@ -312,18 +315,17 @@ const ProductDetails = () => {
                     )}
                   </div>
                 ))}
-                {product.feedbacks.length > 3 && !showAllFeedbacks && (
+                {feedbacks.length > 3 && (
                   <button
-                    onClick={() => setShowAllFeedbacks(true)}
+                    onClick={toggleShowAllFeedbacks}
                     className="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-xl font-semibold hover:bg-indigo-700 transition-colors duration-200"
                   >
-                    Xem thêm
+                    {showAllFeedbacks ? 'Ẩn bớt' : 'Xem thêm'}
                   </button>
                 )}
               </div>
-            ) : (
-              <p className="text-gray-500 italic">Chưa có phản hồi nào.</p>
             )}
+            {!loading && !error && feedbacks.length === 0 && <p className="text-gray-500 italic">Chưa có phản hồi nào.</p>}
           </section>
 
           {hasPurchasedAndConfirmed && (

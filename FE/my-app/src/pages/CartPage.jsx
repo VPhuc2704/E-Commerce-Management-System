@@ -4,9 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Footer from '../components/layout/Footer';
 import { useCart } from '../hooks/useCart';
 
-
 const CartPage = () => {
-
   const Host = "http://localhost:8081";
 
   const {
@@ -39,8 +37,8 @@ const CartPage = () => {
     cardHoverVariants,
     setCurrentPage,
     setUserInfo,
+    modalQuantities,
   } = useCart();
-
 
   const formatPrice = (price) => {
     if (typeof price !== 'number' || isNaN(price) || price < 0) {
@@ -361,7 +359,7 @@ const CartPage = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[5000] flex items-center justify-center p-4"
               onClick={() => setShowPaymentModal(false)}
             >
               <motion.div
@@ -369,82 +367,137 @@ const CartPage = () => {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.8, y: 50 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+                className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 mt-16" // Thêm mt-16 để đẩy xuống dưới
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="p-8">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Xác nhận thanh toán</h3>
-                  {!isUserInfoValid && (
-                    <p className="text-red-600 text-sm mb-4">Vui lòng điền đầy đủ thông tin!</p>
-                  )}
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-gray-700 font-semibold mb-2">Họ và tên</label>
-                      <input
-                        type="text"
-                        value={userInfo.fullname}
-                        onChange={(e) => setUserInfo({ ...userInfo, fullname: e.target.value })}
-                        className="w-full border rounded-lg p-2 mb-2 bg-gray-100 cursor-not-allowed"
-                        disabled
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 font-semibold mb-2">Email</label>
-                      <input
-                        type="email"
-                        value={userInfo.email}
-                        onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
-                        className="w-full border rounded-lg p-2 mb-2 bg-gray-100 cursor-not-allowed"
-                        disabled
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 font-semibold mb-2">Số điện thoại</label>
-                      <input
-                        type="text"
-                        value={userInfo.numberphone}
-                        onChange={(e) => setUserInfo({ ...userInfo, numberphone: e.target.value })}
-                        className="w-full border rounded-lg p-2 mb-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 font-semibold mb-2">Địa chỉ giao hàng</label>
-                      <input
-                        type="text"
-                        value={userInfo.address}
-                        onChange={(e) => setUserInfo({ ...userInfo, address: e.target.value })}
-                        className="w-full border rounded-lg p-2 mb-4"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 font-semibold mb-2">Phương thức thanh toán</label>
-                      <select
-                        value={paymentMethod}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="w-full border rounded-lg p-2 mb-4"
-                      >
-                        <option value="VNPAY">VNPAY</option>
-                        <option value="COD">COD (Thanh toán khi nhận hàng)</option>
-                      </select>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Xác nhận thanh toán</h3>
+                {!isUserInfoValid && (
+                  <p className="text-red-600 text-sm mb-4">Vui lòng điền đầy đủ thông tin!</p>
+                )}
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Bảng sản phẩm đã chọn - Bên trái */}
+                  <div className="bg-gray-50 p-4 rounded-xl shadow-inner">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Sản phẩm đã chọn</h4>
+                    {cartItems
+                      .filter((item) => selectedItems.includes(item.productId))
+                      .map((item) => (
+                        <div key={item.productId} className="flex items-center gap-4 mb-4 p-2 bg-white rounded-lg shadow-sm">
+                          <img
+                            src={`${Host}${item.productImage || '/assets/images/default.jpg'}`}
+                            alt={item.productName}
+                            className="w-16 h-16 rounded-lg object-cover"
+                          />
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-800">{item.productName}</p>
+                            <p className="text-sm text-gray-600">Đơn giá: {formatPrice(item.pricePerUnit)}</p>
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm text-gray-500">Số lượng:</span>
+                              <div className="flex items-center bg-gray-100 rounded-xl overflow-hidden">
+                                <motion.button
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => handleQuantityChange(item.productId, -1)}
+                                  className="px-4 py-2 text-gray-700 font-bold hover:bg-gray-200"
+                                  aria-label={`Giảm số lượng ${item.productName}`}
+                                >
+                                  −
+                                </motion.button>
+                                <span className="px-4 py-2 bg-white min-w-[48px] text-center font-semibold">
+                                  {modalQuantities[item.productId] || item.quantity}
+                                </span>
+                                <motion.button
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => handleQuantityChange(item.productId, 1)}
+                                  className="px-4 py-2 text-gray-700 font-bold hover:bg-gray-200"
+                                  aria-label={`Tăng số lượng ${item.productName}`}
+                                >
+                                  +
+                                </motion.button>
+                              </div>
+                            </div>
+                            <p className="text-sm font-semibold text-indigo-600">
+                              Thành tiền: {formatPrice((modalQuantities[item.productId] || item.quantity) * item.pricePerUnit)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    <div className="mt-4 text-right">
+                      <p className="text-lg font-bold text-gray-900">Tổng tiền: {formatPrice(totalAmount)}</p>
                     </div>
                   </div>
-                  <div className="flex gap-4">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowPaymentModal(false)}
-                      className="flex-1 bg-gray-100 text-gray-900 px-4 py-3 rounded-xl font-medium hover:bg-gray-200"
-                    >
-                      Hủy
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handlePayment}
-                      className="flex-1 bg-indigo-600 text-white px-4 py-3 rounded-xl font-medium hover:bg-indigo-700"
-                    >
-                      Xác nhận
-                    </motion.button>
+
+                  {/* Thông tin xác nhận - Bên phải */}
+                  <div className="bg-gray-50 p-4 rounded-xl shadow-inner">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Xác nhận thông tin</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-gray-700 font-semibold mb-2">Họ và tên</label>
+                        <input
+                          type="text"
+                          value={userInfo.fullname}
+                          onChange={(e) => setUserInfo({ ...userInfo, fullname: e.target.value })}
+                          className="w-full border rounded-lg p-2 mb-2 bg-gray-100 cursor-not-allowed"
+                          disabled
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-semibold mb-2">Email</label>
+                        <input
+                          type="email"
+                          value={userInfo.email}
+                          onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
+                          className="w-full border rounded-lg p-2 mb-2 bg-gray-100 cursor-not-allowed"
+                          disabled
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-semibold mb-2">Số điện thoại</label>
+                        <input
+                          type="text"
+                          value={userInfo.numberphone}
+                          onChange={(e) => setUserInfo({ ...userInfo, numberphone: e.target.value })}
+                          className="w-full border rounded-lg p-2 mb-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-semibold mb-2">Địa chỉ giao hàng</label>
+                        <input
+                          type="text"
+                          value={userInfo.address}
+                          onChange={(e) => setUserInfo({ ...userInfo, address: e.target.value })}
+                          className="w-full border rounded-lg p-2 mb-4"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-semibold mb-2">Phương thức thanh toán</label>
+                        <select
+                          value={paymentMethod}
+                          onChange={(e) => setPaymentMethod(e.target.value)}
+                          className="w-full border rounded-lg p-2 mb-4"
+                        >
+                          <option value="VNPAY">VNPAY</option>
+                          <option value="COD">COD (Thanh toán khi nhận hàng)</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex gap-4">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setShowPaymentModal(false)}
+                        className="flex-1 bg-gray-100 text-gray-900 px-4 py-3 rounded-xl font-medium hover:bg-gray-200"
+                      >
+                        Hủy
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handlePayment}
+                        className="flex-1 bg-indigo-600 text-white px-4 py-3 rounded-xl font-medium hover:bg-indigo-700"
+                      >
+                        Xác nhận
+                      </motion.button>
+                    </div>
                   </div>
                 </div>
               </motion.div>

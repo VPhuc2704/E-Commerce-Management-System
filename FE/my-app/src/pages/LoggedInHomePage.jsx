@@ -22,8 +22,15 @@ const DishItem = ({ name, price, rating, imageUrl, soldCount, id }) => (
           <p className="text-green-600 text-sm hover:no-underline">Đã bán: {soldCount} suất</p>
         </div>
         <div className="text-right">
-          <p className="text-yellow-500 mb-1 hover:no-underline">{'★'.repeat(rating) + '☆'.repeat(5 - rating)}</p>
-          <p className="text-gray-500 text-sm hover:no-underline">({rating}/5)</p>
+          <div className="flex items-center space-x-1">
+            <div className="text-amber-400 text-sm">
+              {'★'.repeat(Math.round(rating || 0))}
+            </div>
+            <div className="text-gray-300 text-sm">
+              {'☆'.repeat(5 - Math.round(rating || 0))}
+            </div>
+          </div>
+          <p className="text-gray-500 text-sm hover:no-underline">({(rating || 0).toFixed(1)}/5)</p>
         </div>
       </div>
     </div>
@@ -86,6 +93,7 @@ const LoggedInHomePage = ({ user }) => {
         const categoriesWithProducts = await Promise.all(
           categoryData.map(async (category) => {
             const products = await productService.getProductsByCategory(category.id);
+            console.log('Products for category', category.name, ':', products); // Log để kiểm tra
             return {
               ...category,
               items: products
@@ -107,52 +115,6 @@ const LoggedInHomePage = ({ user }) => {
 
   useEffect(() => {
     let mounted = true;
-
-    const fetchFlashSaleProducts = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/api/flash-sale/products');
-        const data = await response.json();
-        if (mounted) {
-          setFlashSaleProducts(data.map(product => ({
-            ...product,
-            salePrice: product.originalPrice * (1 - product.discountPercentage / 100),
-          })));
-        }
-      } catch (error) {
-        console.error('Failed to fetch flash sale products:', error);
-      }
-    };
-
-    const fetchFlashSaleEndTime = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/api/flash-sale/end-time');
-        const data = await response.json();
-        const endTime = new Date(data.endTime).getTime();
-        const updateCountdown = () => {
-          const now = new Date().getTime();
-          const distance = endTime - now;
-
-          if (distance < 0) {
-            setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
-            return;
-          }
-
-          const hours = Math.floor(distance / (1000 * 60 * 60));
-          const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-          setTimeLeft({ hours, minutes, seconds });
-        };
-
-        updateCountdown();
-        const interval = setInterval(updateCountdown, 1000);
-        return () => clearInterval(interval);
-      } catch (error) {
-        console.error('Failed to fetch flash sale end time:', error);
-      }
-    };
-
-    fetchFlashSaleProducts();
-    fetchFlashSaleEndTime();
 
     return () => {
       mounted = false;
@@ -284,7 +246,6 @@ const LoggedInHomePage = ({ user }) => {
               >
                 🍴 XEM MENU
               </button>
-
             </div>
           </div>
         </section>
@@ -403,7 +364,7 @@ const LoggedInHomePage = ({ user }) => {
                   <DishItem
                     name={item.name}
                     price={item.price}
-                    rating={item.rating}
+                    rating={item.rating || 0} 
                     imageUrl={`http://localhost:8081${item.image}`}
                     soldCount={item.soldCount}
                     id={item.id}
@@ -412,21 +373,30 @@ const LoggedInHomePage = ({ user }) => {
               ))}
             </div>
             {totalCategoryPages > 1 && (
-              <div className="flex justify-center mt-4 gap-2">
+              <div className="flex justify-center mt-6 gap-2">
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 bg-indigo-700 text-white rounded-lg disabled:bg-gray-400 hover:bg-indigo-800 transition-all duration-300"
+                  className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-md"
                 >
                   Previous
                 </button>
-                <span className="px-4 py-2 text-gray-700">
-                  Trang {currentPage} / {totalCategoryPages}
-                </span>
+                {Array.from({ length: totalCategoryPages }, (_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentPage(index + 1)}
+                    className={`px-4 py-2 rounded-full font-semibold text-sm ${currentPage === index + 1
+                      ? 'bg-indigo-600 text-white shadow-lg'
+                      : 'bg-white text-gray-800 border border-gray-300 hover:bg-indigo-100 hover:shadow-md'
+                      } transition-all duration-300`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalCategoryPages))}
                   disabled={currentPage === totalCategoryPages}
-                  className="px-4 py-2 bg-indigo-700 text-white rounded-lg disabled:bg-gray-400 hover:bg-indigo-800 transition-all duration-300"
+                  className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-md"
                 >
                   Next
                 </button>

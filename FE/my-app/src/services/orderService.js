@@ -1,126 +1,142 @@
-// Trong file orderService.js
-import { mockOrders, getProductById } from "../mockdata/productData";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const orderService = {
-  // Get user orders
+  // Lấy danh sách đơn hàng của người dùng
   getUserOrders: async (userId) => {
     try {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve([
-            {
-              id: 1001,
-              date: "15/06/2025",
-              total: 450000,
-              status: "completed",
-              statusText: "Đã giao",
-              items: 3,
-              location: "Quận 1",
-            },
-            {
-              id: 1002,
-              date: "12/06/2025",
-              total: 320000,
-              status: "pending",
-              statusText: "Đang giao",
-              items: 2,
-              location: "Quận 3",
-            },
-            {
-              id: 1003,
-              date: "10/06/2025",
-              total: 180000,
-              status: "cancelled",
-              statusText: "Đã hủy",
-              items: 1,
-              location: "Quận 1",
-            },
-          ]);
-        }, 800);
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("Không tìm thấy token xác thực");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/orders/all`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Không thể tải danh sách đơn hàng");
+      }
+
+      const data = await response.json();
+      return Array.isArray(data) ? data : [data].filter(Boolean);
     } catch (error) {
-      throw new Error("Không thể tải danh sách đơn hàng");
+      console.error("Lỗi khi lấy danh sách đơn hàng:", error);
+      throw new Error(error.message || "Không thể tải danh sách đơn hàng");
     }
   },
 
-  // Get order details
+  // Lấy chi tiết đơn hàng
   getOrderDetails: async (orderId) => {
     try {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({
-            id: orderId,
-            date: "15/06/2025",
-            total: 450000,
-            status: "completed",
-            statusText: "Đã giao",
-            items: [
-              { name: "Phở bò", quantity: 1, price: 65000 },
-              { name: "Bánh mì", quantity: 2, price: 25000 },
-              { name: "Cà phê sữa", quantity: 1, price: 35000 },
-            ],
-            address: "123 Đường Lê Lợi, Phường Bến Nghé, Quận 1",
-            phone: "0901234567",
-          });
-        }, 500);
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("Không tìm thấy token xác thực");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/orders/details/${orderId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Không thể tải chi tiết đơn hàng");
+      }
+
+      const data = await response.json();
+      return data;
     } catch (error) {
-      throw new Error("Không thể tải chi tiết đơn hàng");
+      console.error("Lỗi khi lấy chi tiết đơn hàng:", error);
+      throw new Error(error.message || "Không thể tải chi tiết đơn hàng");
     }
   },
 
-  // Cancel order
+  // Hủy đơn hàng
   cancelOrder: async (orderId) => {
     try {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (Math.random() > 0.1) {
-            // 90% success rate
-            resolve({ success: true });
-          } else {
-            reject(new Error("Hủy đơn hàng thất bại"));
-          }
-        }, 500);
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("Không tìm thấy token xác thực");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/orders/cancel/${orderId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Hủy đơn hàng thất bại");
+      }
+
+      return { success: true };
     } catch (error) {
-      throw new Error("Không thể hủy đơn hàng");
+      console.error("Lỗi khi hủy đơn hàng:", error);
+      throw new Error(error.message || "Không thể hủy đơn hàng");
     }
   },
 
-  // Update getOrders method to use mock data
+  // Lấy danh sách đơn hàng từ localStorage hoặc API
   getOrders: async () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Check localStorage first
-        const savedOrders = localStorage.getItem("orders");
-        if (savedOrders) {
-          resolve(JSON.parse(savedOrders));
-        } else {
-          // Save mock data to localStorage
-          localStorage.setItem("orders", JSON.stringify(mockOrders));
-          resolve(mockOrders);
-        }
-      }, 800);
-    });
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("Không tìm thấy token xác thực");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/orders/all`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Không thể tải danh sách đơn hàng");
+      }
+
+      const data = await response.json();
+      localStorage.setItem("orders", JSON.stringify(data));
+      return Array.isArray(data) ? data : [data].filter(Boolean);
+    } catch (error) {
+      console.error("Lỗi khi lấy đơn hàng:", error);
+      const savedOrders = localStorage.getItem("orders");
+      return savedOrders ? JSON.parse(savedOrders) : [];
+    }
   },
 
-  // Thêm phương thức placeOrder
+  // Đặt hàng
   placeOrder: async (orderData) => {
     try {
       const { buyNow, productId, quantity, paymentMethod, user, items } = orderData;
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("Không tìm thấy token xác thực");
+      }
 
       let orderItems = [];
       let totalAmount = 0;
 
       if (buyNow) {
-        // Xử lý "Mua ngay"
-        const product = await fetchProductDetails(productId);
+        const product = await orderService.fetchProductDetails(productId);
         if (!product) {
-          return { error: 'Sản phẩm không tồn tại' };
+          return { error: "Sản phẩm không tồn tại" };
         }
         orderItems = [
           {
-            id: Math.floor(Math.random() * 1000) + 1,
             productId: product.id,
             productName: product.name,
             imageUrl: product.imageUrl,
@@ -130,9 +146,7 @@ const orderService = {
         ];
         totalAmount = product.price * quantity;
       } else {
-        // Xử lý từ giỏ hàng
         orderItems = items.map((item) => ({
-          id: Math.floor(Math.random() * 1000) + 1,
           productId: item.productId,
           productName: item.productName,
           imageUrl: item.productImage,
@@ -142,52 +156,76 @@ const orderService = {
         totalAmount = orderItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
       }
 
-      // Tạo đơn hàng
       const order = {
-        id: Math.floor(Math.random() * 1000) + 1,
-        createdDate: new Date().toISOString(),
         totalAmount,
-        status: 'PENDING',
-        user,
+        status: "PENDING",
+        user: {
+          fullname: user?.fullname || "Nguyễn Văn A",
+          email: user?.email || "nguyenvana@example.com",
+          numberphone: user?.numberphone || "0901234567",
+          address: user?.address || "123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh",
+        },
         items: orderItems,
         paymentMethod,
       };
 
-      // Lưu vào localStorage
-      const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-      savedOrders.push(order);
-      localStorage.setItem('orders', JSON.stringify(savedOrders));
+      const response = await fetch(`${API_BASE_URL}/api/orders/create`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(order),
+      });
 
-      // Xử lý VNPAY
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Không thể tạo đơn hàng");
+      }
+
+      const savedOrder = await response.json();
+      const savedOrders = JSON.parse(localStorage.getItem("orders") || "[]");
+      savedOrders.push(savedOrder);
+      localStorage.setItem("orders", JSON.stringify(savedOrders));
+
       const redirectUrl =
-        paymentMethod === 'VNPAY'
-          ? `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?orderId=${order.id}&amount=${order.totalAmount}`
+        paymentMethod === "VNPAY"
+          ? `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?orderId=${savedOrder.id}&amount=${savedOrder.totalAmount}`
           : null;
 
-      return { order, redirectUrl };
+      return { order: savedOrder, redirectUrl };
     } catch (error) {
-      console.error('Lỗi khi đặt hàng:', error);
-      return { error: error.message };
+      console.error("Lỗi khi đặt hàng:", error);
+      return { error: error.message || "Không thể tạo đơn hàng" };
     }
   },
 
-  // Hàm fetchProductDetails hỗ trợ placeOrder
+  // Lấy thông tin sản phẩm
   fetchProductDetails: async (productId) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const product = getProductById(productId);
-        if (product) {
-          resolve({
-            id: product.id,
-            name: product.name,
-            imageUrl: product.imageUrl,
-            price: product.price,
-          });
-        } else {
-          resolve(null);
-        }
-      }, 200);
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Không thể lấy thông tin sản phẩm");
+      }
+
+      const product = await response.json();
+      return {
+        id: product.id,
+        name: product.name,
+        imageUrl: product.imageUrl,
+        price: product.price,
+      };
+    } catch (error) {
+      console.error("Lỗi khi lấy thông tin sản phẩm:", error);
+      return null;
+    }
   },
 };
 

@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import logo from '../../assets/images/logo.png';
+import { useCart } from '../../hooks/useCart'; // Import useCart
 
 const Navbar = () => {
   const { isAuthenticated, user, roles, logout } = useAuth();
   const [showLoginAlert, setShowLoginAlert] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [cartItemCount, setCartItemCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
+  const { totalQuantity } = useCart(); // Sử dụng totalQuantity từ useCart
 
   // Handle scroll effect
   useEffect(() => {
@@ -19,28 +20,6 @@ const Navbar = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Update cart count from localStorage
-  useEffect(() => {
-    const updateCartCount = () => {
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      const totalQuantity = cart.reduce((total, item) => total + (item.quantity || 0), 0);
-      setCartItemCount(totalQuantity);
-    };
-
-    updateCartCount();
-
-    // Listen for storage events (cross-tab updates)
-    window.addEventListener('storage', updateCartCount);
-
-    // Listen for custom cart update event (same-tab updates)
-    window.addEventListener('cartUpdated', updateCartCount);
-
-    return () => {
-      window.removeEventListener('storage', updateCartCount);
-      window.removeEventListener('cartUpdated', updateCartCount);
-    };
   }, []);
 
   const handleLoginClick = () => {
@@ -209,9 +188,9 @@ const Navbar = () => {
                     <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                   </svg>
 
-                  {cartItemCount > 0 && (
+                  {totalQuantity > 0 && ( // Sử dụng totalQuantity từ useCart
                     <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                      {cartItemCount}
+                      {totalQuantity}
                     </span>
                   )}
                 </button>
