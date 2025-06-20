@@ -69,6 +69,9 @@ const useAuth = () => {
       const userData = {
         email: decoded.email || "",
         roles: decoded.roles || [],
+        fullname: decoded.fullname || "",
+        numberphone: decoded.numberphone || "",
+        address: decoded.address || "",
       }
 
       localStorage.setItem("accessToken", data.accessToken)

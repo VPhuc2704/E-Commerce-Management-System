@@ -3,6 +3,8 @@ const HOST = 'http://localhost:8081'; // hoặc domain API thật
 export const feedbackService = {
     async getFeedbacksByProduct(productId) {
         const res = await fetch(`${HOST}/api/reviews/products/${productId}`);
+
+
         if (!res.ok) throw new Error('Lỗi khi lấy phản hồi');
         return await res.json();
     },

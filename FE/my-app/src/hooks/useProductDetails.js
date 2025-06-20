@@ -60,7 +60,7 @@ export const useProductDetails = (id, navigate) => {
     }
 
     loadProductDetails();
-  }, [id, navigate]);
+  }, [id]);
 
 
   const handleQuantityChange = (e) => {

@@ -281,7 +281,7 @@ const ProductDetails = () => {
                             {'☆'.repeat(5 - feedback.rating)}
                           </div>
                         </div>
-                        <span className="text-gray-500 text-sm">{feedback.create}</span>
+                        <span className="text-gray-500 text-sm">{new Date(feedback.createdDate).toLocaleString()}</span>
                       </div>
                       <p className="text-gray-700 leading-relaxed">{feedback.comment}</p>
                       {feedback.imageUrl && (

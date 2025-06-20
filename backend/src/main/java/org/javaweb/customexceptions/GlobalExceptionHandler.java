@@ -1,6 +1,4 @@
 package org.javaweb.customexceptions;
-
-import jdk.nashorn.internal.runtime.regexp.joni.exception.ErrorMessages;
 import org.javaweb.constant.ApiResponse;
 import org.javaweb.exceptions.*;
 import org.javaweb.model.dto.ErrorDTO;

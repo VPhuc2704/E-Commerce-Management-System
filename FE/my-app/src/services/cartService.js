@@ -10,6 +10,23 @@ export const fetchCartItems = async () => {
         Authorization: `Bearer ${accessToken}`,
       },
     });
+
+    if (res.status === 401) {
+      console.warn("Bạn chưa đăng nhập!");
+      return [];
+    }
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errorText}`);
+    }
+
+    // Kiểm tra header để tránh lỗi .json() khi không phải JSON
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Phản hồi không phải JSON');
+    }
+
     const cart = await res.json();
     return Array.isArray(cart.cartItemDTOList) ? cart.cartItemDTOList : [];
   } catch (error) {

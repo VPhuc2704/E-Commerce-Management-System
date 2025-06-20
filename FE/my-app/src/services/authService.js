@@ -23,7 +23,7 @@ export const login = async (email, password) => {
 
   const data = await response.json()
 
-  console.log("Login response:", data) // <-- Kiểm tra có token không
+  // console.log("Login response:", data) // <-- Kiểm tra có token không
 
   if (!response.ok) {
     // Nếu status không phải 2xx, tức là login fail
