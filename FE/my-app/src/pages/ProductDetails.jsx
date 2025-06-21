@@ -5,6 +5,7 @@ import Footer from '../components/layout/Footer';
 import { useProductDetails } from '../hooks/useProductDetails';
 import { useProductFeedbacks } from '../hooks/useProductFeedbacks';
 import { useCart } from '../hooks/useCart';
+import { X, Package } from "lucide-react";
 
 const ProductCard = ({ product }) => {
   const formatPrice = (price) => {
@@ -16,7 +17,7 @@ const ProductCard = ({ product }) => {
   return (
     <Link to={`/product-details/${product.id}`} className="no-underline hover:no-underline group">
       <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-5 hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 flex items-center space-x-4 hover:border-indigo-200">
-        <div className="relative overflow-hidden rounded-xl">
+        <div classClassName="relative overflow-hidden rounded-xl">
           <img
             src={imageUrl || '/assets/images/default.jpg'}
             alt={product.name}
@@ -154,7 +155,7 @@ const ProductDetails = () => {
                   <img
                     src={`http://localhost:8081${product.image}` || '/assets/images/default.jpg'}
                     alt={product.name}
-                    className="w-full h-80 object-cover rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-80 object-cover rounded-xl shadow-lg group-hover:scale-105扁transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
                 </div>
@@ -392,100 +393,156 @@ const ProductDetails = () => {
       </main>
 
       {buyNowModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl p-6 max-w-md w-full"
-          >
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Đặt hàng ngay</h3>
-            <div className="flex items-center gap-4 mb-4">
-              <img
-                src={buyNowModal.imageUrl}
-                alt={buyNowModal.name}
-                className="w-16 h-16 object-cover rounded-lg"
-              />
-              <div>
-                <p className="font-semibold">{buyNowModal.name}</p>
-                <p>{formatPrice(buyNowModal.price)} VNĐ</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setBuyNowModal(false)}
+          />
+
+          {/* Modal chính */}
+          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden bg-white rounded-2xl shadow-2xl">
+            {/* Header */}
+            <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6 text-white">
+              <button
+                onClick={() => setBuyNowModal(false)}
+                className="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-white/20 rounded-full">
+                  <Package size={24} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Xác nhận đặt hàng</h2>
+                  <p className="text-blue-100">Vui lòng kiểm tra kỹ thông tin đơn hàng</p>
+                </div>
               </div>
             </div>
 
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-1">Số lượng</label>
-              <input
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={handleQuantityChange}
-                className="w-full border rounded-lg p-2"
-              />
-            </div>
+            {/* Nội dung modal */}
+            <div className="flex flex-col lg:flex-row max-h-[calc(90vh-120px)] overflow-hidden">
+              {/* Bên trái: Sản phẩm đã chọn */}
+              <div className="lg:w-2/5 bg-gray-50 p-6 lg:p-8 overflow-y-auto">
+                <h3 className="text-lg font-semibold text-gray-800 mb-6">Chi tiết đơn hàng</h3>
+                <div className="space-y-4">
+                  <div className="flex gap-4 p-4 bg-white rounded-xl shadow-sm border">
+                    <img
+                      src={`http://localhost:8081${buyNowModal.imageUrl}` || '/assets/images/default.jpg'}
+                      alt={buyNowModal.name}
+                      className="w-16 h-16 object-cover rounded-lg"
+                    />
+                    <div className="flex-1">
+                      <p className="font-semibold">{buyNowModal.name}</p>
+                      <p className="text-sm text-gray-500">Đơn giá: {formatPrice(buyNowModal.price)}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-sm text-gray-500">Số lượng:</span>
+                        <button
+                          onClick={() => handleQuantityChange({ target: { value: (parseInt(quantity) - 1).toString() } })}
+                          className="px-2"
+                        >
+                          −
+                        </button>
+                        <span>{quantity}</span>
+                        <button
+                          onClick={() => handleQuantityChange({ target: { value: (parseInt(quantity) + 1).toString() } })}
+                          className="px-2"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <p className="text-sm font-semibold text-indigo-600 mt-1">
+                        Thành tiền: {formatPrice(quantity * buyNowModal.price)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right font-bold mt-4">Tổng tiền: {formatPrice(quantity * buyNowModal.price)}</div>
+                </div>
 
-            <div className="mb-4">
-              <h4 className="font-semibold text-gray-900 mb-2">Thông tin người dùng</h4>
-              {!isUserInfoValid && (
-                <p className="text-red-600 text-sm mb-2">Vui lòng điền đầy đủ thông tin!</p>
-              )}
-              <input
-                type="email"
-                placeholder="Email"
-                value={userInfo.email}
-                onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
-                className="w-full border rounded-lg p-2 mb-2 bg-gray-100 cursor-not-allowed"
-                disabled
-              />
-              <input
-                type="text"
-                placeholder="Họ và tên"
-                value={userInfo.fullname}
-                onChange={(e) => setUserInfo({ ...userInfo, fullname: e.target.value })}
-                className="w-full border rounded-lg p-2 mb-2 bg-gray-100 cursor-not-allowed"
-                disabled
-              />
-              <input
-                type="text"
-                placeholder="Số điện thoại"
-                value={userInfo.numberphone}
-                onChange={(e) => setUserInfo({ ...userInfo, numberphone: e.target.value })}
-                className="w-full border rounded-lg p-2 mb-2"
-              />
-              <input
-                type="text"
-                placeholder="Địa chỉ giao hàng"
-                value={userInfo.address}
-                onChange={(e) => setUserInfo({ ...userInfo, address: e.target.value })}
-                className="w-full border rounded-lg p-2 mb-2"
-              />
-            </div>
+                {/* Phương thức thanh toán */}
+                <div className="mt-6">
+                  <h4 className="font-semibold mb-3">Phương thức thanh toán</h4>
+                  <label className="flex items-center mb-2">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="VNPAY"
+                      checked={paymentMethod === 'VNPAY'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="mr-2"
+                    />
+                    VNPAY - Thanh toán online
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="COD"
+                      checked={paymentMethod === 'COD'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="mr-2"
+                    />
+                    COD - Thanh toán khi nhận hàng
+                  </label>
+                </div>
+              </div>
 
-            <div className="mb-4">
-              <label className="block text-gray-700 font-semibold mb-2">Phương thức thanh toán</label>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full border rounded-lg p-2 mb-4"
-              >
-                <option value="VNPAY">VNPAY</option>
-                <option value="COD">COD (Thanh toán khi nhận hàng)</option>
-              </select>
-            </div>
+              {/* Bên phải: Thông tin khách hàng */}
+              <div className="lg:w-3/5 p-6 lg:p-8 overflow-y-auto">
+                <h3 className="text-lg font-semibold text-gray-800 mb-6">Thông tin khách hàng</h3>
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={userInfo.fullname}
+                    disabled
+                    className="w-full bg-gray-100 p-3 rounded border"
+                    placeholder="Họ và tên"
+                  />
+                  <input
+                    type="email"
+                    value={userInfo.email}
+                    disabled
+                    className="w-full bg-gray-100 p-3 rounded border"
+                    placeholder="Email"
+                  />
+                  <input
+                    type="text"
+                    value={userInfo.numberphone}
+                    onChange={(e) => setUserInfo({ ...userInfo, numberphone: e.target.value })}
+                    className="w-full p-3 rounded border"
+                    placeholder="Số điện thoại"
+                  />
+                  <input
+                    type="text"
+                    value={userInfo.address}
+                    onChange={(e) => setUserInfo({ ...userInfo, address: e.target.value })}
+                    className="w-full p-3 rounded border"
+                    placeholder="Địa chỉ giao hàng"
+                  />
+                  {!isUserInfoValid && (
+                    <p className="text-red-600 text-sm">Vui lòng điền đầy đủ thông tin!</p>
+                  )}
+                </div>
 
-            <div className="flex gap-4">
-              <button
-                onClick={() => setBuyNowModal(null)}
-                className="bg-gray-300 text-gray-900 px-4 py-2 rounded-lg"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handlePlaceOrder}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg"
-              >
-                Đặt hàng
-              </button>
+                {/* Button */}
+                <div className="flex gap-4 mt-6">
+                  <button
+                    onClick={() => setBuyNowModal(null)}
+                    className="flex-1 px-4 py-3 bg-gray-100 rounded-lg text-gray-700 hover:bg-gray-200"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handlePlaceOrder}
+                    className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                  >
+                    Xác nhận đặt hàng
+                  </button>
+                </div>
+              </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
 

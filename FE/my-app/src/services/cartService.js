@@ -134,6 +134,7 @@ export const processPayment = async (
     const response = await orderService.placeOrder(orderData);
     if (response.order) {
       await fetchCartItems(); // Cập nhật giỏ hàng sau khi thanh toán
+      window.dispatchEvent(new Event('cartUpdated')); // Kích hoạt sự kiện để cập nhật UI giỏ hàng
       return {
         success: true,
         vnpayCode: paymentMethod === 'VNPAY' ? 'VNPAY-' + Math.random().toString(36).substr(2, 8) : null,

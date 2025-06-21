@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import orderService from '../services/orderService';
 import { motion } from 'framer-motion';
-import "../components/orders/OrderDetails.css"; // Import custom CSS
+import "../components/orders/OrderDetails.css";
 
 const Host = "http://localhost:8081";
 
@@ -111,7 +111,6 @@ const OrderDetails = () => {
         transition={{ duration: 0.5 }}
         className="order-card"
       >
-        {/* Header */}
         <div className="order-header">
           <div>
             <h1 className="order-title">Chi tiết đơn hàng #{order.id}</h1>
@@ -127,13 +126,9 @@ const OrderDetails = () => {
           </span>
         </div>
 
-        {/* Content */}
         <div className="content-section">
           <div className="content-grid">
-            {/* User Info */}
             <UserInfo user={order.user} />
-
-            {/* Products */}
             <div className="info-section">
               <h3 className="section-title">Sản phẩm đã đặt</h3>
               {order.items.map(item => (
@@ -143,7 +138,6 @@ const OrderDetails = () => {
           </div>
         </div>
 
-        {/* Total */}
         <div className="total-section">
           <p className="total-amount">
             Tổng tiền: {order.totalAmount.toLocaleString('vi-VN')} VNĐ
@@ -151,7 +145,7 @@ const OrderDetails = () => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => navigate('/orders')}
+            onClick={() => navigate('/profile?tab=orders')}
             className="simple-button"
           >
             ← Quay lại danh sách đơn hàng

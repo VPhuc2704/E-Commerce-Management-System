@@ -1,18 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import logo from '../../assets/images/logo.png';
-import { useCart } from '../../hooks/useCart'; // Import useCart
+import { useCart } from '../../hooks/useCart';
+import { useNotifications } from '../../hooks/useNotifications';
+import { Bell, X } from 'lucide-react';
 
 const Navbar = () => {
   const { isAuthenticated, user, roles, logout } = useAuth();
   const [showLoginAlert, setShowLoginAlert] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const navigate = useNavigate();
-  const { totalQuantity } = useCart(); // Sử dụng totalQuantity từ useCart
+  const { totalQuantity } = useCart();
+  const { notifications, unreadCount, markAsRead } = useNotifications();
+  const dropdownRef = useRef(null);
 
-  // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -20,6 +24,17 @@ const Navbar = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleLoginClick = () => {
@@ -54,18 +69,22 @@ const Navbar = () => {
     }
   };
 
+  const handleNotificationClick = (notification) => {
+    markAsRead(notification.id);
+    navigate(`/order-details/${notification.orderId}`);
+    setShowNotifications(false);
+  };
+
   return (
     <>
-      {/* Spacer để tránh navbar chèn lên content */}
       <div className="h-20"></div>
 
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
         ? 'bg-white/95 backdrop-blur-md shadow-xl border-b border-gray-200/20'
         : 'bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm shadow-lg'
-        }`}>
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-
             {/* Logo Section */}
             <div className="flex items-center space-x-3 flex-shrink-0">
               <div className="relative group">
@@ -87,7 +106,6 @@ const Navbar = () => {
             {/* Navigation Menu - Centered */}
             <div className="absolute left-1/2 transform -translate-x-1/2">
               <div className="button-container flex bg-blue-800 bg-opacity-80 rounded-full h-12 items-center justify-center backdrop-blur-md shadow-md px-3 gap-5">
-
                 {/* Home Button */}
                 <button
                   className="group w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white transition-all duration-300 hover:bg-white hover:shadow-glow"
@@ -126,7 +144,60 @@ const Navbar = () => {
                   </svg>
                 </button>
 
-                {/* Admin Buttons - Only show when authenticated */}
+                {/* Notification Bell Button */}
+                {isAuthenticated && (
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      className="group w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white transition-all duration-300 hover:bg-white hover:shadow-glow"
+                      onClick={() => setShowNotifications(!showNotifications)}
+                      title="Notifications"
+                    >
+                      <Bell className="icon text-xl transition-all duration-300 group-hover:text-blue-700" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Notification Dropdown */}
+                    {showNotifications && (
+                      <div className="absolute top-14 right-0 w-80 bg-white/95 backdrop-blur-md rounded-lg shadow-xl border border-gray-200/20 z-50 p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-gray-800 font-semibold">Thông báo</h3>
+                          <button
+                            onClick={() => setShowNotifications(false)}
+                            className="text-gray-500 hover:text-gray-700 bg-white hover:bg-gray-100 p-1 rounded"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                        {notifications.length > 0 ? (
+                          <ul className="space-y-2 max-h-64 overflow-y-auto">
+                            {notifications.map((notif) => (
+                              <li
+                                key={notif.id}
+                                className={`p-3 rounded-lg transition-all duration-200 ${
+                                  notif.read ? 'bg-gray-100' : 'bg-blue-50 hover:bg-blue-100'
+                                } cursor-pointer`}
+                                onClick={() => handleNotificationClick(notif)}
+                              >
+                                <p className="text-sm text-gray-800">{notif.message}</p>
+                                <p className="text-xs text-gray-500">
+                                  {new Date(notif.timestamp).toLocaleString('vi-VN')}
+                                </p>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-gray-500 text-sm text-center">Không có thông báo mới</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Admin Buttons */}
                 {isAuthenticated && roles.includes('ROLE_ADMIN') && (
                   <>
                     <button
@@ -186,14 +257,12 @@ const Navbar = () => {
                     <circle cx="20" cy="21" r="1" />
                     <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                   </svg>
-
-                  {totalQuantity > 0 && ( // Sử dụng totalQuantity từ useCart
+                  {totalQuantity > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                       {totalQuantity}
                     </span>
                   )}
                 </button>
-
               </div>
             </div>
 

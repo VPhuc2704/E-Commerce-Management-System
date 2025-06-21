@@ -1,27 +1,27 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from "framer-motion";
-import useAuth from "../hooks/useAuth"; // Changed from { useAuth } to useAuth
+import useAuth from "../hooks/useAuth";
 import { useProfileData } from "../hooks/useProfileData";
 import { useProfileForm } from "../hooks/useProfileForm";
 import { useNotification } from "../hooks/useNotification";
-import { useAddressManager } from "../hooks/useAddressManager";
 import { useOrderHistory } from "../hooks/useOrderHistory";
 import ProfileSidebar from "./ProfileSidebar";
 import ProfileInfo from "./ProfileInfo";
-import AddressList from "./AddressList";
 import SecuritySettings from "./SecuritySettings";
 import Notification from "./Notification";
 
 const ProfilePage = () => {
-  const { user } = useAuth(); // This will now work correctly
-  const [activeTab, setActiveTab] = useState("profile");
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectPath = new URLSearchParams(location.search).get('redirect');
+  const queryParams = new URLSearchParams(location.search);
+  const redirectPath = queryParams.get('redirect');
+  const initialTab = queryParams.get('tab') || "profile";
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   const { notification, showNotification } = useNotification();
-  const { userInfo, setUserInfo, addresses, setAddresses, isLoading } = useProfileData(user);
+  const { userInfo, setUserInfo, isLoading } = useProfileData(user);
   const {
     isEditing,
     setIsEditing,
@@ -31,11 +31,6 @@ const ProfilePage = () => {
     handleSaveProfile,
     handleUpdatePassword,
   } = useProfileForm(userInfo, showNotification);
-  const { handleSetDefaultAddress, handleDeleteAddress, handleAddAddress } = useAddressManager(
-    addresses,
-    setAddresses,
-    showNotification,
-  );
   const { orders, loading: orderLoading, error: orderError } = useOrderHistory();
 
   const [avatarPreview, setAvatarPreview] = useState(userInfo.avatar || "../src/assets/images/default-avatar.jpg");
@@ -53,6 +48,10 @@ const ProfilePage = () => {
       setIsEditing(true);
     }
   }, [redirectPath, isLoading, userInfo, showNotification]);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const handleToggleChange = (setting) => (e) => {
     setSecuritySettings((prev) => ({
@@ -79,12 +78,6 @@ const ProfilePage = () => {
       icon: "M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z",
       label: "Lịch sử đơn hàng",
       gradient: "from-emerald-500 to-teal-500",
-    },
-    {
-      tab: "addresses",
-      icon: "M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z",
-      label: "Địa chỉ",
-      gradient: "from-purple-500 to-pink-500",
     },
     {
       tab: "security",
@@ -126,7 +119,6 @@ const ProfilePage = () => {
             <span className="font-semibold">
               {activeTab === "profile" && "Hồ sơ"}
               {activeTab === "orders" && "Lịch sử đơn hàng"}
-              {activeTab === "addresses" && "Địa chỉ"}
               {activeTab === "security" && "Bảo mật"}
             </span>
           </div>
@@ -175,21 +167,31 @@ const ProfilePage = () => {
                             })}
                           </p>
                         </div>
-                        <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            order.status === 'PENDING'
-                              ? 'bg-yellow-100 text-yellow-700'
+                        <div className="flex flex-col items-end gap-2">
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              order.status === 'PENDING'
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : order.status === 'COMPLETED'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-red-100 text-red-700'
+                            }`}
+                          >
+                            {order.status === 'PENDING'
+                              ? 'Chờ xác nhận'
                               : order.status === 'COMPLETED'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}
-                        >
-                          {order.status === 'PENDING'
-                            ? 'Chờ xác nhận'
-                            : order.status === 'COMPLETED'
-                            ? 'Đã hoàn thành'
-                            : order.status}
-                        </span>
+                              ? 'Đã hoàn thành'
+                              : order.status}
+                          </span>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => navigate(`/order-details/${order.id}`)}
+                            className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold shadow-md transition-all duration-300 text-sm"
+                          >
+                            Xem chi tiết
+                          </motion.button>
+                        </div>
                       </div>
                       <p className="text-gray-600 mb-2">
                         Tổng: {order.totalAmount.toLocaleString('vi-VN')}₫
@@ -197,28 +199,11 @@ const ProfilePage = () => {
                       <p className="text-sm text-gray-500">
                         {order.items.length} món • Giao đến {order.user.address}
                       </p>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate(`/order-details/${order.id}`)}
-                        className="mt-4 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold shadow-md transition-all duration-300"
-                      >
-                        Xem chi tiết
-                      </motion.button>
                     </motion.div>
                   ))}
                   {orders.length === 0 && <p className="text-gray-600">Không có đơn hàng nào.</p>}
                 </div>
               </motion.div>
-            )}
-            {activeTab === "addresses" && (
-              <AddressList
-                addresses={addresses}
-                handleAddAddress={handleAddAddress}
-                handleSetDefaultAddress={handleSetDefaultAddress}
-                handleDeleteAddress={handleDeleteAddress}
-                userInfo={userInfo}
-              />
             )}
             {activeTab === "security" && (
               <SecuritySettings

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { processPayment, fetchCartItems, addToCart, updateCartQuantity, removeFromCart } from '../services/cartService';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import profileService from '../services/profileService';
 
 export const useCart = () => {
@@ -21,8 +21,9 @@ export const useCart = () => {
   });
   const [isUserInfoValid, setIsUserInfoValid] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [modalQuantities, setModalQuantities] = useState({}); // State mới để quản lý số lượng trong modal
+  const [modalQuantities, setModalQuantities] = useState({});
   const navigate = useNavigate();
+  const location = useLocation();
   const itemsPerPage = 4;
 
   const isValidItem = (item) => {
@@ -55,7 +56,6 @@ export const useCart = () => {
       const validCart = items.filter(isValidItem);
       setCartItems(validCart);
       setSelectedItems((prev) => prev.filter((id) => validCart.some((item) => item.productId === id)));
-      // Cập nhật modalQuantities dựa trên cartItems hiện tại khi mở modal
       const newModalQuantities = validCart.reduce((acc, item) => {
         acc[item.productId] = item.quantity;
         return acc;
@@ -85,7 +85,7 @@ export const useCart = () => {
       };
       setUserInfo(updatedUserInfo);
       localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
-      setIsUserInfoValid(validateUserInfo());
+      setIsUserInfoValid(validateForm(updatedUserInfo));
     } catch (error) {
       console.error('Lỗi khi tải thông tin người dùng:', error);
       setUserInfo({ email: '', fullname: '', numberphone: '', address: '' });
@@ -93,18 +93,48 @@ export const useCart = () => {
     }
   };
 
+  const validateForm = (info) => {
+    const { email, fullname, numberphone, address } = info;
+    const emailRegex = /\S+@\S+\.\S+/;
+    const phoneRegex = /^[0-9]{10,11}$/;
+    return (
+      email &&
+      emailRegex.test(email) &&
+      fullname &&
+      fullname.length >= 2 &&
+      numberphone &&
+      phoneRegex.test(numberphone) &&
+      address &&
+      address.length >= 5
+    );
+  };
+
   useEffect(() => {
-    const savedUser = localStorage.getItem('userInfo');
-    if (savedUser) setUserInfo(JSON.parse(savedUser));
+    const savedUserInfo = localStorage.getItem('userInfo');
+    if (savedUserInfo) {
+      const parsedInfo = JSON.parse(savedUserInfo);
+      setUserInfo(parsedInfo);
+      setIsUserInfoValid(validateForm(parsedInfo));
+    }
     fetchCart();
     fetchUserInfo();
-  }, []);
+
+    if (location.search.includes('redirect=/cart')) {
+      fetchUserInfo();
+    }
+  }, [location.search]);
 
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'cart') {
         console.log('localStorage "cart" thay đổi:', e.newValue);
         fetchCart();
+      }
+      if (e.key === 'userInfo') {
+        console.log('localStorage "userInfo" thay đổi:', e.newValue);
+        const parsedInfo = JSON.parse(e.newValue || '{}');
+        setUserInfo(parsedInfo);
+        setIsUserInfoValid(validateForm(parsedInfo));
       }
     };
     const handleCartUpdated = () => {
@@ -128,7 +158,7 @@ export const useCart = () => {
       const result = await addToCart({ productId: product.productId, quantity: product.quantity });
       if (result.success) {
         await fetchCart();
-        window.dispatchEvent(new Event('cartUpdated')); // Phát sự kiện để cập nhật navbar
+        window.dispatchEvent(new Event('cartUpdated'));
         return true;
       }
       return false;
@@ -141,24 +171,20 @@ export const useCart = () => {
   const handleQuantityChange = async (productId, delta) => {
     setModalQuantities((prev) => {
       const currentQty = prev[productId] || 1;
-      const newQty = Math.max(0, currentQty + delta); // Cho phép giảm xuống 0
+      const newQty = Math.max(0, currentQty + delta);
       const updatedQuantities = { ...prev, [productId]: newQty };
 
       if (newQty === 0) {
-        // Xóa sản phẩm khỏi selectedItems nếu số lượng là 0
         setSelectedItems((prev) => prev.filter((id) => id !== productId));
-        // Nếu đây là sản phẩm cuối cùng, đóng modal
         if (prev.length === 1) {
           setShowPaymentModal(false);
         }
       } else {
-        // Cập nhật selectedItems nếu sản phẩm vẫn được chọn
         if (!selectedItems.includes(productId)) {
           setSelectedItems((prev) => [...prev, productId]);
         }
       }
 
-      // Cập nhật cartItems và server nếu cần
       const item = cartItems.find((i) => i.productId === productId);
       if (item && newQty > 0) {
         updateCartQuantity(productId, newQty).then(() => fetchCart());
@@ -177,23 +203,17 @@ export const useCart = () => {
         await fetchCart();
         setSelectedItems((prev) => {
           const newSelected = prev.filter((id) => id !== productId);
-          // Nếu không còn sản phẩm nào được chọn, đóng modal
           if (newSelected.length === 0) {
             setShowPaymentModal(false);
           }
           if (paginatedItems.length === 1 && currentPage > 1) setCurrentPage((prevPage) => prevPage - 1);
           return newSelected;
         });
-        window.dispatchEvent(new Event('cartUpdated')); // Cập nhật số lượng trên icon ngay lập tức
+        window.dispatchEvent(new Event('cartUpdated'));
       } catch (error) {
         console.error('Lỗi khi xóa sản phẩm:', error);
       }
     }
-  };
-
-  const validateUserInfo = () => {
-    const { email, fullname, numberphone, address } = userInfo;
-    return email && fullname && numberphone && address;
   };
 
   const handleCheckout = () => {
@@ -201,7 +221,7 @@ export const useCart = () => {
       alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!');
       return;
     }
-    if (!validateUserInfo()) {
+    if (!isUserInfoValid) {
       alert('Vui lòng cập nhật thông tin cá nhân trước khi thanh toán!');
       navigate('/profile?redirect=/cart');
       return;
@@ -210,7 +230,7 @@ export const useCart = () => {
   };
 
   const handlePayment = async () => {
-    if (!validateUserInfo()) {
+    if (!isUserInfoValid) {
       alert('Vui lòng cập nhật thông tin cá nhân trước khi thanh toán!');
       navigate('/profile?redirect=/cart');
       return;
@@ -225,13 +245,20 @@ export const useCart = () => {
       const response = await processPayment(paymentMethod, selectedItemsWithQty, validCartItems);
       if (response.success) {
         if (paymentMethod === 'COD') {
-          alert('Đặt hàng thành công! Chờ xác nhận từ cửa hàng.');
-          setShowPaymentModal(false);
+          const orderId = localStorage.getItem('lastOrderId');
+          if (orderId) {
+            alert('Đặt hàng thành công! Chờ xác nhận từ cửa hàng.');
+            setShowPaymentModal(false);
+            navigate(`/order-details/${orderId}`);
+          } else {
+            alert('Đặt hàng thành công nhưng không thể điều hướng đến chi tiết đơn hàng.');
+          }
         } else if (response.redirectUrl) {
           window.location.href = response.redirectUrl;
         }
         setSelectedItems([]);
         await fetchCart();
+        window.dispatchEvent(new Event('cartUpdated'));
       } else {
         alert(`Thanh toán thất bại: ${response.error}`);
       }
@@ -306,7 +333,7 @@ export const useCart = () => {
   const handleSaveUserInfo = (newUserInfo) => {
     setUserInfo(newUserInfo);
     localStorage.setItem('userInfo', JSON.stringify(newUserInfo));
-    setIsUserInfoValid(validateUserInfo());
+    setIsUserInfoValid(validateForm(newUserInfo));
   };
 
   return {

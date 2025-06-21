@@ -162,6 +162,11 @@ export const useProductDetails = (id) => {
   }, [productWithRating, quantity, showNotification]);
 
   const handleBuyNow = useCallback(() => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      showNotification('Vui lòng đăng nhập để đặt hàng!');
+      return;
+    }
     if (!productWithRating) {
       showNotification('Sản phẩm không tồn tại!');
       return;
@@ -177,7 +182,7 @@ export const useProductDetails = (id) => {
 
   const handlePlaceOrder = useCallback(async () => {
     if (!validateUserInfo()) {
-      alert('Vui lòng cập nhật thông tin cá nhân trước khi đặt hàng!');
+      showNotification('Vui lòng cập nhật thông tin cá nhân trước khi đặt hàng!');
       navigate('/profile?redirect=/product-details/' + id);
       return;
     }
@@ -189,12 +194,19 @@ export const useProductDetails = (id) => {
     try {
       const response = await processPayment(paymentMethod, [], [], buyNowModal, parseInt(quantity));
       if (response.success) {
+        const orderId = localStorage.getItem('lastOrderId');
         if (paymentMethod === 'COD') {
-          alert('Đặt hàng thành công! Chờ xác nhận từ cửa hàng.');
+          if (orderId) {
+            showNotification('Đặt hàng thành công! Chờ xác nhận từ cửa hàng.');
+            setBuyNowModal(null);
+            navigate(`/order-details/${orderId}`);
+          } else {
+            showNotification('Đặt hàng thành công nhưng không thể điều hướng đến chi tiết đơn hàng.');
+          }
         } else if (response.redirectUrl) {
           window.location.href = response.redirectUrl;
         }
-        setBuyNowModal(null);
+        window.dispatchEvent(new Event('cartUpdated'));
       } else {
         showNotification(`Lỗi: ${response.error}`);
       }

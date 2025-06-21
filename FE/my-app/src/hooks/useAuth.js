@@ -16,7 +16,7 @@ const useAuth = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  // Check if we have a accsessToken in localStorage
+  // Check if we have an accessToken in localStorage
   const checkAuthStatus = () => {
     const accessToken = localStorage.getItem("accessToken")
     if (accessToken) {
@@ -49,8 +49,13 @@ const useAuth = () => {
       else if (["/login", "/"].includes(window.location.pathname)) {
         navigate("/home", { replace: true })
       }
+    } else {
+      // Nếu không có người dùng xác thực, chuyển hướng về / nếu đang ở /home hoặc các tuyến đường admin
+      if (["/home", "/admin/dashboard", "/admin/products", "/admin/orders"].includes(window.location.pathname)) {
+        navigate("/", { replace: true })
+      }
     }
-  }, [])
+  }, [navigate, user])
 
   // Login function
   const login = async (email, password) => {
@@ -123,7 +128,7 @@ const useAuth = () => {
     localStorage.removeItem("cart")
     localStorage.removeItem("orders")
     setUser(null)
-    navigate("/login", { replace: true })
+    navigate("/", { replace: true })
   }
 
   return {
@@ -139,6 +144,3 @@ const useAuth = () => {
   }
 }
 export default useAuth
-// Changed from: export default useAuth
-// To: export { useAuth }
-// export { useAuth }

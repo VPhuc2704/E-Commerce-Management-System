@@ -1,121 +1,110 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { useOrderApi } from "../hooks/useOrderApi"
-import OrderList from "../components/orders/OrderList"
-import OrderDetailsModal from "../components/orders/OrderDetailsModal"
-import SearchFilter from "../components/orders/SearchFilter"
-import StatsCards from "../components/orders/StatsCards"
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useOrderApi } from "../hooks/useOrderApi";
+import { useNotification } from "../hooks/useNotification"; // Thêm useNotification
+import orderService from "../services/orderService"; // Thêm orderService
+import OrderList from "../components/orders/OrderList";
+import OrderDetailsModal from "../components/orders/OrderDetailsModal";
+import SearchFilter from "../components/orders/SearchFilter";
+import StatsCards from "../components/orders/StatsCards";
 
 const AdminOrderManagement = () => {
-  const [orders, setOrders] = useState([])
-  const [selectedStatuses, setSelectedStatuses] = useState({})
-  const [filterStatus, setFilterStatus] = useState("all")
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
-  const [showNotification, setShowNotification] = useState(false)
-  const [notificationMessage, setNotificationMessage] = useState("")
-  const [selectedOrder, setSelectedOrder] = useState(null)
-  const [showDetailsModal, setShowDetailsModal] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
+  const [orders, setOrders] = useState([]);
+  const [selectedStatuses, setSelectedStatuses] = useState({});
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-  const { getAllOrders, getOrdersByStatus, updateOrderStatus, getOrderDetails } = useOrderApi()
+  const { getAllOrders, getOrdersByStatus, getOrderDetails } = useOrderApi();
+  const { showNotification } = useNotification(); // Sử dụng useNotification
 
   // Load orders
   const loadOrders = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const response = await (filterStatus === "all"
         ? getAllOrders()
-        : getOrdersByStatus(filterStatus))
+        : getOrdersByStatus(filterStatus));
 
-      const orders = Array.isArray(response) ? response : [response].filter(Boolean)
-      setOrders(orders)
-      setCurrentPage(1) // Reset to first page when filter changes
+      const orders = Array.isArray(response) ? response : [response].filter(Boolean);
+      setOrders(orders);
+      setCurrentPage(1); // Reset to first page when filter changes
     } catch (error) {
-      console.error("Error loading orders:", error)
-      displayNotification("Không thể tải danh sách đơn hàng")
-      setOrders([])
+      console.error("Error loading orders:", error);
+      showNotification("Không thể tải danh sách đơn hàng", "error");
+      setOrders([]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    loadOrders()
-  }, [filterStatus])
+    loadOrders();
+  }, [filterStatus]);
 
   // Update order status
   const handleUpdateStatus = async (orderId) => {
-    const newStatus = selectedStatuses[orderId]
+    const newStatus = selectedStatuses[orderId];
     if (!newStatus) {
-      displayNotification("Vui lòng chọn trạng thái!")
-      return
+      showNotification("Vui lòng chọn trạng thái!", "error");
+      return;
     }
 
     try {
-      const success = await updateOrderStatus(orderId, newStatus)
-      if (success) {
-        await loadOrders()
-        displayNotification("Đã cập nhật trạng thái đơn hàng thành công")
-        setSelectedStatuses((prev) => ({
-          ...prev,
-          [orderId]: "",
-        }))
-      } else {
-        throw new Error("Failed to update order status")
-      }
+      await orderService.updateOrderStatus(orderId, newStatus); // Sử dụng orderService
+      await loadOrders();
+      showNotification(`Đã cập nhật trạng thái đơn hàng ${orderId} thành ${newStatus}`, "success");
+      setSelectedStatuses((prev) => ({
+        ...prev,
+        [orderId]: "",
+      }));
     } catch (error) {
-      console.error("Error updating order:", error)
-      displayNotification("Không thể cập nhật trạng thái đơn hàng")
+      console.error("Error updating order:", error);
+      showNotification("Không thể cập nhật trạng thái đơn hàng", "error");
     }
-  }
+  };
 
   const handleStatusChange = (orderId, status) => {
     setSelectedStatuses({
       ...selectedStatuses,
       [orderId]: status,
-    })
-  }
-
-  const displayNotification = (message) => {
-    setNotificationMessage(message)
-    setShowNotification(true)
-    setTimeout(() => {
-      setShowNotification(false)
-    }, 3000)
-  }
+    });
+  };
 
   // Filter orders with null check
   const filteredOrders = Array.isArray(orders)
     ? orders.filter((order) => {
-      if (!order) return false
-      const matchesSearch =
-        order.id?.toString().includes(searchTerm.toLowerCase()) ||
-        order.user?.fullname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
-      return matchesSearch
-    })
-    : []
+        if (!order) return false;
+        const matchesSearch =
+          order.id?.toString().includes(searchTerm.toLowerCase()) ||
+          order.user?.fullname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesSearch;
+      })
+    : [];
 
   // View order details
   const handleViewDetails = async (orderId) => {
     try {
-      setIsLoading(true)
-      const details = await getOrderDetails(orderId)
+      setIsLoading(true);
+      const details = await getOrderDetails(orderId);
       if (details) {
-        setSelectedOrder(details)
-        setShowDetailsModal(true)
+        setSelectedOrder(details);
+        setShowDetailsModal(true);
       }
     } catch (error) {
-      console.error("Error fetching order details:", error)
-      displayNotification("Không thể tải chi tiết đơn hàng")
+      console.error("Error fetching order details:", error);
+      showNotification("Không thể tải chi tiết đơn hàng", "error");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div>
@@ -168,40 +157,20 @@ const AdminOrderManagement = () => {
         onPageChange={setCurrentPage}
       />
 
-      {/* Notification */}
-      {showNotification && (
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 50 }}
-          className="fixed bottom-4 right-4 bg-indigo-600 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          {notificationMessage}
-        </motion.div>
-      )}
-
       {/* Order Details Modal */}
       <AnimatePresence>
         {showDetailsModal && (
           <OrderDetailsModal
             order={selectedOrder}
             onClose={() => {
-              setShowDetailsModal(false)
-              setSelectedOrder(null)
+              setShowDetailsModal(false);
+              setSelectedOrder(null);
             }}
           />
         )}
       </AnimatePresence>
     </div>
-  )
-}
+  );
+};
 
-export default AdminOrderManagement
+export default AdminOrderManagement;

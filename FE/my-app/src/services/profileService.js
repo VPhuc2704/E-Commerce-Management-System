@@ -18,20 +18,18 @@ class ProfileService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch user info');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to fetch user info');
       }
 
       const userData = await response.json();
-
-      // Map response data to expected format
       return {
         name: userData.name || userData.fullname || "",
         email: userData.email || user?.email || "",
         phone: userData.phone || userData.numberphone || "",
         address: userData.address || "",
         bio: userData.bio || userData.description || "",
-        avatar: userData.avatar || userData.profileImage || "",
+        avatar: userData.avatar || userData.profileImage || ""
       };
     } catch (error) {
       console.error('Error fetching user info:', error);
@@ -46,26 +44,37 @@ class ProfileService {
         throw new Error('No authentication token found');
       }
 
+      const payload = {
+        name: userInfo.name || userInfo.fullname || "",
+        email: userInfo.email || "",
+        phone: userInfo.phone || userInfo.numberphone || "",
+        address: userInfo.address || "",
+        bio: userInfo.bio || ""
+      };
+
       const response = await fetch(`${API_BASE_URL}/user/`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          name: userInfo.username || userInfo.name,
-          phone: userInfo.phone || userInfo.numberphone,
-          address: userInfo.address,
-          bio: userInfo.bio
-        })
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update user info');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to update user info');
       }
 
-      return await response.json();
+      const updatedUser = await response.json();
+      return {
+        name: updatedUser.name || updatedUser.fullname || "",
+        email: updatedUser.email || userInfo.email || "",
+        phone: updatedUser.phone || updatedUser.numberphone || "",
+        address: updatedUser.address || "",
+        bio: updatedUser.bio || updatedUser.description || "",
+        avatar: updatedUser.avatar || updatedUser.profileImage || ""
+      };
     } catch (error) {
       console.error('Error updating user info:', error);
       throw error;
@@ -85,15 +94,14 @@ class ProfileService {
       const response = await fetch(`${API_BASE_URL}/user/avatar`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          // Don't set Content-Type for FormData
+          'Authorization': `Bearer ${token}`
         },
         body: formData
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update avatar');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to update avatar');
       }
 
       return await response.json();
@@ -119,8 +127,8 @@ class ProfileService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch addresses');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to fetch addresses');
       }
 
       const addresses = await response.json();
@@ -148,8 +156,8 @@ class ProfileService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to add address');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to add address');
       }
 
       return await response.json();
@@ -176,8 +184,8 @@ class ProfileService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update address');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to update address');
       }
 
       return await response.json();
@@ -203,14 +211,14 @@ class ProfileService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete address');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to delete address');
       }
 
       return true;
     } catch (error) {
       console.error('Error deleting address:', error);
-      throw error;
+      return [];
     }
   }
 
@@ -234,13 +242,40 @@ class ProfileService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to change password');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to change password');
       }
 
       return await response.json();
     } catch (error) {
       console.error('Error changing password:', error);
+      throw error;
+    }
+  }
+
+  async setDefaultAddress(addressId) {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/user/addresses/${addressId}/default`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to set default address');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error setting default address:', error);
       throw error;
     }
   }

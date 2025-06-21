@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import OrderHistory from './OrderHistory';
 
 const ProfileInfo = ({
   userInfo,
@@ -58,6 +57,7 @@ const ProfileInfo = ({
           { label: "Họ và tên", name: "name", type: "text", editable: true },
           { label: "Email", name: "email", type: "email", editable: true },
           { label: "Số điện thoại", name: "phone", type: "tel", editable: true },
+          { label: "Địa chỉ", name: "address", type: "text", editable: true },
         ].map(({ label, name, type, editable }) => (
           <motion.div
             key={name}

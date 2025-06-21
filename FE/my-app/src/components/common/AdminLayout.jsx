@@ -63,7 +63,7 @@ const AdminLayout = ({ user }) => {
     localStorage.removeItem("accessToken")
     localStorage.removeItem("refreshToken")
     localStorage.removeItem("userData")
-    navigate("/login")
+    navigate("/")
   }
 
   return (
