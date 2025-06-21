@@ -226,6 +226,7 @@ export const useCart = () => {
       if (response.success) {
         if (paymentMethod === 'COD') {
           alert('Đặt hàng thành công! Chờ xác nhận từ cửa hàng.');
+          setShowPaymentModal(false);
         } else if (response.redirectUrl) {
           window.location.href = response.redirectUrl;
         }

@@ -6,7 +6,7 @@ import { productService } from '../services/productService';
 import { feedbackService } from '../services/feedbackService';
 
 // Reusable component for dish items
-const DishItem = ({ id, name, price, rating, imageUrl, soldCount }) => {
+const DishItem = ({ id, name, price, rating, imageUrl, soldQuantity }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -26,7 +26,7 @@ const DishItem = ({ id, name, price, rating, imageUrl, soldCount }) => {
       <div className="flex-grow">
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-lg font-semibold text-gray-900">{name}</h4>
-          {soldCount > 50 && (
+          {soldQuantity > 50 && (
             <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-semibold">
               HOT 🔥
             </span>
@@ -35,7 +35,7 @@ const DishItem = ({ id, name, price, rating, imageUrl, soldCount }) => {
         <div className="flex items-center justify-between">
           <div className="flex flex-col space-y-1">
             <p className="text-gray-600 font-medium">Giá: {price.toLocaleString('vi-VN')} VNĐ</p>
-            <p className="text-green-600 text-sm">Đã bán: {soldCount} suất</p>
+            <p className="text-green-600 text-sm">Đã bán: {soldQuantity} suất</p>
           </div>
           <div className="text-right">
             <p className="text-yellow-500 mb-1">{'★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating)}</p>
@@ -276,7 +276,7 @@ const HomePage = () => {
                   price={item.price}
                   rating={item.feedback?.rating || 0}
                   imageUrl={`http://localhost:8081${item.image}`}
-                  soldCount={item.soldCount || 0}
+                  soldQuantity={item.soldQuantity || 0}
                 />
               ))}
             </div>

@@ -1,23 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import orderService from '../services/orderService';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import "../components/orders/OrderDetails.css"; // Import custom CSS
 
 const Host = "http://localhost:8081";
 
 const OrderItem = ({ item }) => (
-  <div className="flex items-center space-x-4 mb-3">
+  <div className="product-item">
     <img
       src={`${Host}${item.imageUrl}`}
       alt={item.productName}
-      className="w-16 h-16 object-cover rounded-lg shadow-sm"
+      className="product-image"
     />
-    <div>
-      <p className="text-sm font-medium text-gray-900">{item.productName}</p>
-      <p className="text-sm text-gray-600">
+    <div className="product-info">
+      <p className="product-name">{item.productName}</p>
+      <p className="product-details">
         Số lượng: {item.quantity} x {item.price.toLocaleString('vi-VN')} VNĐ
       </p>
-      <p className="text-sm text-gray-600">
+      <p className="product-details">
         Tổng: {(item.quantity * item.price).toLocaleString('vi-VN')} VNĐ
       </p>
     </div>
@@ -25,12 +26,12 @@ const OrderItem = ({ item }) => (
 );
 
 const UserInfo = ({ user }) => (
-  <div>
-    <h3 className="text-md font-bold text-gray-900 mb-2">Thông tin khách hàng</h3>
-    <p className="text-sm text-gray-700">Họ tên: {user.fullname}</p>
-    <p className="text-sm text-gray-700">Email: {user.email}</p>
-    <p className="text-sm text-gray-700">Số điện thoại: {user.numberphone}</p>
-    <p className="text-sm text-gray-700">Địa chỉ: {user.address}</p>
+  <div className="info-section">
+    <h3 className="section-title">Thông tin khách hàng</h3>
+    <p className="user-info-item"><strong>Họ tên:</strong> {user.fullname}</p>
+    <p className="user-info-item"><strong>Email:</strong> {user.email}</p>
+    <p className="user-info-item"><strong>Số điện thoại:</strong> {user.numberphone}</p>
+    <p className="user-info-item"><strong>Địa chỉ:</strong> {user.address}</p>
   </div>
 );
 
@@ -58,72 +59,102 @@ const OrderDetails = () => {
     fetchOrderDetails();
   }, [orderId]);
 
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'PENDING':
+        return 'status-badge status-pending';
+      case 'COMPLETED':
+        return 'status-badge status-completed';
+      default:
+        return 'status-badge status-cancelled';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'PENDING':
+        return 'Chờ xác nhận';
+      case 'COMPLETED':
+        return 'Đã hoàn thành';
+      default:
+        return status;
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 p-6 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải...</p>
+      <div className="loading-container">
+        <div className="loading-content">
+          <div className="spinner"></div>
+          <p className="loading-text">Đang tải chi tiết đơn hàng...</p>
         </div>
       </div>
     );
   }
 
   if (error || !order) {
-    return <div className="text-center p-8 text-red-600">{error || 'Đơn hàng không tồn tại'}</div>;
+    return (
+      <div className="error-container">
+        <div className="error-content">
+          <h2 className="error-title">Có lỗi xảy ra</h2>
+          <p className="error-message">{error || 'Đơn hàng không tồn tại'}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 p-6">
+    <div className="order-details-container">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-6 border border-white/20"
+        transition={{ duration: 0.5 }}
+        className="order-card"
       >
-        <div className="flex justify-between items-center mb-4">
+        {/* Header */}
+        <div className="order-header">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Chi tiết đơn hàng #{order.id}</h1>
-            <p className="text-sm text-gray-600">
+            <h1 className="order-title">Chi tiết đơn hàng #{order.id}</h1>
+            <p className="order-date">
               Ngày đặt: {new Date(order.createdDate).toLocaleString('vi-VN', {
                 dateStyle: 'short',
                 timeStyle: 'short',
               })}
             </p>
           </div>
-          <span
-            className={`text-sm font-medium px-3 py-1 rounded-full ${
-              order.status === 'PENDING'
-                ? 'bg-yellow-100 text-yellow-700'
-                : order.status === 'COMPLETED'
-                ? 'bg-green-100 text-green-700'
-                : 'bg-red-100 text-red-700'
-            }`}
-          >
-            {order.status === 'PENDING' ? 'Chờ xác nhận' : order.status === 'COMPLETED' ? 'Đã hoàn thành' : order.status}
+          <span className={getStatusClass(order.status)}>
+            {getStatusText(order.status)}
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-          <UserInfo user={order.user} />
-          <div>
-            <h3 className="text-md font-bold text-gray-900 mb-2">Sản phẩm</h3>
-            {order.items.map(item => (
-              <OrderItem key={item.id} item={item} />
-            ))}
+        {/* Content */}
+        <div className="content-section">
+          <div className="content-grid">
+            {/* User Info */}
+            <UserInfo user={order.user} />
+
+            {/* Products */}
+            <div className="info-section">
+              <h3 className="section-title">Sản phẩm đã đặt</h3>
+              {order.items.map(item => (
+                <OrderItem key={item.id} item={item} />
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-lg text-right">
-          <p className="text-lg font-semibold text-indigo-600">
+        {/* Total */}
+        <div className="total-section">
+          <p className="total-amount">
             Tổng tiền: {order.totalAmount.toLocaleString('vi-VN')} VNĐ
           </p>
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => navigate('/orders')}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl font-semibold shadow-md transition-all duration-300"
+            className="simple-button"
           >
-            Quay lại lịch sử đơn hàng
+            ← Quay lại danh sách đơn hàng
           </motion.button>
         </div>
       </motion.div>

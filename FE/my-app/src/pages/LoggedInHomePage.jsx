@@ -5,7 +5,7 @@ import { productService } from '../services/productService';
 import { feedbackService } from '../services/feedbackService';
 
 // Reusable component for dish items (matching HomePage style)
-const DishItem = ({ name, price, feedback = {}, imageUrl, soldCount, id }) => {
+const DishItem = ({ name, price, feedback = {}, imageUrl, soldQuantity, id }) => {
 
   // const rating = Number(feedback.rating || 0);
   const rawRating = Number(feedback?.rating);
@@ -20,7 +20,7 @@ const DishItem = ({ name, price, feedback = {}, imageUrl, soldCount, id }) => {
       <div className="flex-grow">
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-lg font-semibold text-gray-900 hover:no-underline">{name}</h4>
-          {soldCount > 50 && (
+          {soldQuantity > 50 && (
             <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-semibold hover:no-underline">
               HOT 🔥
             </span>
@@ -29,7 +29,7 @@ const DishItem = ({ name, price, feedback = {}, imageUrl, soldCount, id }) => {
         <div className="flex items-center justify-between">
           <div className="flex flex-col space-y-1">
             <p className="text-gray-600 font-medium hover:no-underline">Giá: {price.toLocaleString('vi-VN')} VNĐ</p>
-            <p className="text-green-600 text-sm hover:no-underline">Đã bán: {soldCount} suất</p>
+            <p className="text-green-600 text-sm hover:no-underline">Đã bán: {soldQuantity != null ? soldQuantity : 0} suất</p>
           </div>
           <div className="text-right">
             <div className="flex items-center space-x-1">
@@ -170,7 +170,7 @@ const LoggedInHomePage = ({ user }) => {
   }, []);
 
   const sortedItems = selectedCategory
-    ? [...categories.find(cat => cat.name === selectedCategory).items].sort((a, b) => b.soldCount - a.soldCount)
+    ? [...categories.find(cat => cat.name === selectedCategory).items].sort((a, b) => b.soldQuantity - a.soldQuantity)
     : [];
 
   const paginatedItems = sortedItems.slice(
@@ -392,7 +392,7 @@ const LoggedInHomePage = ({ user }) => {
                     price={item.price}
                     feedback={item.feedback}
                     imageUrl={`http://localhost:8081${item.image}`}
-                    soldCount={item.soldCount}
+                    soldQuantity={item.soldQuantity}
                     id={item.id}
                   />
                 </Link>

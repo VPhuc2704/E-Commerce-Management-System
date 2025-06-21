@@ -29,7 +29,7 @@ const ProductCard = ({ product }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-indigo-600 font-semibold text-sm">{formatPrice(product.price)} VNĐ</p>
-              <p className="text-emerald-600 text-xs font-medium">Đã bán: {product.soldCount || 0}</p>
+              <p className="text-emerald-600 text-xs font-medium">Đã bán: {product.soldQuantity || 0}</p>
             </div>
             <div className="text-amber-400 text-sm">
               {'★'.repeat(product.rating || 0) + '☆'.repeat(5 - (product.rating || 0))}
@@ -159,7 +159,7 @@ const ProductDetails = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
                 </div>
                 <div className="absolute bottom-13 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-emerald-900 to-green-600 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg">
-                  Bán chạy #{product.soldCount}
+                  Bán chạy #{product.soldQuantity}
                 </div>
                 <div className="absolute -top-2 -left-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-300">
                   {product.type}
