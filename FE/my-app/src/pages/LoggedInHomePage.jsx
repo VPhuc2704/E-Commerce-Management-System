@@ -96,6 +96,9 @@ const LoggedInHomePage = ({ user }) => {
     { imageUrl: 'src/assets/images/nuocep_tao.jpg', name: 'Nước ép thanh mát' },
   ];
 
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -391,7 +394,7 @@ const LoggedInHomePage = ({ user }) => {
                     name={item.name}
                     price={item.price}
                     feedback={item.feedback}
-                    imageUrl={`http://localhost:8081${item.image}`}
+                    imageUrl={`${BASE_URL}${item.image}`}
                     soldQuantity={item.soldQuantity}
                     id={item.id}
                   />

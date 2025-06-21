@@ -6,7 +6,8 @@ import { useCart } from '../hooks/useCart';
 import { X, CreditCard, Truck, Package, MapPin, Phone, Mail, User } from "lucide-react";
 
 const CartPage = () => {
-  const Host = "http://localhost:8081";
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
 
   const {
     cartItems,
@@ -151,7 +152,7 @@ const CartPage = () => {
 
                         <div className="relative flex-shrink-0">
                           <img
-                            src={`${Host}${item.productImage || '/assets/images/default.jpg'}`}
+                            src={`${BASE_URL}${item.productImage || '/assets/images/default.jpg'}`}
                             alt={item.productName}
                             className="w-24 h-24 rounded-2xl object-cover shadow-md transition-transform duration-300 group-hover:scale-110"
                           />
@@ -395,7 +396,7 @@ const CartPage = () => {
                         .map((item) => (
                           <div key={item.productId} className="flex gap-4 p-4 bg-white rounded-xl shadow-sm border">
                             <img
-                              src={`${Host}${item.productImage || '/assets/images/default.jpg'}`}
+                              src={`${BASE_URL}${item.productImage || '/assets/images/default.jpg'}`}
                               alt={item.productName}
                               className="w-16 h-16 object-cover rounded-lg"
                             />

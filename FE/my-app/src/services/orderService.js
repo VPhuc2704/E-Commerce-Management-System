@@ -131,7 +131,7 @@ const orderService = {
         throw new Error("Không tìm thấy token xác thực");
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/orders/updates`, {
+      const response = await fetch(`${API_BASE_URL}/api/orders/all`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -164,13 +164,16 @@ const orderService = {
         throw new Error("Không tìm thấy token xác thực");
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/orders/update-status/${orderId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/orders/admin/status`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({
+          orderId: orderId,
+          orderStatus: status
+        }),
       });
 
       if (!response.ok) {

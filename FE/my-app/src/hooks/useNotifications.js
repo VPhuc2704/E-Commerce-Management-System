@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNotification } from './useNotification';
 import orderService from '../services/orderService';
 
@@ -6,14 +6,12 @@ export const useNotifications = () => {
   const { showNotification } = useNotification();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const intervalRef = useRef(null); // 👈 lưu interval để clear
 
-  const fetchNotifications = useCallback(async () => {
+  const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      if (!token) {
-        console.warn('Chưa đăng nhập, bỏ qua lấy thông báo');
-        return;
-      }
+      if (!token) return;
 
       const updates = await orderService.getOrderUpdates();
       const newNotifications = updates.map((update) => ({
@@ -44,34 +42,40 @@ export const useNotifications = () => {
       console.error('Lỗi khi lấy thông báo:', error);
       showNotification('Lỗi khi lấy thông báo đơn hàng', 'error');
     }
-  }, [showNotification]);
+  };
 
-  const markAsRead = useCallback((notificationId) => {
+  const markAsRead = (notificationId) => {
     setNotifications((prev) =>
       prev.map((notif) =>
         notif.id === notificationId ? { ...notif, read: true } : notif
       )
     );
     setUnreadCount((prev) => Math.max(0, prev - 1));
-  }, []);
+  };
 
   useEffect(() => {
     const handleCartUpdated = () => {
-      console.log('Sự kiện cartUpdated được kích hoạt, kiểm tra thông báo');
       fetchNotifications();
     };
 
     window.addEventListener('cartUpdated', handleCartUpdated);
     return () => window.removeEventListener('cartUpdated', handleCartUpdated);
-  }, [fetchNotifications]);
+  }, []);
 
   useEffect(() => {
     if (localStorage.getItem('accessToken')) {
       fetchNotifications();
-      const interval = setInterval(fetchNotifications, 30000);
-      return () => clearInterval(interval);
+
+      if (!intervalRef.current) {
+        intervalRef.current = setInterval(fetchNotifications, 100000);
+      }
+
+      return () => {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      };
     }
-  }, [fetchNotifications]);
+  }, []); // 👈 chỉ chạy 1 lần duy nhất
 
   return {
     notifications,

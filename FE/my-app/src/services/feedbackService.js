@@ -1,8 +1,8 @@
-const HOST = 'http://localhost:8081'; // hoặc domain API thật
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const feedbackService = {
   async getFeedbacksByProduct(productId) {
-    const res = await fetch(`${HOST}/api/reviews/products/${productId}`);
+    const res = await fetch(`${BASE_URL}/api/reviews/products/${productId}`);
     if (!res.ok) throw new Error('Lỗi khi lấy phản hồi');
     return await res.json();
   },
@@ -22,7 +22,7 @@ export const feedbackService = {
       formData.append('imageFile', imageFile);
     }
 
-    const res = await fetch(`${HOST}/api/reviews/product/${productId}`, {
+    const res = await fetch(`${BASE_URL}/api/reviews/product/${productId}`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,

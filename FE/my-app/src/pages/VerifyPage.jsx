@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader2, Mail, ArrowLeft } from 'lucide-react';
 
+const BASE_URL = import.meta.env.VITE_API_URL;
 const VerifyPage = () => {
     const [searchParams] = useSearchParams();
     const token = searchParams.get('token');
@@ -14,7 +15,7 @@ const VerifyPage = () => {
     useEffect(() => {
         const verifyEmail = async (token) => {
             try {
-                const response = await fetch(`http://localhost:8081/api/auth/verify?token=${token}`, {
+                const response = await fetch(`${BASE_URL}/api/auth/verify?token=${token}`, {
                     method: 'POST',
                 });
 
@@ -26,14 +27,14 @@ const VerifyPage = () => {
 
                 setMessage(data.message || "Xác thực thành công! Bạn có thể đăng nhập.");
                 setStatus('success');
-                
+
                 setTimeout(() => {
                     navigate('/login');
                 }, 3000);
             } catch (error) {
                 setMessage(error.message || "Có lỗi xảy ra khi xác thực.");
                 setStatus('error');
-                
+
                 setTimeout(() => {
                     navigate('/login', {
                         state: {

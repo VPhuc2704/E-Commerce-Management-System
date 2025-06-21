@@ -4,12 +4,12 @@ import orderService from '../services/orderService';
 import { motion } from 'framer-motion';
 import "../components/orders/OrderDetails.css";
 
-const Host = "http://localhost:8081";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const OrderItem = ({ item }) => (
   <div className="product-item">
     <img
-      src={`${Host}${item.imageUrl}`}
+      src={`${BASE_URL}${item.imageUrl}`}
       alt={item.productName}
       className="product-image"
     />

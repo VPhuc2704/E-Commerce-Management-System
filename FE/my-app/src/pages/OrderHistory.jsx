@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useOrderHistory } from '../hooks/useOrderHistory';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const Host = "http://localhost:8081";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 // Component hiển thị một sản phẩm trong đơn hàng
 const OrderItem = ({ item }) => (
   <div className="flex items-center space-x-4 mb-3">
     <img
-      src={`${Host}${item.imageUrl}`}
+      src={`${BASE_URL}${item.imageUrl}`}
       alt={item.productName}
       className="w-16 h-16 object-cover rounded-lg shadow-sm"
     />
@@ -55,13 +55,12 @@ const OrderCard = ({ order, onViewDetails }) => (
         </p>
       </div>
       <span
-        className={`text-sm font-medium px-3 py-1 rounded-full ${
-          order.status === 'PENDING'
-            ? 'bg-yellow-100 text-yellow-700'
-            : order.status === 'COMPLETED'
+        className={`text-sm font-medium px-3 py-1 rounded-full ${order.status === 'PENDING'
+          ? 'bg-yellow-100 text-yellow-700'
+          : order.status === 'COMPLETED'
             ? 'bg-green-100 text-green-700'
             : 'bg-red-100 text-red-700'
-        }`}
+          }`}
       >
         {order.status === 'PENDING' ? 'Chờ xác nhận' : order.status === 'COMPLETED' ? 'Đã hoàn thành' : order.status}
       </span>

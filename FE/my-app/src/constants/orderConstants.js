@@ -1,4 +1,5 @@
-export const API_BASE_URL = "http://localhost:8081/api"
+const BASE_URL = import.meta.env.VITE_API_URL;
+export const API_BASE_URL = `${BASE_URL}/api`
 export const ORDERS_API = `${API_BASE_URL}/orders`
 export const ADMIN_ORDERS_API = `${API_BASE_URL}/admin/orders`
 

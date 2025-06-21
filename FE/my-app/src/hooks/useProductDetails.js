@@ -175,7 +175,7 @@ export const useProductDetails = (id) => {
       id: productWithRating.id,
       name: productWithRating.name,
       price: productWithRating.price,
-      imageUrl: productWithRating.imageUrl || '/img/default.jpg',
+      imageUrl: productWithRating.image || '/img/default.jpg',
     });
     setQuantity("1");
   }, [productWithRating, showNotification]);

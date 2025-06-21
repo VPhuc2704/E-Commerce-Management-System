@@ -7,17 +7,19 @@ import { useProductFeedbacks } from '../hooks/useProductFeedbacks';
 import { useCart } from '../hooks/useCart';
 import { X, Package } from "lucide-react";
 
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 const ProductCard = ({ product }) => {
   const formatPrice = (price) => {
     if (!price) return '0';
     return price.toLocaleString('vi-VN');
   };
-  const baseUrl = "http://localhost:8081";
+  const baseUrl = import.meta.env.VITE_API_URL;;
   const imageUrl = `${baseUrl}${product.image}`;
   return (
     <Link to={`/product-details/${product.id}`} className="no-underline hover:no-underline group">
       <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-5 hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 flex items-center space-x-4 hover:border-indigo-200">
-        <div classClassName="relative overflow-hidden rounded-xl">
+        <div className="relative overflow-hidden rounded-xl">
           <img
             src={imageUrl || '/assets/images/default.jpg'}
             alt={product.name}
@@ -153,7 +155,7 @@ const ProductDetails = () => {
               <div className="lg:w-1/2 relative group">
                 <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 p-4">
                   <img
-                    src={`http://localhost:8081${product.image}` || '/assets/images/default.jpg'}
+                    src={`${BASE_URL}${product.image}` || '/assets/images/default.jpg'}
                     alt={product.name}
                     className="w-full h-80 object-cover rounded-xl shadow-lg group-hover:scale-105扁transition-transform duration-500"
                   />
@@ -309,7 +311,7 @@ const ProductDetails = () => {
                     <p className="text-gray-700 leading-relaxed">{feedback.comment}</p>
                     {feedback.imageUrl && (
                       <img
-                        src={`http://localhost:8081${feedback.imageUrl}`}
+                        src={`${BASE_URL}${feedback.imageUrl}`}
                         alt={`Feedback from ${feedback.user}`}
                         className="w-24 h-24 object-cover rounded-xl mt-3 shadow-sm hover:scale-105 transition-transform duration-300"
                       />
@@ -429,7 +431,7 @@ const ProductDetails = () => {
                 <div className="space-y-4">
                   <div className="flex gap-4 p-4 bg-white rounded-xl shadow-sm border">
                     <img
-                      src={`http://localhost:8081${buyNowModal.imageUrl}` || '/assets/images/default.jpg'}
+                      src={buyNowModal.imageUrl ? `${BASE_URL}${buyNowModal.imageUrl}` : '/assets/images/default.jpg'}
                       alt={buyNowModal.name}
                       className="w-16 h-16 object-cover rounded-lg"
                     />

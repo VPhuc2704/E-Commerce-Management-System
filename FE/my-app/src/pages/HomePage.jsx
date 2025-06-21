@@ -5,6 +5,8 @@ import '../features/home/home.css';
 import { productService } from '../services/productService';
 import { feedbackService } from '../services/feedbackService';
 
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 // Reusable component for dish items
 const DishItem = ({ id, name, price, rating, imageUrl, soldQuantity }) => {
   const navigate = useNavigate();
@@ -275,7 +277,7 @@ const HomePage = () => {
                   name={item.name}
                   price={item.price}
                   rating={item.feedback?.rating || 0}
-                  imageUrl={`http://localhost:8081${item.image}`}
+                  imageUrl={`${BASE_URL}${item.image}`}
                   soldQuantity={item.soldQuantity || 0}
                 />
               ))}
