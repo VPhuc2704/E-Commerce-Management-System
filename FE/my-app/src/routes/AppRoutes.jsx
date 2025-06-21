@@ -21,6 +21,7 @@ import AdminDashboard from "../pages/AdminDashboard"
 import VerifyPage from "../pages/VerifyPage"
 import ProfilePage from "../pages/ProfilePage"
 import OrderDetails from "../pages/OrderDetails"
+import PaymentResult from "../pages/PaymentResult";
 
 // GuestOnlyRoute Component
 const GuestOnlyRoute = ({ children }) => {
@@ -86,6 +87,7 @@ const RoutesContent = () => {
               <Route path="/cart" element={<Layout><CartPage /></Layout>} />
               <Route path="/orders" element={<Layout><OrderHistory /></Layout>} />
               <Route path="/order-details/:orderId" element={<Layout><OrderDetails /></Layout>} />
+              <Route path="/payment-result" element={<PaymentResult />} />
             </>
           )}
         </Route>

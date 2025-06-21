@@ -22,7 +22,7 @@ export const useProfileData = (user) => {
 
       // Thử các endpoint có thể có
       const possibleEndpoints = [
-        `${API_BASE_URL}/user/profile`,
+        `${API_BASE_URL}/user/`,
         `${API_BASE_URL}/user/info`,
         `${API_BASE_URL}/user/me`,
         `${API_BASE_URL}/user`,
@@ -35,7 +35,7 @@ export const useProfileData = (user) => {
       for (const endpoint of possibleEndpoints) {
         try {
           console.log(`🔍 Trying endpoint: ${endpoint}`);
-          
+
           const response = await fetch(endpoint, {
             method: 'GET',
             headers: {
@@ -66,9 +66,9 @@ export const useProfileData = (user) => {
 
       // Map response data to expected format
       return {
-        name: userData.name || userData.fullName || userData.username || "",
+        name: userData.name || userData.fullname || userData.username || "",
         email: userData.email || user?.email || "",
-        phone: userData.phone || userData.phoneNumber || userData.mobile || "",
+        phone: userData.phone || userData.numberphone || userData.mobile || "",
         address: userData.address || userData.location || "",
         bio: userData.bio || userData.description || userData.about || "",
         avatar: userData.avatar || userData.profileImage || userData.image || "",
@@ -99,7 +99,7 @@ export const useProfileData = (user) => {
       for (const endpoint of possibleEndpoints) {
         try {
           console.log(`🔍 Trying addresses endpoint: ${endpoint}`);
-          
+
           const response = await fetch(endpoint, {
             method: 'GET',
             headers: {
@@ -133,22 +133,22 @@ export const useProfileData = (user) => {
       try {
         setIsLoading(true);
         console.log('🔄 Starting to fetch profile data for user:', user);
-        
+
         // Clear localStorage profile data để tránh cache cũ
         localStorage.removeItem('profileData');
-        
+
         // Fetch user profile
         const userData = await fetchUserProfile();
         console.log('📋 Setting user info:', userData);
         setUserInfo(userData);
-        
+
         // Fetch user addresses
         const addressData = await fetchUserAddresses();
         setAddresses(addressData);
-        
+
       } catch (error) {
         console.error("❌ Lỗi khi tải dữ liệu hồ sơ:", error);
-        
+
         // Đặt lại về dữ liệu trống khi có lỗi
         setUserInfo({
           name: "",
@@ -163,7 +163,7 @@ export const useProfileData = (user) => {
         setIsLoading(false);
       }
     };
-    
+
     if (user) {
       fetchData();
     } else {
@@ -181,10 +181,10 @@ export const useProfileData = (user) => {
       try {
         setIsLoading(true);
         console.log('🔄 Refetching profile data...');
-        
+
         const userData = await fetchUserProfile();
         setUserInfo(userData);
-        
+
         const addressData = await fetchUserAddresses();
         setAddresses(addressData);
       } catch (error) {

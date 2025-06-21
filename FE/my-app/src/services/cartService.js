@@ -1,5 +1,4 @@
 const HOST = import.meta.env.VITE_API_URL;
-import { fetchProductDetails } from './productService';
 import orderService from './orderService';
 
 export const fetchCartItems = async () => {
@@ -21,7 +20,6 @@ export const fetchCartItems = async () => {
 export const addToCart = async (product, quantity) => {
   const token = localStorage.getItem('accessToken');
   if (!token) {
-    console.error('No authentication token found');
     return { success: false, error: 'Vui lòng đăng nhập' };
   }
 
@@ -89,30 +87,49 @@ export const removeFromCart = async (productId) => {
   return data;
 };
 
-export const processPayment = async (paymentMethod, selectedItems, cartItems) => {
+export const processPayment = async (
+  paymentMethod,
+  selectedItems,
+  cartItems,
+  buyNowProduct = null,
+  quantity = 1
+) => {
   try {
-    const itemsToPay = cartItems.filter(item => selectedItems.includes(item.productId));
-    if (itemsToPay.length === 0) {
-      return { success: false, error: 'Không có sản phẩm nào được chọn' };
-    }
-
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     if (!userInfo.email || !userInfo.fullname || !userInfo.numberphone || !userInfo.address) {
       return { success: false, error: 'Thiếu thông tin người dùng' };
     }
 
-    const orderData = {
-      buyNow: false,
-      items: itemsToPay.map(item => ({
-        productId: item.productId,
-        productName: item.productName,
-        productImage: item.productImage,
-        quantity: item.quantity,
-        pricePerUnit: item.pricePerUnit,
-      })),
-      paymentMethod,
-      user: userInfo,
-    };
+    let orderData;
+
+    if (buyNowProduct) {
+      // 👉 Mua ngay 1 sản phẩm
+      orderData = {
+        buyNow: true,
+        productId: buyNowProduct.id,
+        quantity: quantity,
+        paymentMethod,
+        user: userInfo,
+      };
+    } else {
+      // 👉 Mua từ giỏ hàng
+      const itemsToPay = cartItems.filter(item => selectedItems.includes(item.productId));
+      if (itemsToPay.length === 0) {
+        return { success: false, error: 'Không có sản phẩm nào được chọn' };
+      }
+
+      orderData = {
+        buyNow: false,
+        items: itemsToPay.map(item => ({
+          id: item.id,
+          productId: item.productId,
+          quantity: item.quantity,
+          pricePerUnit: item.pricePerUnit,
+        })),
+        paymentMethod,
+        user: userInfo,
+      };
+    }
 
     const response = await orderService.placeOrder(orderData);
     if (response.order) {

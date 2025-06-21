@@ -58,22 +58,21 @@ const Navbar = () => {
     <>
       {/* Spacer để tránh navbar chèn lên content */}
       <div className="h-20"></div>
-      
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-white/95 backdrop-blur-md shadow-xl border-b border-gray-200/20' 
-          : 'bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm shadow-lg'
-      }`}>
+
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
+        ? 'bg-white/95 backdrop-blur-md shadow-xl border-b border-gray-200/20'
+        : 'bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm shadow-lg'
+        }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            
+
             {/* Logo Section */}
             <div className="flex items-center space-x-3 flex-shrink-0">
               <div className="relative group">
                 <div className="absolute -inset-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
-                <img 
-                  src={logo} 
-                  alt="Logo" 
+                <img
+                  src={logo}
+                  alt="Logo"
                   className="relative h-12 w-auto cursor-pointer transition-transform duration-300 hover:scale-110"
                   onClick={() => navigate('/')}
                 />
@@ -88,7 +87,7 @@ const Navbar = () => {
             {/* Navigation Menu - Centered */}
             <div className="absolute left-1/2 transform -translate-x-1/2">
               <div className="button-container flex bg-blue-800 bg-opacity-80 rounded-full h-12 items-center justify-center backdrop-blur-md shadow-md px-3 gap-5">
-                
+
                 {/* Home Button */}
                 <button
                   className="group w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white transition-all duration-300 hover:bg-white hover:shadow-glow"
@@ -209,11 +208,11 @@ const Navbar = () => {
                   </div>
                   <div className="text-sm">
                     <p className="font-medium text-gray-800">Welcome back!</p>
-                    <p className="text-gray-600">{user.name || 'User'}</p>
+                    <p className="text-gray-600">{user.fullname || 'User'}</p>
                   </div>
                 </div>
               )}
-              
+
               <button
                 className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 hover:from-blue-600 hover:to-indigo-700 hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5"
                 onClick={handleLoginClick}

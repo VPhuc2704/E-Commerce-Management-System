@@ -8,11 +8,9 @@ export const useOrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Get the function but don't put it in dependencies
+
   const { getAllOrders } = useOrderApi();
 
-  // ✅ Fix: Remove getAllOrders from dependencies to prevent infinite loop
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -28,7 +26,7 @@ export const useOrderHistory = () => {
     };
 
     fetchOrders();
-  }, []); // ✅ Empty dependency array - only run once on mount
+  }, []);
 
   useEffect(() => {
     const handleStorageChange = (e) => {
@@ -43,11 +41,9 @@ export const useOrderHistory = () => {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  // ✅ Use useCallback to prevent recreation and use getAllOrders directly
   const refreshOrders = useCallback(async () => {
     try {
       setLoading(true);
-      // Use getAllOrders instead of orderService.getOrders for consistency
       const data = await getAllOrders();
       setOrders(data);
       setError(null);
@@ -57,7 +53,7 @@ export const useOrderHistory = () => {
     } finally {
       setLoading(false);
     }
-  }, [getAllOrders]); // ✅ Now it's safe to include getAllOrders here since refreshOrders is called manually
+  }, [getAllOrders]);
 
   return {
     orders,

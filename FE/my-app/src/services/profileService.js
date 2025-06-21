@@ -5,10 +5,11 @@ class ProfileService {
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        throw new Error('No authentication token found');
+        console.warn('Người dùng chưa đăng nhập');
+        return null;
       }
 
-      const response = await fetch(`${API_BASE_URL}/user/profile`, {
+      const response = await fetch(`${API_BASE_URL}/user/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -22,12 +23,12 @@ class ProfileService {
       }
 
       const userData = await response.json();
-      
+
       // Map response data to expected format
       return {
-        name: userData.name || userData.fullName || "",
+        name: userData.name || userData.fullname || "",
         email: userData.email || user?.email || "",
-        phone: userData.phone || userData.phoneNumber || "",
+        phone: userData.phone || userData.numberphone || "",
         address: userData.address || "",
         bio: userData.bio || userData.description || "",
         avatar: userData.avatar || userData.profileImage || "",
@@ -45,15 +46,15 @@ class ProfileService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/user/profile`, {
+      const response = await fetch(`${API_BASE_URL}/user/`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          name: userInfo.name,
-          phone: userInfo.phone,
+          name: userInfo.username || userInfo.name,
+          phone: userInfo.phone || userInfo.numberphone,
           address: userInfo.address,
           bio: userInfo.bio
         })
@@ -220,7 +221,7 @@ class ProfileService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/user/change-password`, {
+      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

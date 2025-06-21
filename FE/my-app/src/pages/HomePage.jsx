@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Footer from '../components/layout/Footer';
 import '../features/home/home.css';
 import { productService } from '../services/productService';
+import { feedbackService } from '../services/feedbackService';
 
 // Reusable component for dish items
 const DishItem = ({ id, name, price, rating, imageUrl, soldCount }) => {
@@ -12,6 +13,7 @@ const DishItem = ({ id, name, price, rating, imageUrl, soldCount }) => {
     navigate(`/product-details/${id}`);
   };
 
+  const roundedRating = Math.round(rating);
   return (
     <div
       className="flex items-center bg-white rounded-lg shadow-md p-4 mb-2 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
@@ -36,8 +38,8 @@ const DishItem = ({ id, name, price, rating, imageUrl, soldCount }) => {
             <p className="text-green-600 text-sm">Đã bán: {soldCount} suất</p>
           </div>
           <div className="text-right">
-            <p className="text-yellow-500 mb-1">{'★'.repeat(rating) + '☆'.repeat(5 - rating)}</p>
-            <p className="text-gray-500 text-sm">({rating}/5)</p>
+            <p className="text-yellow-500 mb-1">{'★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating)}</p>
+            <p className="text-gray-500 text-sm">({rating.toFixed(1)}/5)</p>
           </div>
         </div>
       </div>
@@ -107,7 +109,22 @@ const HomePage = () => {
       if (selectedCategory?.id) {
         try {
           const productsData = await productService.getProductsByCategory(selectedCategory.id);
-          setProducts(productsData);
+          const productsWithRatings = await Promise.all(
+            productsData.map(async (product) => {
+              try {
+                const feedback = await feedbackService.getFeedbacksByProduct(product.id);
+                const ratings = feedback.map(fb => fb.rating);
+                const avgRating = ratings.length > 0
+                  ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+                  : 0;
+                return { ...product, feedback: { rating: avgRating } };
+              } catch (err) {
+                console.warn('Lỗi feedback sản phẩm:', product.id, err.message);
+                return { ...product, feedback: { rating: 0 } };
+              }
+            })
+          );
+          setProducts(productsWithRatings);
         } catch (error) {
           console.error('Error fetching products:', error);
           setProducts([]);
@@ -257,7 +274,7 @@ const HomePage = () => {
                   id={item.id}
                   name={item.name}
                   price={item.price}
-                  rating={item.rating || 0}
+                  rating={item.feedback?.rating || 0}
                   imageUrl={`http://localhost:8081${item.image}`}
                   soldCount={item.soldCount || 0}
                 />

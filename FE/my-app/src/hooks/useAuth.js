@@ -118,6 +118,10 @@ const useAuth = () => {
     localStorage.removeItem("accessToken")
     localStorage.removeItem("refreshToken")
     localStorage.removeItem("userData")
+    localStorage.removeItem("userInfo")
+    localStorage.removeItem("lastOrderId")
+    localStorage.removeItem("cart")
+    localStorage.removeItem("orders")
     setUser(null)
     navigate("/login", { replace: true })
   }

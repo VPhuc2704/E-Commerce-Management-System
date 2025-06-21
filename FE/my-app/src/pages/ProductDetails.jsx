@@ -231,7 +231,7 @@ const ProductDetails = () => {
                         </button>
                       </div>
                     </div>
-                  
+
                     <div className="flex gap-3">
                       <button
                         onClick={handleAddToCart}
@@ -294,7 +294,7 @@ const ProductDetails = () => {
                 {displayedFeedbacks.map((feedback) => (
                   <div key={feedback.id} className="border-b border-gray-200 pb-6">
                     <div className="flex items-center space-x-4 mb-3">
-                      <span className="font-semibold text-gray-900">{feedback.fullname}</span>
+                      <span className="font-semibold text-gray-900">{feedback.userName}</span>
                       <div className="flex items-center space-x-1">
                         <div className="text-amber-400">
                           {'★'.repeat(feedback.rating)}

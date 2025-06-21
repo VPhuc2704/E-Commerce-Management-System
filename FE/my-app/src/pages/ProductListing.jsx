@@ -97,50 +97,6 @@ const ProductListing = () => {
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-coral-100 flex flex-col">
       <main className="flex-grow container mx-auto p-6">
         <h1 className="text-3xl font-bold text-indigo-900 mb-6">Danh sách sản phẩm</h1>
-
-        {/* Search and Filters
-        <div className="mb-6 flex flex-col md:flex-row gap-4">
-          <input
-            type="text"
-            placeholder="Tìm kiếm sản phẩm..."
-            value={searchTerm}
-            onChange={handleSearch}
-            className="w-full md:w-1/3 p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <select
-            onChange={handlePriceFilter}
-            className="p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="0-1000">Tất cả giá</option>
-            <option value="0-50">$0 - $50</option>
-            <option value="50-100">$50 - $100</option>
-            <option value="100-200">$100 - $200</option>
-            <option value="200-500">$500 - $1000</option>
-          </select>
-          <button
-            onClick={() => handleCategoryClick('')}
-            className={`px-4 py-2 rounded-full transition-all duration-200 ${selectedCategory === ''
-              ? 'bg-indigo-600 text-white shadow-lg'
-              : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-          >
-            Tất cả sản phẩm
-          </button>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => handleCategoryClick(cat.id)}
-              className={`px-4 py-2 rounded-full transition-all duration-200 ${selectedCategory === cat.id
-                ? 'bg-indigo-600 text-white shadow-lg'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </div>
-
-        {/* Loading State */}
         {loading && (
           <div className="flex justify-center items-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>

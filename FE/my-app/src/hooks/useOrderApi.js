@@ -5,7 +5,6 @@ export const useOrderApi = () => {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
 
-    // ✅ Use useCallback to prevent function recreation
     const getAllOrders = useCallback(async () => {
         setLoading(true)
         try {
@@ -35,7 +34,7 @@ export const useOrderApi = () => {
         } finally {
             setLoading(false)
         }
-    }, []) // ✅ Empty dependency array since it doesn't depend on any values
+    }, [])
 
     const getOrdersByStatus = useCallback(async (status) => {
         setLoading(true)

@@ -6,6 +6,7 @@ export const feedbackService = {
     if (!res.ok) throw new Error('Lỗi khi lấy phản hồi');
     return await res.json();
   },
+
   async postFeedback(productId, { rating, comment, imageFile }) {
     const token = localStorage.getItem('accessToken');
     if (!token) {

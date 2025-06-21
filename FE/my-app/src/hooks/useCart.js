@@ -44,6 +44,12 @@ export const useCart = () => {
 
   const fetchCart = async () => {
     setIsLoading(true);
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      console.warn('Người dùng chưa đăng nhập, bỏ qua fetchCart');
+      setCartItems([]);
+      return;
+    }
     try {
       const items = await fetchCartItems();
       const validCart = items.filter(isValidItem);
@@ -64,6 +70,11 @@ export const useCart = () => {
   };
 
   const fetchUserInfo = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      console.warn('Người dùng chưa đăng nhập, bỏ qua fetch user info');
+      return null;
+    }
     try {
       const profile = await profileService.getUserInfo();
       const updatedUserInfo = {

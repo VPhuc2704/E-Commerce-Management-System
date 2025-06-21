@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { addToCart, placeOrder, fetchProductDetails, fetchRelatedProducts, checkPurchaseStatus } from '../services/productService';
+import { addToCart, fetchProductDetails, fetchRelatedProducts, checkPurchaseStatus } from '../services/productService';
 import { ORDER_STATUS } from '../constants/orderConstants';
 import { feedbackService } from '../services/feedbackService';
 import { useProductFeedbacks } from './useProductFeedbacks';
@@ -52,6 +52,13 @@ export const useProductDetails = (id) => {
       if (savedUser) {
         setUserInfo(JSON.parse(savedUser));
       }
+
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.warn('Chưa đăng nhập, bỏ qua gọi API lấy user info');
+        return; // Không gọi API nếu chưa đăng nhập
+      }
+
       const profile = await profileService.getUserInfo();
       const updatedUserInfo = {
         email: profile.email || '',
@@ -135,14 +142,12 @@ export const useProductDetails = (id) => {
       const result = await addToCart(productWithRating, quantity);
       if (result.success) {
         showNotification(`${productWithRating.name} (x${quantity}) đã được thêm vào giỏ hàng!`);
-        
-        // **FIX: Phát sự kiện cartUpdated để cập nhật navbar ngay lập tức**
+
         window.dispatchEvent(new Event('cartUpdated'));
-        
-        // **OPTIONAL: Cũng có thể trigger sự kiện storage nếu navbar listen storage changes**
+
         window.dispatchEvent(new StorageEvent('storage', {
           key: 'cart',
-          newValue: Date.now().toString(), // Giá trị dummy để trigger event
+          newValue: Date.now().toString(),
           url: window.location.href
         }));
       } else {
@@ -181,17 +186,8 @@ export const useProductDetails = (id) => {
       return;
     }
 
-    const tempCartItems = [{
-      productId: buyNowModal.id,
-      productName: buyNowModal.name,
-      productImage: buyNowModal.imageUrl,
-      quantity: parseInt(quantity),
-      pricePerUnit: productWithRating.price,
-      totalPrice: parseInt(quantity) * productWithRating.price,
-    }];
-
     try {
-      const response = await processPayment(paymentMethod, [buyNowModal.id], tempCartItems);
+      const response = await processPayment(paymentMethod, [], [], buyNowModal, parseInt(quantity));
       if (response.success) {
         if (paymentMethod === 'COD') {
           alert('Đặt hàng thành công! Chờ xác nhận từ cửa hàng.');
@@ -205,7 +201,16 @@ export const useProductDetails = (id) => {
     } catch (error) {
       showNotification(`Lỗi khi đặt hàng: ${error.message}`);
     }
-  }, [validateUserInfo, navigate, id, buyNowModal, productWithRating, quantity, paymentMethod, showNotification]);
+  }, [
+    validateUserInfo,
+    navigate,
+    id,
+    buyNowModal,
+    productWithRating,
+    quantity,
+    paymentMethod,
+    showNotification
+  ]);
 
   const handleFeedbackSubmit = useCallback(async (e) => {
     e.preventDefault();
@@ -232,7 +237,7 @@ export const useProductDetails = (id) => {
       setFeedbackRating(0);
       setFeedbackComment('');
       setFeedbackImage(null);
-      
+
       // Refresh feedbacks sau khi reset form để tránh conflict
       await refreshFeedbacks();
 
@@ -241,7 +246,14 @@ export const useProductDetails = (id) => {
       console.error('Lỗi khi gửi phản hồi:', error);
       showNotification('Lỗi khi gửi phản hồi. Vui lòng thử lại!');
     }
-  }, [feedbackRating, feedbackComment, feedbackImage, productWithRating, refreshFeedbacks, showNotification]);
+  }, [
+    feedbackRating,
+    feedbackComment,
+    feedbackImage,
+    productWithRating,
+    refreshFeedbacks,
+    showNotification
+  ]);
 
   return {
     product: productWithRating, // Trả về product đã có rating
