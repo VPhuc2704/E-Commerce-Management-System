@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { addToCart, placeOrder } from '../services/productService'; // Thêm placeOrder
-import { fetchProductDetails, fetchRelatedProducts, checkPurchaseStatus } from '../services/productService';
+import { addToCart, fetchProductDetails, fetchRelatedProducts, checkPurchaseStatus } from '../services/productService';
 import { ORDER_STATUS } from '../constants/orderConstants';
 import { feedbackService } from '../services/feedbackService';
 import { useProductFeedbacks } from './useProductFeedbacks';
+import { processPayment } from '../services/cartService';
+import profileService from '../services/profileService';
 
-// import { mockFeedbacks } from '../mockdata/productData';
-
-export const useProductDetails = (id, navigate) => {
+export const useProductDetails = (id) => {
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [hasPurchasedAndConfirmed, setHasPurchasedAndConfirmed] = useState(false);
@@ -18,23 +18,74 @@ export const useProductDetails = (id, navigate) => {
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackComment, setFeedbackComment] = useState('');
   const [feedbackImage, setFeedbackImage] = useState(null);
-  const [buyNowModal, setBuyNowModal] = useState(null); // Thêm state cho modal
-  const [paymentMethod, setPaymentMethod] = useState('VNPAY'); // Thêm state cho phương thức thanh toán
+  const [buyNowModal, setBuyNowModal] = useState(null);
   const [userInfo, setUserInfo] = useState({
     email: '',
     fullname: '',
     numberphone: '',
     address: '',
   });
-  const [isUserInfoValid, setIsUserInfoValid] = useState(true);
+  const [isUserInfoValid, setIsUserInfoValid] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('VNPAY');
 
-  const { feedbacks, loading, fetchReviews } = useProductFeedbacks(id);
+  const { feedbacks, loading, refreshFeedbacks, error } = useProductFeedbacks(id);
+
+  // Tính rating từ feedbacks - sử dụng useMemo để tránh tính toán lại không cần thiết
+  const averageRating = useMemo(() => {
+    if (!feedbacks || feedbacks.length === 0) return 0;
+    const sum = feedbacks.reduce((acc, fb) => acc + fb.rating, 0);
+    return (sum / feedbacks.length).toFixed(1);
+  }, [feedbacks]);
+
+  // Product với rating được tính toán - sử dụng useMemo
+  const productWithRating = useMemo(() => {
+    if (!product) return null;
+    return {
+      ...product,
+      rating: averageRating
+    };
+  }, [product, averageRating]);
+
+  const fetchUserInfo = useCallback(async () => {
+    try {
+      const savedUser = localStorage.getItem('userInfo');
+      if (savedUser) {
+        setUserInfo(JSON.parse(savedUser));
+      }
+
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.warn('Chưa đăng nhập, bỏ qua gọi API lấy user info');
+        return; // Không gọi API nếu chưa đăng nhập
+      }
+
+      const profile = await profileService.getUserInfo();
+      const updatedUserInfo = {
+        email: profile.email || '',
+        fullname: profile.name || '',
+        numberphone: profile.phone || '',
+        address: profile.address || '',
+      };
+      setUserInfo(updatedUserInfo);
+      localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
+      setIsUserInfoValid(validateUserInfo(updatedUserInfo));
+    } catch (error) {
+      console.error('Lỗi khi tải thông tin người dùng:', error);
+      setUserInfo({ email: '', fullname: '', numberphone: '', address: '' });
+      setIsUserInfoValid(false);
+    }
+  }, []);
+
+  // Validate user info function - nhận userInfo làm parameter để tránh dependency
+  const validateUserInfo = useCallback((userInfoToValidate = userInfo) => {
+    const { email, fullname, numberphone, address } = userInfoToValidate;
+    return !!(email && fullname && numberphone && address);
+  }, [userInfo]);
 
   useEffect(() => {
     const loadProductDetails = async () => {
       try {
         const productData = await fetchProductDetails(id, navigate);
-        console.log("Product data: ", productData);
         if (!productData) {
           console.error('Không lấy được chi tiết sản phẩm!');
           return;
@@ -53,136 +104,171 @@ export const useProductDetails = (id, navigate) => {
       }
     };
 
-    // Đúng: gọi ở đây, KHÔNG gọi bên trong chính `loadProductDetails`
-    const savedUser = localStorage.getItem('userInfo');
-    if (savedUser) {
-      setUserInfo(JSON.parse(savedUser));
-    }
-
     loadProductDetails();
-  }, [id]);
+    fetchUserInfo();
+  }, [id, navigate, fetchUserInfo]);
 
+  // Auto-hide notification after 3 seconds
+  useEffect(() => {
+    if (notification.isVisible) {
+      const timer = setTimeout(() => {
+        setNotification(prev => ({ ...prev, isVisible: false }));
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification.isVisible]);
 
-  const handleQuantityChange = (e) => {
+  const handleQuantityChange = useCallback((e) => {
     const value = e.target.value;
     if (/^\d+$/.test(value) && parseInt(value) > 0) {
       setQuantity(value);
     } else {
       setQuantity("1");
     }
-  };
+  }, []);
 
-  const handleAddToCart = async () => {
-    if (!product) {
-      setNotification({ message: 'Sản phẩm không tồn tại!', isVisible: true });
+  const showNotification = useCallback((message) => {
+    setNotification({ message, isVisible: true });
+  }, []);
+
+  const handleAddToCart = useCallback(async () => {
+    if (!productWithRating) {
+      showNotification('Sản phẩm không tồn tại!');
       return;
     }
+    console.log('Adding to cart:', { productId: productWithRating.id, quantity });
     setIsAddingToCart(true);
     try {
-      const result = await addToCart(product.id, quantity, navigate);
+      const result = await addToCart(productWithRating, quantity);
       if (result.success) {
-        setNotification({
-          message: `${product.name} (x${quantity}) đã được thêm vào giỏ hàng!`,
-          isVisible: true,
-        });
+        showNotification(`${productWithRating.name} (x${quantity}) đã được thêm vào giỏ hàng!`);
+
+        window.dispatchEvent(new Event('cartUpdated'));
+
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'cart',
+          newValue: Date.now().toString(),
+          url: window.location.href
+        }));
       } else {
         throw new Error(result.error);
       }
     } catch (error) {
       console.error('Lỗi khi thêm vào giỏ hàng:', error);
-      setNotification({
-        message: `Không thể thêm sản phẩm: ${error.message}`,
-        isVisible: true,
-      });
+      showNotification(`Không thể thêm sản phẩm: ${error.message || 'Lỗi không xác định'}`);
     } finally {
       setIsAddingToCart(false);
     }
-  };
+  }, [productWithRating, quantity, showNotification]);
 
-  const handleBuyNow = () => {
-    if (!product) {
-      setNotification({ message: 'Sản phẩm không tồn tại!', isVisible: true });
+  const handleBuyNow = useCallback(() => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      showNotification('Vui lòng đăng nhập để đặt hàng!');
+      return;
+    }
+    if (!productWithRating) {
+      showNotification('Sản phẩm không tồn tại!');
       return;
     }
     setBuyNowModal({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      imageUrl: product.imageUrl || '/img/default.jpg',
+      id: productWithRating.id,
+      name: productWithRating.name,
+      price: productWithRating.price,
+      imageUrl: productWithRating.image || '/img/default.jpg',
     });
     setQuantity("1");
-    setPaymentMethod('VNPAY');
-  };
+  }, [productWithRating, showNotification]);
 
-  const validateUserInfo = () => {
-    const { email, fullname, numberphone, address } = userInfo;
-    return email && fullname && numberphone && address;
-  };
-
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = useCallback(async () => {
     if (!validateUserInfo()) {
-      setIsUserInfoValid(false);
+      showNotification('Vui lòng cập nhật thông tin cá nhân trước khi đặt hàng!');
+      navigate('/profile?redirect=/product-details/' + id);
       return;
     }
-    localStorage.setItem('userInfo', JSON.stringify(userInfo));
-    const orderData = {
-      buyNow: true,
-      productId: buyNowModal.id,
-      quantity: parseInt(quantity),
-      paymentMethod,
-      user: userInfo,
-    };
+    if (!buyNowModal || !productWithRating) {
+      showNotification('Sản phẩm không hợp lệ!');
+      return;
+    }
+
     try {
-      const response = await placeOrder(orderData);
-      if (response.order) {
+      const response = await processPayment(paymentMethod, [], [], buyNowModal, parseInt(quantity));
+      if (response.success) {
+        const orderId = localStorage.getItem('lastOrderId');
         if (paymentMethod === 'COD') {
-          setNotification({
-            message: 'Đặt hàng thành công! Chờ xác nhận.',
-            isVisible: true,
-          });
-          setBuyNowModal(null);
-        } else if (paymentMethod === 'VNPAY' && response.redirectUrl) {
+          if (orderId) {
+            showNotification('Đặt hàng thành công! Chờ xác nhận từ cửa hàng.');
+            setBuyNowModal(null);
+            navigate(`/order-details/${orderId}`);
+          } else {
+            showNotification('Đặt hàng thành công nhưng không thể điều hướng đến chi tiết đơn hàng.');
+          }
+        } else if (response.redirectUrl) {
           window.location.href = response.redirectUrl;
         }
+        window.dispatchEvent(new Event('cartUpdated'));
       } else {
-        setNotification({
-          message: `Lỗi: ${response.error}`,
-          isVisible: true,
-        });
+        showNotification(`Lỗi: ${response.error}`);
       }
     } catch (error) {
-      setNotification({
-        message: `Lỗi khi đặt hàng: ${error.message}`,
-        isVisible: true,
-      });
+      showNotification(`Lỗi khi đặt hàng: ${error.message}`);
     }
-  };
-  const handleFeedbackSubmit = async (e) => {
-    e.preventDefault();
-    try {
+  }, [
+    validateUserInfo,
+    navigate,
+    id,
+    buyNowModal,
+    productWithRating,
+    quantity,
+    paymentMethod,
+    showNotification
+  ]);
 
-      await feedbackService.postFeedback(product.id, {
+  const handleFeedbackSubmit = useCallback(async (e) => {
+    e.preventDefault();
+    if (feedbackRating < 1 || feedbackRating > 5) {
+      showNotification('Vui lòng chọn số sao từ 1 đến 5.');
+      return;
+    }
+    if (!feedbackComment.trim()) {
+      showNotification('Vui lòng nhập nhận xét.');
+      return;
+    }
+    try {
+      await feedbackService.postFeedback(productWithRating.id, {
         rating: feedbackRating,
         comment: feedbackComment,
         imageFile: feedbackImage,
       });
 
-      alert('Gửi phản hồi thành công!');
+      if (feedbackImage) {
+        URL.revokeObjectURL(URL.createObjectURL(feedbackImage));
+      }
+
+      // Reset form
       setFeedbackRating(0);
       setFeedbackComment('');
       setFeedbackImage(null);
 
-      fetchReviews();
+      // Refresh feedbacks sau khi reset form để tránh conflict
+      await refreshFeedbacks();
 
-    } catch (err) {
-      console.error(err);
-      alert('Lỗi khi gửi phản hồi');
+      showNotification('Phản hồi đã được gửi thành công!');
+    } catch (error) {
+      console.error('Lỗi khi gửi phản hồi:', error);
+      showNotification('Lỗi khi gửi phản hồi. Vui lòng thử lại!');
     }
-  };
-
+  }, [
+    feedbackRating,
+    feedbackComment,
+    feedbackImage,
+    productWithRating,
+    refreshFeedbacks,
+    showNotification
+  ]);
 
   return {
-    product,
+    product: productWithRating, // Trả về product đã có rating
     relatedProducts,
     hasPurchasedAndConfirmed,
     quantity,
@@ -200,12 +286,15 @@ export const useProductDetails = (id, navigate) => {
     isAddingToCart,
     buyNowModal,
     setBuyNowModal,
-    paymentMethod,
-    setPaymentMethod,
     userInfo,
     setUserInfo,
     isUserInfoValid,
     handlePlaceOrder,
-    handleBuyNow, // Thêm handleBuyNow
+    handleBuyNow,
+    paymentMethod,
+    setPaymentMethod,
+    feedbacks,
+    loading,
+    error,
   };
 };

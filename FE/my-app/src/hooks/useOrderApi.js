@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { ORDERS_API } from '../constants/orderConstants'
 
 export const useOrderApi = () => {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
 
-    const getAllOrders = async () => {
+    const getAllOrders = useCallback(async () => {
         setLoading(true)
         try {
             const token = localStorage.getItem('accessToken')
@@ -34,9 +34,9 @@ export const useOrderApi = () => {
         } finally {
             setLoading(false)
         }
-    }
+    }, [])
 
-    const getOrdersByStatus = async (status) => {
+    const getOrdersByStatus = useCallback(async (status) => {
         setLoading(true)
         try {
             const token = localStorage.getItem('accessToken')
@@ -65,9 +65,9 @@ export const useOrderApi = () => {
         } finally {
             setLoading(false)
         }
-    }
+    }, [])
 
-    const updateOrderStatus = async (orderId, orderStatus) => {
+    const updateOrderStatus = useCallback(async (orderId, orderStatus) => {
         setLoading(true)
         try {
             const token = localStorage.getItem('accessToken')
@@ -97,9 +97,9 @@ export const useOrderApi = () => {
         } finally {
             setLoading(false)
         }
-    }
+    }, [])
 
-    const getOrderDetails = async (orderId) => {
+    const getOrderDetails = useCallback(async (orderId) => {
         setLoading(true)
         try {
             const token = localStorage.getItem('accessToken')
@@ -128,7 +128,7 @@ export const useOrderApi = () => {
         } finally {
             setLoading(false)
         }
-    }
+    }, [])
 
     return {
         loading,

@@ -10,6 +10,8 @@ public class OrderRequestDTO {
     private Integer quantity;
     private List<Long> cartItemIds;
     private PaymentMethod paymentMethod;
+    private String shippingAddress;
+    private String recipientPhone;
 
     public boolean isBuyNow() {
         return buyNow;
@@ -49,5 +51,21 @@ public class OrderRequestDTO {
 
     public void setPaymentMethod(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    public String getShippingAddress() {
+        return shippingAddress;
+    }
+
+    public void setShippingAddress(String shippingAddress) {
+        this.shippingAddress = shippingAddress;
+    }
+
+    public String getRecipientPhone() {
+        return recipientPhone;
+    }
+
+    public void setRecipientPhone(String recipientPhone) {
+        this.recipientPhone = recipientPhone;
     }
 }

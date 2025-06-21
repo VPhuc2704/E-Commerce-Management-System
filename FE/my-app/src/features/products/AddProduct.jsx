@@ -189,7 +189,7 @@ const AddProduct = ({ onClose, onAdd }) => {
                     <img
                       src={imagePreview.startsWith("blob:") || imagePreview.startsWith("http")
                         ? imagePreview
-                        : `http://localhost:8081${imagePreview}`}
+                        : `${BASE_URL}${imagePreview}`}
                       alt="Preview"
                       className="w-full h-full object-cover"
                     />

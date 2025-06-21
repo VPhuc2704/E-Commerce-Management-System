@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -52,7 +53,9 @@ public class ReviewController {
                 Path filePath = Paths.get(uploadDir, fileName);
 
                 // Ghi file vào hệ thống
-                Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                try (InputStream is = imageFile.getInputStream()) {
+                    Files.copy(is, filePath, StandardCopyOption.REPLACE_EXISTING);
+                }
 
                 // Gán đường dẫn để FE truy cập qua /reviews/filename
                 dto.setImageUrl("/reviews/" + fileName);

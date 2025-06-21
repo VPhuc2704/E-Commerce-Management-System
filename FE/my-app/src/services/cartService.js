@@ -1,6 +1,5 @@
-
 const HOST = import.meta.env.VITE_API_URL;
-
+import orderService from './orderService';
 
 export const fetchCartItems = async () => {
   try {
@@ -37,20 +36,44 @@ export const fetchCartItems = async () => {
 
 export const addToCart = async (product, quantity) => {
   const token = localStorage.getItem('accessToken');
-  const res = await fetch(`${HOST}/api/cart/items/`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(
-      {
-        productId: product.id,
-        quantity: Number(quantity)
+  if (!token) {
+    return { success: false, error: 'Vui lòng đăng nhập' };
+  }
+
+  if (!product || !product.id || isNaN(product.id)) {
+    console.error('Product ID không hợp lệ:', product);
+    return { success: false, error: 'Sản phẩm không hợp lệ' };
+  }
+
+  if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) {
+    console.error('Số lượng không hợp lệ:', quantity);
+    return { success: false, error: 'Số lượng phải là số nguyên dương' };
+  }
+
+  try {
+    const res = await fetch(`${HOST}/api/cart/items/`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        productId: Number(product.id),
+        quantity: Number(quantity),
       }),
-  });
-  const data = await res.text();
-  return data;
+    });
+
+    const data = await res.text();
+    if (!res.ok) {
+      console.error('Lỗi server:', res.status, data);
+      return { success: false, error: `Lỗi server: ${data || res.statusText}` };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error('Lỗi khi thêm vào giỏ hàng:', error);
+    return { success: false, error: 'Lỗi không xác định' };
+  }
 };
 
 export const updateCartQuantity = async (productId, quantity) => {
@@ -81,38 +104,54 @@ export const removeFromCart = async (productId) => {
   return data;
 };
 
-
-export const processPayment = async (paymentMethod, selectedItems, cartItems) => {
+export const processPayment = async (
+  paymentMethod,
+  selectedItems,
+  cartItems,
+  buyNowProduct = null,
+  quantity = 1
+) => {
   try {
-    const itemsToPay = cartItems.filter(item => selectedItems.includes(item.productId));
-    if (itemsToPay.length === 0) {
-      return { success: false, error: 'Không có sản phẩm nào được chọn' };
-    }
-
-    // Load thông tin người dùng
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     if (!userInfo.email || !userInfo.fullname || !userInfo.numberphone || !userInfo.address) {
       return { success: false, error: 'Thiếu thông tin người dùng' };
     }
 
-    const orderData = {
-      buyNow: false,
-      items: itemsToPay.map(item => ({
-        productId: item.productId,
-        productName: item.productName,
-        productImage: item.productImage,
-        quantity: item.quantity,
-        pricePerUnit: item.pricePerUnit,
-      })),
-      paymentMethod,
-      user: userInfo,
-    };
+    let orderData;
+
+    if (buyNowProduct) {
+      // 👉 Mua ngay 1 sản phẩm
+      orderData = {
+        buyNow: true,
+        productId: buyNowProduct.id,
+        quantity: quantity,
+        paymentMethod,
+        user: userInfo,
+      };
+    } else {
+      // 👉 Mua từ giỏ hàng
+      const itemsToPay = cartItems.filter(item => selectedItems.includes(item.productId));
+      if (itemsToPay.length === 0) {
+        return { success: false, error: 'Không có sản phẩm nào được chọn' };
+      }
+
+      orderData = {
+        buyNow: false,
+        items: itemsToPay.map(item => ({
+          id: item.id,
+          productId: item.productId,
+          quantity: item.quantity,
+          pricePerUnit: item.pricePerUnit,
+        })),
+        paymentMethod,
+        user: userInfo,
+      };
+    }
 
     const response = await orderService.placeOrder(orderData);
     if (response.order) {
-      // Xóa các mục đã thanh toán khỏi giỏ hàng
-      // const newCart = cartItems.filter(item => !selectedItems.includes(item.productId));
-      await fetchCart();
+      await fetchCartItems(); // Cập nhật giỏ hàng sau khi thanh toán
+      window.dispatchEvent(new Event('cartUpdated')); // Kích hoạt sự kiện để cập nhật UI giỏ hàng
       return {
         success: true,
         vnpayCode: paymentMethod === 'VNPAY' ? 'VNPAY-' + Math.random().toString(36).substr(2, 8) : null,

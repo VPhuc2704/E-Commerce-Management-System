@@ -58,7 +58,6 @@ public class ProductController {
         try {
             ProductsDTO productsDTO;
 
-            // Nếu có dữ liệu JSON thì parse ra object
             if (productsJson != null) {
                 productsDTO = new ObjectMapper().readValue(productsJson, ProductsDTO.class);
             } else {

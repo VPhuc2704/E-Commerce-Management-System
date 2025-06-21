@@ -5,7 +5,9 @@ import { motion } from "framer-motion"
 import { CATEGORIES } from "../../constants/productConstants"
 import { useProductApi } from '../../hooks/useProductApi';
 
+
 const EditProduct = ({ product, onClose, onUpdate }) => {
+  const BASE_URL = import.meta.env.VITE_API_URL;
   const { updateProduct } = useProductApi();
   const [editedProduct, setEditedProduct] = useState(product)
   const [imagePreview, setImagePreview] = useState(product.image)
@@ -16,7 +18,7 @@ const EditProduct = ({ product, onClose, onUpdate }) => {
 
     if (product.image) {
       const isAbsoluteUrl = product.image.startsWith("http") || product.image.startsWith("blob:")
-      const imageUrl = isAbsoluteUrl ? product.image : `http://localhost:8081${product.image}`
+      const imageUrl = isAbsoluteUrl ? product.image : `${BASE_URL}${product.image}`
       setImagePreview(imageUrl)
     }
     setEditedProduct(product)

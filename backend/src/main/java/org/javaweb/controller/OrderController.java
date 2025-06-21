@@ -1,6 +1,5 @@
 package org.javaweb.controller;
 
-import org.javaweb.constant.ApiResponse;
 import org.javaweb.enums.OrderStatus;
 import org.javaweb.model.dto.OrderDTO;
 import org.javaweb.model.dto.OrderPreviewDTO;
@@ -9,6 +8,7 @@ import org.javaweb.model.request.OrderStatusDTO;
 import org.javaweb.model.response.OrderResponseDTO;
 import org.javaweb.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -47,6 +47,12 @@ public class OrderController {
 
     @GetMapping("/status")
     public ResponseEntity<?> getOrderStatus(Authentication authentication, @RequestParam("status") OrderStatus status) {
+
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getPrincipal().equals("anonymousUser")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Bạn chưa đăng nhập");
+        }
+
         List<OrderDTO> order = orderService.getOrderStatus(authentication, status);
         return ResponseEntity.ok(order);
     }

@@ -1,121 +1,194 @@
-import { fetchProductDetails } from './productService';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-export const getOrders = async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const mockOrders = [
-        {
-          id: 7,
-          createdDate: '2025-06-09T13:14:10.468',
-          totalAmount: 64000.0,
-          status: 'PENDING',
-          user: {
-            email: '2251120103@ut.edu.vn',
-            fullname: 'VanPhuc',
-            numberphone: '0355308724',
-            address: '39/11a Duong 102, Tang Nhon Phu A, TP.HCM',
-          },
-          items: [
-            {
-              id: 8,
-              productId: 6,
-              productName: 'Chả giò hải sản',
-              imageUrl: '/img/cha_gio_6.jpg',
-              quantity: 2,
-              price: 32000.0,
-            },
-          ],
-        },
-        {
-          id: 8,
-          createdDate: '2025-06-08T10:30:00.000',
-          totalAmount: 120000.0,
-          status: 'COMPLETED',
-          user: {
-            email: '2251120103@ut.edu.vn',
-            fullname: 'VanPhuc',
-            numberphone: '0355308724',
-            address: '39/11a Duong 102, Tang Nhon Phu A, TP.HCM',
-          },
-          items: [
-            {
-              id: 9,
-              productId: 5,
-              productName: 'Phở bò',
-              imageUrl: '/img/pho_bo_5.jpg',
-              quantity: 1,
-              price: 120000.0,
-            },
-          ],
-        },
-      ];
-      resolve(mockOrders);
-    }, 800);
-  });
-};
-
-export const placeOrder = async (orderData) => {
-  try {
-    const { buyNow, productId, quantity, paymentMethod, user, items } = orderData;
-
-    let orderItems = [];
-    let totalAmount = 0;
-
-    if (buyNow) {
-      // Xử lý "Mua ngay"
-      const product = await fetchProductDetails(productId, null);
-      if (!product) {
-        return { error: 'Sản phẩm không tồn tại' };
+const orderService = {
+  getOrderDetails: async (orderId) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("Không tìm thấy token xác thực");
       }
-      orderItems = [
-        {
-          id: Math.floor(Math.random() * 1000) + 1,
-          productId: product.id,
-          productName: product.name,
-          imageUrl: product.imageUrl,
-          quantity,
-          price: product.price,
+
+      const response = await fetch(`${API_BASE_URL}/api/orders/details/${orderId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      ];
-      totalAmount = product.price * quantity;
-    } else {
-      // Xử lý từ giỏ hàng
-      orderItems = items.map((item) => ({
-        id: Math.floor(Math.random() * 1000) + 1,
-        productId: item.productId,
-        productName: item.productName,
-        imageUrl: item.productImage,
-        quantity: item.quantity,
-        price: item.pricePerUnit,
-      }));
-      totalAmount = orderItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Không thể tải chi tiết đơn hàng");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Lỗi khi lấy chi tiết đơn hàng:", error);
+      throw new Error(error.message || "Không thể tải chi tiết đơn hàng");
     }
+  },
 
-    // Tạo đơn hàng
-    const order = {
-      id: Math.floor(Math.random() * 1000) + 1,
-      createdDate: new Date().toISOString(),
-      totalAmount,
-      status: 'PENDING',
-      user,
-      items: orderItems,
-      paymentMethod,
-    };
+  cancelOrder: async (orderId) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("Không tìm thấy token xác thực");
+      }
 
-    // Lưu vào localStorage
-    const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    savedOrders.push(order);
-    localStorage.setItem('orders', JSON.stringify(savedOrders));
+      const response = await fetch(`${API_BASE_URL}/api/orders/cancel/${orderId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-    // Xử lý VNPAY
-    const redirectUrl =
-      paymentMethod === 'VNPAY'
-        ? `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?orderId=${order.id}&amount=${order.totalAmount}`
-        : null;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Hủy đơn hàng thất bại");
+      }
 
-    return { order, redirectUrl };
-  } catch (error) {
-    console.error('Lỗi khi đặt hàng:', error);
-    return { error: error.message };
-  }
+      return { success: true };
+    } catch (error) {
+      console.error("Lỗi khi hủy đơn hàng:", error);
+      throw new Error(error.message || "Không thể hủy đơn hàng");
+    }
+  },
+
+  placeOrder: async (orderData) => {
+    try {
+      const { buyNow, productId, quantity, paymentMethod, user, items } = orderData;
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("Không tìm thấy token xác thực");
+      }
+
+      let payload;
+
+      if (buyNow) {
+        payload = {
+          buyNow: true,
+          productId: productId,
+          quantity: quantity,
+          paymentMethod: paymentMethod,
+          shippingAddress: user?.address,
+          recipientPhone: user?.numberphone,
+        };
+      } else {
+        const cartItemIds = items
+          .filter((item) => item?.id !== undefined && item?.id !== null)
+          .map((item) => item.id);
+
+        if (!cartItemIds.length) {
+          throw new Error("Giỏ hàng không hợp lệ hoặc thiếu ID");
+        }
+
+        payload = {
+          buyNow: false,
+          cartItemIds: cartItemIds,
+          paymentMethod: paymentMethod,
+          shippingAddress: user?.address,
+          recipientPhone: user?.numberphone,
+        };
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/orders/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Không thể tạo đơn hàng");
+      }
+
+      const result = await response.json();
+
+      if (result.order?.id) {
+        localStorage.setItem("lastOrderId", result.order.id);
+      }
+
+      if (result.redirectUrl) {
+        window.location.href = result.redirectUrl;
+      } else {
+        return { order: result.order };
+      }
+    } catch (error) {
+      console.error("Lỗi khi đặt hàng:", error);
+      return { error: error.message || "Không thể tạo đơn hàng" };
+    }
+  },
+
+  getOrderUpdates: async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("Không tìm thấy token xác thực");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/orders/all`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Không thể tải cập nhật đơn hàng");
+      }
+
+      const updates = await response.json();
+      return updates.map((update) => ({
+        id: update.id || `update-${Math.random().toString(36).substr(2, 9)}`,
+        orderId: update.orderId,
+        status: update.status,
+        timestamp: update.timestamp || new Date().toISOString(),
+      }));
+    } catch (error) {
+      console.error("Lỗi khi lấy cập nhật đơn hàng:", error);
+      throw new Error(error.message || "Không thể tải cập nhật đơn hàng");
+    }
+  },
+
+  updateOrderStatus: async (orderId, status) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("Không tìm thấy token xác thực");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/orders/admin/status`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: orderId,
+          orderStatus: status
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Cập nhật trạng thái thất bại");
+      }
+
+      window.dispatchEvent(new Event('cartUpdated')); // Kích hoạt sự kiện
+      return { success: true };
+    } catch (error) {
+      console.error("Lỗi khi cập nhật trạng thái đơn hàng:", error);
+      throw new Error(error.message || "Không thể cập nhật trạng thái");
+    }
+  },
+
 };
+
+export default orderService;

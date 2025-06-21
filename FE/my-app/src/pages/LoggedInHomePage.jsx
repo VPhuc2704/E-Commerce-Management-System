@@ -2,33 +2,51 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Footer from '../components/layout/Footer';
 import { productService } from '../services/productService';
+import { feedbackService } from '../services/feedbackService';
 
 // Reusable component for dish items (matching HomePage style)
-const DishItem = ({ name, price, rating, imageUrl, soldCount, id }) => (
-  <div className="flex items-center bg-white rounded-lg shadow-md p-4 mb-2 hover:shadow-lg transition-shadow duration-300">
-    <img src={imageUrl || 'src/assets/images/default.jpg'} alt={name} className="w-24 h-24 object-cover rounded mr-4" />
-    <div className="flex-grow">
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="text-lg font-semibold text-gray-900 hover:no-underline">{name}</h4>
-        {soldCount > 50 && (
-          <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-semibold hover:no-underline">
-            HOT 🔥
-          </span>
-        )}
-      </div>
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col space-y-1">
-          <p className="text-gray-600 font-medium hover:no-underline">Giá: {price.toLocaleString('vi-VN')} VNĐ</p>
-          <p className="text-green-600 text-sm hover:no-underline">Đã bán: {soldCount} suất</p>
+const DishItem = ({ name, price, feedback = {}, imageUrl, soldQuantity, id }) => {
+
+  // const rating = Number(feedback.rating || 0);
+  const rawRating = Number(feedback?.rating);
+  const rating = isNaN(rawRating) ? 0 : Math.min(Math.max(rawRating, 0), 5);
+
+  const fullStars = Math.round(rating);
+  const emptyStars = 5 - fullStars;
+
+  return (
+    <div className="flex items-center bg-white rounded-lg shadow-md p-4 mb-2 hover:shadow-lg transition-shadow duration-300">
+      <img src={imageUrl || 'src/assets/images/default.jpg'} alt={name} className="w-24 h-24 object-cover rounded mr-4" />
+      <div className="flex-grow">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-lg font-semibold text-gray-900 hover:no-underline">{name}</h4>
+          {soldQuantity > 50 && (
+            <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-semibold hover:no-underline">
+              HOT 🔥
+            </span>
+          )}
         </div>
-        <div className="text-right">
-          <p className="text-yellow-500 mb-1 hover:no-underline">{'★'.repeat(rating) + '☆'.repeat(5 - rating)}</p>
-          <p className="text-gray-500 text-sm hover:no-underline">({rating}/5)</p>
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col space-y-1">
+            <p className="text-gray-600 font-medium hover:no-underline">Giá: {price.toLocaleString('vi-VN')} VNĐ</p>
+            <p className="text-green-600 text-sm hover:no-underline">Đã bán: {soldQuantity != null ? soldQuantity : 0} suất</p>
+          </div>
+          <div className="text-right">
+            <div className="flex items-center space-x-1">
+              <div className="text-amber-400 text-sm">
+                {'★'.repeat(fullStars)}
+              </div>
+              <div className="text-gray-300 text-sm">
+                {'☆'.repeat(emptyStars)}
+              </div>
+            </div>
+            <p className="text-gray-500 text-sm hover:no-underline">({(rating || 0).toFixed(1)}/5)</p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Enhanced Dish Carousel Item with better fit and animations
 const DishCarouselItem = ({ imageUrl, name, isActive }) => (
@@ -78,6 +96,9 @@ const LoggedInHomePage = ({ user }) => {
     { imageUrl: 'src/assets/images/nuocep_tao.jpg', name: 'Nước ép thanh mát' },
   ];
 
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -86,9 +107,25 @@ const LoggedInHomePage = ({ user }) => {
         const categoriesWithProducts = await Promise.all(
           categoryData.map(async (category) => {
             const products = await productService.getProductsByCategory(category.id);
+            console.log('Products for category', category.name, ':', products); // Log để kiểm tra
+            const productsWithRatings = await Promise.all(
+              products.map(async (product) => {
+                try {
+                  const feedback = await feedbackService.getFeedbacksByProduct(product.id);
+                  const ratings = feedback.map(fb => fb.rating);
+                  const avgRating = ratings.length > 0
+                    ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+                    : 0;
+                  return { ...product, feedback: { rating: avgRating } };
+                } catch (err) {
+                  console.warn('Lỗi feedback sản phẩm:', product.id, err.message);
+                  return { ...product, feedback: { rating: 0 } };
+                }
+              })
+            );
             return {
               ...category,
-              items: products
+              items: productsWithRatings
             };
           })
         );
@@ -107,52 +144,6 @@ const LoggedInHomePage = ({ user }) => {
 
   useEffect(() => {
     let mounted = true;
-
-    const fetchFlashSaleProducts = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/api/flash-sale/products');
-        const data = await response.json();
-        if (mounted) {
-          setFlashSaleProducts(data.map(product => ({
-            ...product,
-            salePrice: product.originalPrice * (1 - product.discountPercentage / 100),
-          })));
-        }
-      } catch (error) {
-        console.error('Failed to fetch flash sale products:', error);
-      }
-    };
-
-    const fetchFlashSaleEndTime = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/api/flash-sale/end-time');
-        const data = await response.json();
-        const endTime = new Date(data.endTime).getTime();
-        const updateCountdown = () => {
-          const now = new Date().getTime();
-          const distance = endTime - now;
-
-          if (distance < 0) {
-            setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
-            return;
-          }
-
-          const hours = Math.floor(distance / (1000 * 60 * 60));
-          const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-          setTimeLeft({ hours, minutes, seconds });
-        };
-
-        updateCountdown();
-        const interval = setInterval(updateCountdown, 1000);
-        return () => clearInterval(interval);
-      } catch (error) {
-        console.error('Failed to fetch flash sale end time:', error);
-      }
-    };
-
-    fetchFlashSaleProducts();
-    fetchFlashSaleEndTime();
 
     return () => {
       mounted = false;
@@ -182,7 +173,7 @@ const LoggedInHomePage = ({ user }) => {
   }, []);
 
   const sortedItems = selectedCategory
-    ? [...categories.find(cat => cat.name === selectedCategory).items].sort((a, b) => b.soldCount - a.soldCount)
+    ? [...categories.find(cat => cat.name === selectedCategory).items].sort((a, b) => b.soldQuantity - a.soldQuantity)
     : [];
 
   const paginatedItems = sortedItems.slice(
@@ -226,7 +217,7 @@ const LoggedInHomePage = ({ user }) => {
         <section className="text-center mb-12">
           <div className="mb-8">
             <h1 className="text-5xl font-extrabold mb-4 tracking-wide text-indigo-800 drop-shadow-lg">
-              Chào mừng trở lại, {user?.name || 'User'}!
+              Chào mừng trở lại, {user?.fullname || 'User'}!
             </h1>
             <p className="text-xl mb-6 text-indigo-600 font-medium">
               Nơi hương vị gặp gỡ tình yêu - Trải nghiệm ẩm thực đích thực
@@ -284,7 +275,6 @@ const LoggedInHomePage = ({ user }) => {
               >
                 🍴 XEM MENU
               </button>
-
             </div>
           </div>
         </section>
@@ -403,30 +393,39 @@ const LoggedInHomePage = ({ user }) => {
                   <DishItem
                     name={item.name}
                     price={item.price}
-                    rating={item.rating}
-                    imageUrl={`http://localhost:8081${item.image}`}
-                    soldCount={item.soldCount}
+                    feedback={item.feedback}
+                    imageUrl={`${BASE_URL}${item.image}`}
+                    soldQuantity={item.soldQuantity}
                     id={item.id}
                   />
                 </Link>
               ))}
             </div>
             {totalCategoryPages > 1 && (
-              <div className="flex justify-center mt-4 gap-2">
+              <div className="flex justify-center mt-6 gap-2">
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 bg-indigo-700 text-white rounded-lg disabled:bg-gray-400 hover:bg-indigo-800 transition-all duration-300"
+                  className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-md"
                 >
                   Previous
                 </button>
-                <span className="px-4 py-2 text-gray-700">
-                  Trang {currentPage} / {totalCategoryPages}
-                </span>
+                {Array.from({ length: totalCategoryPages }, (_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentPage(index + 1)}
+                    className={`px-4 py-2 rounded-full font-semibold text-sm ${currentPage === index + 1
+                      ? 'bg-indigo-600 text-white shadow-lg'
+                      : 'bg-white text-gray-800 border border-gray-300 hover:bg-indigo-100 hover:shadow-md'
+                      } transition-all duration-300`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalCategoryPages))}
                   disabled={currentPage === totalCategoryPages}
-                  className="px-4 py-2 bg-indigo-700 text-white rounded-lg disabled:bg-gray-400 hover:bg-indigo-800 transition-all duration-300"
+                  className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-md"
                 >
                   Next
                 </button>

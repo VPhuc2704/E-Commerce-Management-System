@@ -76,7 +76,7 @@ public class ReviewDTO {
         this.imageUrl = reviewEntity.getImageUrl();
         if (reviewEntity.getUser() != null) {
             this.userId = reviewEntity.getUser().getId();
-            this.userName = reviewEntity.getUser().getUsername();
+            this.userName = reviewEntity.getUser().getFullname();
         }
         this.createdDate = reviewEntity.getCreatedDate();
     }

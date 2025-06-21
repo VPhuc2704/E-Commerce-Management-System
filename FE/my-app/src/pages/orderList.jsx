@@ -4,7 +4,8 @@ import { useOrderHistory } from '../hooks/useOrderHistory';
 
 const OrderList = () => {
   const { orders } = useOrderHistory();
-  const Host = "http://localhost:8081";
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -66,7 +67,7 @@ const OrderList = () => {
                     {order.items.map((item) => (
                       <div key={item.id} className="flex items-center gap-4 mb-3">
                         <img
-                          src={`${Host}${item.imageUrl}` || '/assets/images/default.jpg'}
+                          src={`${BASE_URL}${item.imageUrl}` || '/assets/images/default.jpg'}
                           alt={item.productName}
                           className="w-16 h-16 object-cover rounded-lg shadow-sm"
                           onError={(e) => { e.target.src = '/assets/images/default.jpg'; }}

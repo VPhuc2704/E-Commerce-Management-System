@@ -41,7 +41,7 @@ const ProductCard = ({ product, index, onEdit, onDelete }) => (
                 className="w-full h-48 object-cover"
             />
             <StatusBadge status={product.status} />
-            <StockBadge stock={product.stock} />
+            <StockBadge stockQuantity={product.quantity} />
         </div>
 
         <div className="p-6">
@@ -91,10 +91,10 @@ const StatusBadge = ({ status }) => (
     </div>
 )
 
-const StockBadge = ({ stock }) => (
+const StockBadge = ({ quantity }) => (
     <div className="absolute top-3 left-3">
         <span className="bg-black/70 text-white px-2 py-1 rounded-lg text-xs">
-            Kho: {stock}
+            Kho: {quantity}
         </span>
     </div>
 )

@@ -2,7 +2,7 @@ import { ORDER_STATUS } from '../constants/orderConstants';
 import { API_BASE_URL } from '../constants/productConstants';
 // import { categories, mockProductListing, mockFeedbacks } from '../mockdata/productData';
 import { addToCart as cartAddToCart } from './cartService';
-import { placeOrder as orderPlaceOrder } from './orderService';
+import orderService from './orderService';
 
 class ProductService {
     async getAllProducts() {
