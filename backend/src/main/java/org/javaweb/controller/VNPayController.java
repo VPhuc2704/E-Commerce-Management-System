@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping("/api/vnpayment")
 public class VNPayController {
@@ -16,7 +18,7 @@ public class VNPayController {
     @PostMapping("create")
     public ResponseEntity<String> createPayment(@RequestBody VNPayRequest paymentRequest) {
         try {
-            String paymentUrl = vnpayService.createPayment(paymentRequest.getAmount());
+            String paymentUrl = vnpayService.createPayment(paymentRequest.getAmount(), paymentRequest.getOrderId());
             return ResponseEntity.ok(paymentUrl);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -26,7 +28,7 @@ public class VNPayController {
     }
 
     @GetMapping("/return")
-    public ResponseEntity<String> returnPayment(@RequestParam("vnp_ResponseCode") String responseCode) {
-        return vnpayService.handlePaymentReturn(responseCode);
+    public ResponseEntity<String> returnPayment(HttpServletRequest request) {
+        return vnpayService.handlePaymentReturn(request);
     }
 }

@@ -5,6 +5,7 @@ import org.javaweb.entity.*;
 import org.javaweb.enums.OrderStatus;
 import org.javaweb.enums.PaymentStatus;
 import org.javaweb.exceptions.CartEmptyException;
+import org.javaweb.exceptions.IncompleteUserInfoException;
 import org.javaweb.exceptions.NoProductSelectedException;
 import org.javaweb.exceptions.OrderException;
 import org.javaweb.model.dto.OrderDTO;
@@ -23,7 +24,6 @@ import org.javaweb.service.PaymentService;
 import org.javaweb.service.VNPayService;
 import org.javaweb.service.factory.OrderFactory;
 import org.javaweb.utils.ChekoutRole;
-import org.javaweb.utils.ValidateUserInfor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -128,17 +128,26 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDTO createOrders(OrderRequestDTO orderRequest, Authentication authentication) {
         UserEntity user = (UserEntity) authentication.getPrincipal();
 
-        ValidateUserInfor.validateUserInfo(user);
+        String shippingAddress = getShippingAddress(orderRequest, user);
+        String recipientPhone  = getRecipientPhone(orderRequest, user);
+
+        validateShippingInfo(shippingAddress, recipientPhone);
 
         OrderEntity orderEntity;
 
         if(orderRequest.isBuyNow()){
 
-            ProductEntity product = productRepository.findById(orderRequest.getProductId()).get();
+            ProductEntity product = productRepository.findById(orderRequest.getProductId())
+                    .orElseThrow(() -> new NoProductSelectedException("Không tìm thấy sản phẩm."));
 
             OrderItemEntity orderItemEntity = buildOrderItem(product,orderRequest.getQuantity());
 
-            orderEntity = orderFactory.createOrderEntityBuyNow(user, new ArrayList<>(Collections.singletonList(orderItemEntity)));
+            orderEntity = orderFactory.createOrderEntityBuyNow(
+                    user,
+                    new ArrayList<>(Collections.singletonList(orderItemEntity)),
+                    shippingAddress,
+                    recipientPhone
+            );
 
             orderEntity.setTotalAmount(orderItemEntity.getPrice());
         }else{
@@ -151,7 +160,13 @@ public class OrderServiceImpl implements OrderService {
                 throw new NoProductSelectedException("Hãy lựa chọn sản phẩm");
             }
 
-            orderEntity = orderFactory.createOrderEntity(user, selectedItems);
+            orderEntity = orderFactory.createOrderEntity(
+                    user,
+                    selectedItems,
+                    shippingAddress,
+                    recipientPhone
+            );
+
             removeItemsFromCart(cartEntity, selectedItems);
         }
         OrderEntity savedOrder = orderRepository.save(orderEntity);
@@ -159,24 +174,37 @@ public class OrderServiceImpl implements OrderService {
         PaymentEntity paymentEntity = paymentService.createPaymentForOrder(savedOrder, orderRequest.getPaymentMethod());
         savedOrder.setPayment(paymentEntity);
 
+        if (orderRequest.getPaymentMethod() == null) {
+            throw new OrderException("Vui lòng chọn phương thức thanh toán.");
+        }
+
         String paymentUrl = null;
         switch (orderRequest.getPaymentMethod()) {
             case COD:
                 orderEntity.setStatus(OrderStatus.CONFIRMED);
                 paymentEntity.setPaymentStatus(PaymentStatus.CONFIRMED);
+
+                for (OrderItemEntity item : orderEntity.getListOrderItems()) {
+                    ProductEntity product = item.getProducts();
+                    int currentSold = product.getSoldQuantity() == null ? 0 : product.getSoldQuantity();
+                    product.setSoldQuantity(currentSold + item.getQuantity());
+                    productRepository.save(product);
+                }
                 break;
 
             case VNPAY:
                 try {
                     long totalAmount = Math.round(orderEntity.getTotalAmount());
-                    paymentUrl = vnPayService.createPayment(String.valueOf(totalAmount));
+                    paymentUrl = vnPayService.createPayment(String.valueOf(totalAmount), savedOrder.getId());
 
                 }catch (Exception e){
-                    throw new RuntimeException("khong taoj duoc URL payment");
+                    throw new RuntimeException("Không tạo được URL thanh toán VNPay.");
                 }
                 paymentEntity.setPaymentStatus(PaymentStatus.PENDING);
                 orderEntity.setStatus(OrderStatus.PENDING);
                 break;
+            default:
+                throw new OrderException("Phương thức thanh toán không hợp lệ.");
         }
 
         orderRepository.save(savedOrder);
@@ -280,7 +308,23 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
+    private String resolveValue(String input, String fallback) {
+        return (input != null && !input.trim().isEmpty()) ? input : fallback;
+    }
 
+    private String getShippingAddress(OrderRequestDTO request, UserEntity user) {
+        return resolveValue(request.getShippingAddress(), user.getAddress());
+    }
 
+    private String getRecipientPhone(OrderRequestDTO request, UserEntity user) {
+        return resolveValue(request.getRecipientPhone(), user.getNumberphone());
+    }
+
+    private void validateShippingInfo(String shippingAddress, String recipientPhone) {
+        if (shippingAddress == null || shippingAddress.trim().isEmpty()
+                || recipientPhone == null || recipientPhone.trim().isEmpty()) {
+            throw new IncompleteUserInfoException("Bạn cần cung cấp địa chỉ và số điện thoại để đặt hàng.");
+        }
+    }
 
 }

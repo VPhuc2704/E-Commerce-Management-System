@@ -3,7 +3,7 @@ package org.javaweb.enums;
 public enum PaymentStatus {
     PENDING("Đang chờ thanh toán"),
     CONFIRMED("Hoàn thành"),
-    FAILD("Thất bại");
+    FAILED("Thất bại");
 
     private final String name;
 

@@ -8,6 +8,7 @@ public class ProductsDTO {
     private Integer quantity;
     private String image;
     private String type;
+    private Integer soldQuantity;
     private String status;
     private Long categoryId;
 
@@ -81,5 +82,13 @@ public class ProductsDTO {
 
     public void setCategoryId(Long categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public Integer getSoldQuantity() {
+        return soldQuantity;
+    }
+
+    public void setSoldQuantity(Integer soldQuantity) {
+        this.soldQuantity = soldQuantity;
     }
 }
