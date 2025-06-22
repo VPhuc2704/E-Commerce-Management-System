@@ -5,6 +5,11 @@ import '../features/home/home.css';
 import { productService } from '../services/productService';
 import { feedbackService } from '../services/feedbackService';
 
+import comtamImg from '../assets/images/comtam.jpg';
+import goicuonImg from '../assets/images/goicuon.jpg';
+import traicayImg from '../assets/images/traicay.jpg';
+
+
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 // Reusable component for dish items
@@ -87,11 +92,10 @@ const HomePage = () => {
 
   const qualityBadges = ['CHẤT LƯỢNG', 'VỆ SINH', 'TƯƠI NGON'];
   const featuredDishes = [
-    { imageUrl: 'src/assets/images/comtam.jpg', name: 'Cơm Tấm Đặc Biệt' },
-    { imageUrl: 'src/assets/images/goicuon.jpg', name: 'Gỏi Cuốn Tươi Ngon' },
-    { imageUrl: 'src/assets/images/traicay.jpg', name: 'Trái Cây Tươi Mát' },
+    { imageUrl: comtamImg, name: 'Cơm Tấm Đặc Biệt' },
+    { imageUrl: goicuonImg, name: 'Gỏi Cuốn Tươi Ngon' },
+    { imageUrl: traicayImg, name: 'Trái Cây Tươi Mát' },
   ];
-
   useEffect(() => {
     const fetchCategories = async () => {
       try {

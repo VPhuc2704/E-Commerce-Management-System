@@ -3,9 +3,9 @@ import profileService from "../services/profileService";
 
 export const useProfileData = (user) => {
   const [userInfo, setUserInfo] = useState({
-    name: "",
+    fullname: "",
     email: user?.email || "",
-    phone: "",
+    numberphone: "",
     address: "",
     bio: "",
     avatar: "",
@@ -27,9 +27,9 @@ export const useProfileData = (user) => {
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu hồ sơ:", error);
         setUserInfo({
-          name: "",
+          fullname: "",
           email: user?.email || "",
-          phone: "",
+          numberphone: "",
           address: "",
           bio: "",
           avatar: "",

@@ -10,9 +10,9 @@ const useProfile = (user) => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [userInfo, setUserInfo] = useState({
-    name: "",
+    fullname: "",
     email: "",
-    phone: "",
+    numberphone: "",
     address: "",
     bio: "",
     avatar: ""

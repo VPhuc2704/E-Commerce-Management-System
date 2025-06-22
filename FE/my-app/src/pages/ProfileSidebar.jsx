@@ -67,7 +67,7 @@ const ProfileSidebar = ({ userInfo, avatarPreview, setAvatarPreview, activeTab, 
               </svg>
             </label>
           </div>
-          <h2 className="text-xl font-bold text-white mb-1">{userInfo.name || "Chưa cập nhật"}</h2>
+          <h2 className="text-xl font-bold text-white mb-1">{userInfo.fullname || "Chưa cập nhật"}</h2>
           <p className="text-indigo-200 text-sm">{userInfo.email}</p>
           <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs font-medium">
             <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
@@ -82,19 +82,17 @@ const ProfileSidebar = ({ userInfo, avatarPreview, setAvatarPreview, activeTab, 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setActiveTab(tab)}
-              className={`w-full group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 text-indigo-200 hover:text-white ${
-                activeTab === tab
-                  ? "bg-gradient-to-r from-white/15 to-white/5 text-white shadow-lg"
-                  : "bg-transparent"
-              }`}
+              className={`w-full group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 text-indigo-200 hover:text-white ${activeTab === tab
+                ? "bg-gradient-to-r from-white/15 to-white/5 text-white shadow-lg"
+                : "bg-transparent"
+                }`}
             >
               <div className="flex items-center gap-4 relative z-10">
                 <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                    activeTab === tab
-                      ? `bg-gradient-to-r ${gradient} shadow-lg`
-                      : "bg-transparent group-hover:bg-white/20"
-                  }`}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${activeTab === tab
+                    ? `bg-gradient-to-r ${gradient} shadow-lg`
+                    : "bg-transparent group-hover:bg-white/20"
+                    }`}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={icon} />

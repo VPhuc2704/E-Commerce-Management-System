@@ -4,10 +4,12 @@ import Footer from '../components/layout/Footer';
 import { productService } from '../services/productService';
 import { feedbackService } from '../services/feedbackService';
 
-// Reusable component for dish items (matching HomePage style)
+import comtamImg from '../assets/images/comtam.jpg';
+import goicuonImg from '../assets/images/goicuon.jpg';
+import traicayImg from '../assets/images/traicay.jpg';
+
 const DishItem = ({ name, price, feedback = {}, imageUrl, soldQuantity, id }) => {
 
-  // const rating = Number(feedback.rating || 0);
   const rawRating = Number(feedback?.rating);
   const rating = isNaN(rawRating) ? 0 : Math.min(Math.max(rawRating, 0), 5);
 
@@ -48,7 +50,6 @@ const DishItem = ({ name, price, feedback = {}, imageUrl, soldQuantity, id }) =>
   );
 };
 
-// Enhanced Dish Carousel Item with better fit and animations
 const DishCarouselItem = ({ imageUrl, name, isActive }) => (
   <div className={`absolute inset-0 transition-all duration-1000 ease-in-out ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
     }`}>
@@ -91,9 +92,9 @@ const LoggedInHomePage = ({ user }) => {
 
   const qualityBadges = ['CHẤT LƯỢNG', 'VỆ SINH', 'TƯƠI NGON'];
   const featuredDishes = [
-    { imageUrl: 'src/assets/images/comtam.jpg', name: 'Cơm Tấm Đặc Biệt' },
-    { imageUrl: 'src/assets/images/goicuon.jpg', name: 'Gỏi Cuốn Tươi Ngon' },
-    { imageUrl: 'src/assets/images/nuocep_tao.jpg', name: 'Nước ép thanh mát' },
+    { imageUrl: comtamImg, name: 'Cơm Tấm Đặc Biệt' },
+    { imageUrl: goicuonImg, name: 'Gỏi Cuốn Tươi Ngon' },
+    { imageUrl: traicayImg, name: 'Trái Cây Tươi Mát' },
   ];
 
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -107,7 +108,7 @@ const LoggedInHomePage = ({ user }) => {
         const categoriesWithProducts = await Promise.all(
           categoryData.map(async (category) => {
             const products = await productService.getProductsByCategory(category.id);
-            console.log('Products for category', category.name, ':', products); // Log để kiểm tra
+            console.log('Products for category', category.name, ':', products);
             const productsWithRatings = await Promise.all(
               products.map(async (product) => {
                 try {

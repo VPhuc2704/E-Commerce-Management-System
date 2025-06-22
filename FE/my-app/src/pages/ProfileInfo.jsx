@@ -42,11 +42,10 @@ const ProfileInfo = ({
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => (isEditing ? handleSaveProfileClick() : setIsEditing(true))}
-          className={`px-6 py-3 rounded-2xl font-semibold shadow-lg transition-all duration-300 ${
-            isEditing
-              ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
-              : "bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
-          }`}
+          className={`px-6 py-3 rounded-2xl font-semibold shadow-lg transition-all duration-300 ${isEditing
+            ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+            : "bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
+            }`}
         >
           {isEditing ? "💾 Lưu thông tin" : "✏️ Chỉnh sửa"}
         </motion.button>
@@ -54,9 +53,9 @@ const ProfileInfo = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {[
-          { label: "Họ và tên", name: "name", type: "text", editable: true },
+          { label: "Họ và tên", name: "fullname", type: "text", editable: true },
           { label: "Email", name: "email", type: "email", editable: true },
-          { label: "Số điện thoại", name: "phone", type: "tel", editable: true },
+          { label: "Số điện thoại", name: "numberphone", type: "tel", editable: true },
           { label: "Địa chỉ", name: "address", type: "text", editable: true },
         ].map(({ label, name, type, editable }) => (
           <motion.div
