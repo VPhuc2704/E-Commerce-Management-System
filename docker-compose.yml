@@ -26,6 +26,8 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: 27042004
       SPRING_PROFILES_ACTIVE: prod
+    volumes:
+      - ./backend/uploads/img:/uploads/img
     networks:
       - app-network
 

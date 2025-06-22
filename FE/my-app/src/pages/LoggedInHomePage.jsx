@@ -4,6 +4,11 @@ import Footer from '../components/layout/Footer';
 import { productService } from '../services/productService';
 import { feedbackService } from '../services/feedbackService';
 
+import comtamImg from '../assets/images/comtam.jpg';
+import goicuonImg from '../assets/images/goicuon.jpg';
+import traicayImg from '../assets/images/traicay.jpg';
+
+
 // Reusable component for dish items (matching HomePage style)
 const DishItem = ({ name, price, feedback = {}, imageUrl, soldQuantity, id }) => {
 
@@ -91,9 +96,9 @@ const LoggedInHomePage = ({ user }) => {
 
   const qualityBadges = ['CHẤT LƯỢNG', 'VỆ SINH', 'TƯƠI NGON'];
   const featuredDishes = [
-    { imageUrl: 'src/assets/images/comtam.jpg', name: 'Cơm Tấm Đặc Biệt' },
-    { imageUrl: 'src/assets/images/goicuon.jpg', name: 'Gỏi Cuốn Tươi Ngon' },
-    { imageUrl: 'src/assets/images/nuocep_tao.jpg', name: 'Nước ép thanh mát' },
+    { imageUrl: comtamImg, name: 'Cơm Tấm Đặc Biệt' },
+    { imageUrl: goicuonImg, name: 'Gỏi Cuốn Tươi Ngon' },
+    { imageUrl: traicayImg, name: 'Trái Cây Tươi Mát' },
   ];
 
   const BASE_URL = import.meta.env.VITE_API_URL;
