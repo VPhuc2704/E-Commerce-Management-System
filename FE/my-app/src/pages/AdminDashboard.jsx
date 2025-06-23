@@ -10,65 +10,35 @@ import {
   Tooltip,
   Legend,
   ArcElement,
+  Filler,
 } from "chart.js"
 
-// Đăng ký các thành phần cần thiết cho Chart.js
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement)
+import { useOrderApi } from "../hooks/useOrderApi"
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler)
 
 const AdminDashboard = () => {
   const [orders, setOrders] = useState([])
   const [filterType, setFilterType] = useState("day")
   const [startDate, setStartDate] = useState("2025-05-01")
-  const [endDate, setEndDate] = useState("2025-05-27")
+  const [endDate, setEndDate] = useState("2025-06-30")
   const [filteredData, setFilteredData] = useState({ totalRevenue: 0, orderCount: 0, topProducts: [] })
+  const { getAllOrders, getOrdersByStatus, getOrderDetails } = useOrderApi();
 
   // Lấy dữ liệu đơn hàng từ state
   useEffect(() => {
-    const mockOrders = [
-      {
-        id: "ORDER-123",
-        date: "2025-05-25",
-        total: 2500000,
-        status: "Chờ xác nhận",
-        products: [
-          { id: 1, name: "Tai nghe Bluetooth Sony", quantity: 1, price: 1500000 },
-          { id: 2, name: "Áo thun Unisex", quantity: 2, price: 250000 },
-        ],
-      },
-      {
-        id: "ORDER-124",
-        date: "2025-05-24",
-        total: 1500000,
-        status: "Đã hoàn thành",
-        products: [{ id: 3, name: "Đồng hồ thông minh Apple", quantity: 1, price: 5000000 }],
-      },
-      {
-        id: "ORDER-125",
-        date: "2025-04-15",
-        total: 2000000,
-        status: "Đã hoàn thành",
-        products: [{ id: 1, name: "Tai nghe Bluetooth Sony", quantity: 1, price: 1500000 }],
-      },
-      {
-        id: "ORDER-126",
-        date: "2025-05-20",
-        total: 3200000,
-        status: "Đã hoàn thành",
-        products: [
-          { id: 4, name: "Laptop Gaming", quantity: 1, price: 2500000 },
-          { id: 5, name: "Chuột gaming", quantity: 1, price: 700000 },
-        ],
-      },
-      {
-        id: "ORDER-127",
-        date: "2025-05-18",
-        total: 1800000,
-        status: "Đã hoàn thành",
-        products: [{ id: 6, name: "Smartphone Samsung", quantity: 1, price: 1800000 }],
-      },
-    ]
-    setOrders(mockOrders)
-  }, [])
+    const fetchOrders = async () => {
+      try {
+        const order = await getAllOrders();
+        console.log("✅ Dữ liệu đơn hàng:", order); // 👈 log dữ liệu
+        setOrders(order);
+      } catch (error) {
+        console.error("Lỗi khi lấy đơn hàng:", error);
+      }
+    };
+
+    fetchOrders();
+  }, []);
 
   // Hàm lọc và tính toán dữ liệu dựa trên khoảng thời gian
   useEffect(() => {
@@ -77,40 +47,52 @@ const AdminDashboard = () => {
       const end = new Date(endDate)
 
       const filteredOrders = orders.filter((order) => {
-        const orderDate = new Date(order.date)
-        return orderDate >= start && orderDate <= end && order.status === "Đã hoàn thành"
+        const orderDate = new Date(order.createdDate)
+        return orderDate >= start && orderDate <= end && order.status === "SHIPPED"
       })
 
-      const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.total, 0)
+      console.log("✅ Đơn hàng sau lọc:", filteredOrders)
+
+
+      const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.totalAmount, 0)
       const orderCount = filteredOrders.length
 
       const productMap = {}
       filteredOrders.forEach((order) => {
-        order.products.forEach((product) => {
-          if (!productMap[product.id]) {
-            productMap[product.id] = { name: product.name, quantity: 0, revenue: 0 }
+        console.log("🔍 Chi tiết đơn:", order.items)
+        order.items.forEach((item) => {
+          if (!productMap[item.productId]) {
+            productMap[item.productId] = {
+              name: item.productName,
+              quantity: 0,
+              revenue: 0
+            }
           }
-          productMap[product.id].quantity += product.quantity
-          productMap[product.id].revenue += product.quantity * product.price
+          productMap[item.productId].quantity += item.quantity
+          productMap[item.productId].revenue += item.quantity * item.price
         })
       })
+
       const topProducts = Object.values(productMap)
         .sort((a, b) => b.quantity - a.quantity)
         .slice(0, 5)
+
+      console.log("📊 Top sản phẩm bán chạy:", topProducts)
 
       setFilteredData({ totalRevenue, orderCount, topProducts })
     }
 
     filterOrders()
-  }, [orders, startDate, endDate])
+  }, [orders, startDate, endDate, filterType]) // ← thêm filterType vào dependency
+
 
   // Dữ liệu cho biểu đồ doanh thu
   const chartData = {
-    labels: orders.map((order) => new Date(order.date).toLocaleDateString('vi-VN')),
+    labels: orders.map((order) => new Date(order.createdDate).toLocaleDateString('vi-VN')),
     datasets: [
       {
         label: "Doanh thu (VNĐ)",
-        data: orders.map((order) => order.total),
+        data: orders.map((order) => order.totalAmount),
         borderColor: "rgb(147, 51, 234)",
         backgroundColor: "rgba(147, 51, 234, 0.1)",
         fill: true,
@@ -129,19 +111,19 @@ const AdminDashboard = () => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { 
-        position: "top", 
-        labels: { 
-          color: "#1f2937", 
+      legend: {
+        position: "top",
+        labels: {
+          color: "#1f2937",
           font: { size: 14, weight: 'bold' },
           usePointStyle: true,
           pointStyle: 'circle'
-        } 
+        }
       },
-      title: { 
-        display: true, 
-        text: "Biểu đồ doanh thu theo thời gian", 
-        color: "#1f2937", 
+      title: {
+        display: true,
+        text: "Biểu đồ doanh thu theo thời gian",
+        color: "#1f2937",
         font: { size: 20, weight: 'bold' },
         padding: 20
       },
@@ -156,29 +138,29 @@ const AdminDashboard = () => {
       },
     },
     scales: {
-      x: { 
-        ticks: { color: "#374151", font: { weight: 'bold' } }, 
-        grid: { color: "rgba(0, 0, 0, 0.05)" } 
+      x: {
+        ticks: { color: "#374151", font: { weight: 'bold' } },
+        grid: { color: "rgba(0, 0, 0, 0.05)" }
       },
-      y: { 
-        ticks: { 
-          color: "#374151", 
+      y: {
+        ticks: {
+          color: "#374151",
           font: { weight: 'bold' },
-          callback: function(value) {
+          callback: function (value) {
             return new Intl.NumberFormat('vi-VN').format(value) + ' VNĐ';
           }
-        }, 
-        grid: { color: "rgba(0, 0, 0, 0.05)" } 
+        },
+        grid: { color: "rgba(0, 0, 0, 0.05)" }
       },
     },
   }
 
   // Dữ liệu cho biểu đồ tròn
   const doughnutData = {
-    labels: filteredData.topProducts.map(product => product.name),
+    labels: filteredData.topProducts.map(item => item.name),
     datasets: [
       {
-        data: filteredData.topProducts.map(product => product.quantity),
+        data: filteredData.topProducts.map(item => item.quantity),
         backgroundColor: [
           '#8B5CF6',
           '#06B6D4',
@@ -220,7 +202,11 @@ const AdminDashboard = () => {
   const exportToCSV = () => {
     const csvContent = [
       ["Ngày", "Tổng doanh thu (VNĐ)", "Số đơn hàng"],
-      ...orders.map((order) => [order.date, order.total, 1]),
+      ...orders.map((order) => [
+        new Date(order.createdDate).toLocaleDateString('vi-VN'),
+        order.totalAmount,
+        1
+      ]),
       ["Tổng", filteredData.totalRevenue, filteredData.orderCount],
     ]
       .map((row) => row.join(","))
@@ -233,6 +219,7 @@ const AdminDashboard = () => {
     link.setAttribute("download", "revenue_report.csv")
     link.click()
   }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50 p-6">
@@ -412,21 +399,21 @@ const AdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredData.topProducts.map((product, index) => (
+                {filteredData.topProducts.map((item, index) => (
                   <tr key={index} className="border-b border-gray-200/30 hover:bg-white/20 transition-colors duration-200">
                     <td className="p-4">
                       <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">
                         {index + 1}
                       </div>
                     </td>
-                    <td className="p-4 text-gray-800 font-medium">{product.name}</td>
+                    <td className="p-4 text-gray-800 font-medium">{item.name}</td>
                     <td className="p-4 text-gray-800">
                       <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
-                        {product.quantity}
+                        {item.quantity}
                       </span>
                     </td>
                     <td className="p-4 text-purple-600 font-bold text-lg">
-                      {product.revenue.toLocaleString("vi-VN")} VNĐ
+                      {item.revenue.toLocaleString("vi-VN")} VNĐ
                     </td>
                   </tr>
                 ))}
