@@ -107,10 +107,10 @@ const LoggedInHomePage = ({ user }) => {
       try {
         setLoading(true);
         const categoryData = await productService.getAllCategories();
+        let allProducts = [];
         const categoriesWithProducts = await Promise.all(
           categoryData.map(async (category) => {
             const products = await productService.getProductsByCategory(category.id);
-            console.log('Products for category', category.name, ':', products);
             const productsWithRatings = await Promise.all(
               products.map(async (product) => {
                 try {
@@ -126,6 +126,7 @@ const LoggedInHomePage = ({ user }) => {
                 }
               })
             );
+            allProducts = [...allProducts, ...productsWithRatings]; // gom lại
             return {
               ...category,
               items: productsWithRatings
@@ -133,7 +134,16 @@ const LoggedInHomePage = ({ user }) => {
           })
         );
 
-        setCategories(categoriesWithProducts);
+        // Thêm danh mục "Tất cả"
+        const allCategory = {
+          id: 'all',
+          name: 'Tất cả',
+          items: allProducts
+        };
+
+        setCategories([allCategory, ...categoriesWithProducts]);
+        setSelectedCategory('Tất cả');
+
       } catch (error) {
         setError(error.message);
         console.error('Lỗi khi tải danh mục:', error);

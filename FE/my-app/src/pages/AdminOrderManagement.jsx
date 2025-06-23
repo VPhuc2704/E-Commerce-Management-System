@@ -34,7 +34,6 @@ const AdminOrderManagement = () => {
 
       const orders = Array.isArray(response) ? response : [response].filter(Boolean);
       setOrders(orders);
-      setCurrentPage(1); // Reset to first page when filter changes
     } catch (error) {
       console.error("Error loading orders:", error);
       showNotification("Không thể tải danh sách đơn hàng", "error");
@@ -46,6 +45,10 @@ const AdminOrderManagement = () => {
 
   useEffect(() => {
     loadOrders();
+  }, [filterStatus]);
+
+  useEffect(() => {
+    setCurrentPage(1); // ✅ Chỉ reset khi filter thay đổi
   }, [filterStatus]);
 
   // Update order status
@@ -80,13 +83,13 @@ const AdminOrderManagement = () => {
   // Filter orders with null check
   const filteredOrders = Array.isArray(orders)
     ? orders.filter((order) => {
-        if (!order) return false;
-        const matchesSearch =
-          order.id?.toString().includes(searchTerm.toLowerCase()) ||
-          order.user?.fullname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesSearch;
-      })
+      if (!order) return false;
+      const matchesSearch =
+        order.id?.toString().includes(searchTerm.toLowerCase()) ||
+        order.user?.fullname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesSearch;
+    })
     : [];
 
   // View order details

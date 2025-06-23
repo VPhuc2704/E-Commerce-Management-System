@@ -113,34 +113,38 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
-    const fetchProductsByCategory = async () => {
-      if (selectedCategory?.id) {
-        try {
-          const productsData = await productService.getProductsByCategory(selectedCategory.id);
-          const productsWithRatings = await Promise.all(
-            productsData.map(async (product) => {
-              try {
-                const feedback = await feedbackService.getFeedbacksByProduct(product.id);
-                const ratings = feedback.map(fb => fb.rating);
-                const avgRating = ratings.length > 0
-                  ? ratings.reduce((a, b) => a + b, 0) / ratings.length
-                  : 0;
-                return { ...product, feedback: { rating: avgRating } };
-              } catch (err) {
-                console.warn('Lỗi feedback sản phẩm:', product.id, err.message);
-                return { ...product, feedback: { rating: 0 } };
-              }
-            })
-          );
-          setProducts(productsWithRatings);
-        } catch (error) {
-          console.error('Error fetching products:', error);
-          setProducts([]);
-        }
+    const fetchAllProducts = async () => {
+      try {
+        const allProducts = await productService.getAllProducts();
+        const productsWithRatings = await Promise.all(
+          allProducts.map(async (product) => {
+            try {
+              const feedback = await feedbackService.getFeedbacksByProduct(product.id);
+              const ratings = feedback.map(fb => fb.rating);
+              const avgRating = ratings.length > 0
+                ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+                : 0;
+              return { ...product, feedback: { rating: avgRating } };
+            } catch (err) {
+              console.warn('Lỗi feedback sản phẩm:', product.id, err.message);
+              return { ...product, feedback: { rating: 0 } };
+            }
+          })
+        );
+        setProducts(productsWithRatings);
+      } catch (error) {
+        console.error('Lỗi khi lấy tất cả sản phẩm:', error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchProductsByCategory();
+
+    if (!selectedCategory) {
+      fetchAllProducts();
+    }
   }, [selectedCategory]);
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -270,10 +274,10 @@ const HomePage = () => {
             ))}
           </div>
         </section>
-        {selectedCategory && (
+        {products.length > 0 && (
           <section className="bg-gradient-to-r from-indigo-200 to-coral-200 rounded-2xl shadow-2xl p-8 mb-12">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-coral-600">{selectedCategory.name}</h2>
+              <h2 className="text-2xl font-bold text-coral-600">{selectedCategory?.name || 'Tất Cả Sản Phẩm'}</h2>
             </div>
             <div className="space-y-2">
               {paginatedProducts.map((item) => (
