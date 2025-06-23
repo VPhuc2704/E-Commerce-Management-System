@@ -16,6 +16,8 @@ import {
 import { useOrderApi } from "../hooks/useOrderApi"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler)
+import { Bar } from 'react-chartjs-2';
+
 
 const AdminDashboard = () => {
   const [orders, setOrders] = useState([])
@@ -84,28 +86,47 @@ const AdminDashboard = () => {
     filterOrders()
   }, [orders, startDate, endDate, filterType]) // ← thêm filterType vào dependency
 
+  function calculateMovingAverage(data, windowSize = 7) {
+    const result = [];
+    for (let i = 0; i < data.length; i++) {
+      const start = Math.max(0, i - windowSize + 1);
+      const window = data.slice(start, i + 1);
+      const average = window.reduce((sum, val) => sum + val, 0) / window.length;
+      result.push(average);
+    }
+    return result;
+  }
+
   // Dữ liệu cho biểu đồ doanh thu với UI cải thiện
+  const labels = orders.map((order) => new Date(order.createdDate).toLocaleDateString('vi-VN'));
+  const data = orders.map((order) => order.totalAmount);
+  const movingAvgData = calculateMovingAverage(data);
+
   const chartData = {
-    labels: orders.map((order) => new Date(order.createdDate).toLocaleDateString('vi-VN')),
+    labels: labels,
     datasets: [
       {
         label: "Doanh thu (VNĐ)",
-        data: orders.map((order) => order.totalAmount),
-        borderColor: "rgb(99, 102, 241)",
-        backgroundColor: "rgba(99, 102, 241, 0.1)",
+        data: data,
         fill: true,
+        backgroundColor: "rgba(99, 102, 241, 0.2)", // vùng tô miền
+        borderColor: "rgb(99, 102, 241)", // đường chính
         tension: 0.4,
-        pointRadius: 5,
-        pointHoverRadius: 8,
-        pointBackgroundColor: "#fff",
-        pointBorderColor: "rgb(99, 102, 241)",
-        pointBorderWidth: 2,
+        pointRadius: 0,
         borderWidth: 3,
-        pointShadowColor: "rgba(99, 102, 241, 0.3)",
-        pointShadowBlur: 10,
       },
-    ],
-  }
+      {
+        label: "Đường gaint (trung bình 7 ngày)",
+        data: movingAvgData,
+        fill: false,
+        borderColor: "rgb(34, 197, 94)", // xanh lá
+        borderDash: [5, 5],
+        tension: 0.4,
+        pointRadius: 0,
+        borderWidth: 2,
+      },
+    ]
+  };
 
   const chartOptions = {
     responsive: true,
@@ -119,68 +140,49 @@ const AdminDashboard = () => {
         position: "top",
         labels: {
           color: "#1f2937",
-          font: { size: 14, weight: '600' },
-          usePointStyle: true,
-          pointStyle: 'circle',
-          padding: 20
+          font: { size: 14, weight: '600' }
         }
       },
       title: {
+        text: "📈 Biểu đồ doanh thu",
         display: true,
-        text: "📈 Biểu đồ doanh thu theo thời gian",
         color: "#1f2937",
         font: { size: 18, weight: 'bold' },
-        padding: 25
       },
       tooltip: {
-        backgroundColor: "rgba(17, 24, 39, 0.95)",
-        titleColor: "#fff",
-        bodyColor: "#fff",
-        borderColor: "rgb(99, 102, 241)",
-        borderWidth: 1,
-        cornerRadius: 12,
-        displayColors: false,
-        padding: 12,
-        titleFont: { size: 14, weight: 'bold' },
-        bodyFont: { size: 13 },
-      },
+        callbacks: {
+          label: (ctx) => {
+            return `${ctx.dataset.label}: ${new Intl.NumberFormat('vi-VN').format(ctx.parsed.y)} VNĐ`
+          }
+        }
+      }
     },
     scales: {
       x: {
         ticks: {
           color: "#6b7280",
-          font: { weight: '500', size: 12 },
-          maxTicksLimit: 10
+          font: { size: 12 }
         },
         grid: {
-          color: "rgba(156, 163, 175, 0.1)",
-          drawBorder: false
-        },
-        border: {
-          display: false
+          color: "rgba(156, 163, 175, 0.1)"
         }
       },
       y: {
         ticks: {
           color: "#6b7280",
-          font: { weight: '500', size: 12 },
-          callback: function (value) {
-            return new Intl.NumberFormat('vi-VN', {
+          font: { size: 12 },
+          callback: (value) =>
+            new Intl.NumberFormat('vi-VN', {
               notation: 'compact',
               compactDisplay: 'short'
-            }).format(value) + ' VNĐ';
-          }
+            }).format(value) + ' VNĐ'
         },
         grid: {
-          color: "rgba(156, 163, 175, 0.1)",
-          drawBorder: false
-        },
-        border: {
-          display: false
+          color: "rgba(156, 163, 175, 0.1)"
         }
-      },
-    },
-  }
+      }
+    }
+  };
 
   // Dữ liệu cho biểu đồ tròn với màu sắc hiện đại
   const doughnutData = {
@@ -507,7 +509,7 @@ const AdminDashboard = () => {
                         <td className="p-6">
                           <div className="flex items-center gap-2">
                             <span className="text-lg font-bold text-indigo-600">{item.quantity}</span>
-                            <span className="text-sm text-gray-500">sp</span>
+                            <span className="text-sm text-gray-500">sản phẩm</span>
                           </div>
                         </td>
                         <td className="p-6">
