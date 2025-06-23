@@ -12,7 +12,6 @@ import traicayImg from '../assets/images/traicay.jpg';
 // Reusable component for dish items (matching HomePage style)
 const DishItem = ({ name, price, feedback = {}, imageUrl, soldQuantity, id }) => {
 
-  // const rating = Number(feedback.rating || 0);
   const rawRating = Number(feedback?.rating);
   const rating = isNaN(rawRating) ? 0 : Math.min(Math.max(rawRating, 0), 5);
 
@@ -53,7 +52,6 @@ const DishItem = ({ name, price, feedback = {}, imageUrl, soldQuantity, id }) =>
   );
 };
 
-// Enhanced Dish Carousel Item with better fit and animations
 const DishCarouselItem = ({ imageUrl, name, isActive }) => (
   <div className={`absolute inset-0 transition-all duration-1000 ease-in-out ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
     }`}>
@@ -112,7 +110,7 @@ const LoggedInHomePage = ({ user }) => {
         const categoriesWithProducts = await Promise.all(
           categoryData.map(async (category) => {
             const products = await productService.getProductsByCategory(category.id);
-            console.log('Products for category', category.name, ':', products); // Log để kiểm tra
+            console.log('Products for category', category.name, ':', products);
             const productsWithRatings = await Promise.all(
               products.map(async (product) => {
                 try {

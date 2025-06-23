@@ -96,7 +96,6 @@ const HomePage = () => {
     { imageUrl: goicuonImg, name: 'Gỏi Cuốn Tươi Ngon' },
     { imageUrl: traicayImg, name: 'Trái Cây Tươi Mát' },
   ];
-
   useEffect(() => {
     const fetchCategories = async () => {
       try {

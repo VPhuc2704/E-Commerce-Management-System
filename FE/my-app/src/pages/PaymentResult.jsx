@@ -17,7 +17,7 @@ const PaymentResult = () => {
                 const responseCode = urlParams.get("vnp_ResponseCode");
                 const transactionStatus = urlParams.get("vnp_TransactionStatus");
 
-                // 🐞 In debug ra console
+                // debug ra console
                 console.log("== VNPay Callback ==");
                 console.log("Query string:", location.search);
                 console.log("TxnRef (Order ID):", orderId);
@@ -27,10 +27,10 @@ const PaymentResult = () => {
                 console.log("Server trả về:", resultText);
 
                 if (response.ok && responseCode === "00" && transactionStatus === "00") {
-                    console.log("✅ Điều kiện thành công đúng — sẽ điều hướng tới:", `/order-details/${orderId}`);
+                    console.log("Điều kiện thành công đúng — sẽ điều hướng tới:", `/order-details/${orderId}`);
                     navigate(`/order-details/${orderId}`);
                 } else {
-                    console.log("❌ Điều kiện thất bại — sẽ về trang chủ");
+                    console.log("Điều kiện thất bại — sẽ về trang chủ");
                     navigate("/");
                 }
 

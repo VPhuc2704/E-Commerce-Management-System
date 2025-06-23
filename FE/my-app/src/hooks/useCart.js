@@ -79,8 +79,8 @@ export const useCart = () => {
       const profile = await profileService.getUserInfo();
       const updatedUserInfo = {
         email: profile.email || '',
-        fullname: profile.name || '',
-        numberphone: profile.phone || '',
+        fullname: profile.fullname || '',
+        numberphone: profile.numberphone || '',
         address: profile.address || '',
       };
       setUserInfo(updatedUserInfo);

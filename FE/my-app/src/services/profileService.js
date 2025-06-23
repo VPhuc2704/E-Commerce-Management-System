@@ -24,9 +24,9 @@ class ProfileService {
 
       const userData = await response.json();
       return {
-        name: userData.name || userData.fullname || "",
+        fullname: userData.name || userData.fullname || "",
         email: userData.email || user?.email || "",
-        phone: userData.phone || userData.numberphone || "",
+        numberphone: userData.phone || userData.numberphone || "",
         address: userData.address || "",
         bio: userData.bio || userData.description || "",
         avatar: userData.avatar || userData.profileImage || ""
@@ -45,9 +45,9 @@ class ProfileService {
       }
 
       const payload = {
-        name: userInfo.name || userInfo.fullname || "",
+        fullname: userInfo.name || userInfo.fullname || "",
         email: userInfo.email || "",
-        phone: userInfo.phone || userInfo.numberphone || "",
+        numberphone: userInfo.phone || userInfo.numberphone || "",
         address: userInfo.address || "",
         bio: userInfo.bio || ""
       };
@@ -68,9 +68,9 @@ class ProfileService {
 
       const updatedUser = await response.json();
       return {
-        name: updatedUser.name || updatedUser.fullname || "",
+        fullname: updatedUser.name || updatedUser.fullname || "",
         email: updatedUser.email || userInfo.email || "",
-        phone: updatedUser.phone || updatedUser.numberphone || "",
+        numberphone: updatedUser.phone || updatedUser.numberphone || "",
         address: updatedUser.address || "",
         bio: updatedUser.bio || updatedUser.description || "",
         avatar: updatedUser.avatar || updatedUser.profileImage || ""
