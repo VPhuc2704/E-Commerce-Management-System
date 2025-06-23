@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Footer from '../components/layout/Footer';
+import AboutUs from '../components/quick links/AboutUs';
+import Contact from '../components/quick links/Contact';
+import PrivacyPolicy from '../components/quick links/PrivacyPolicy';
+import TermsOfService from '../components/quick links/TermsOfService';
 import '../features/home/home.css';
 import { productService } from '../services/productService';
 import { feedbackService } from '../services/feedbackService';
-
 import comtamImg from '../assets/images/comtam.jpg';
 import goicuonImg from '../assets/images/goicuon.jpg';
 import traicayImg from '../assets/images/traicay.jpg';
-
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -316,6 +318,10 @@ const HomePage = () => {
             </div>
           </section>
         )}
+        <AboutUs />
+        <Contact />
+        <PrivacyPolicy />
+        <TermsOfService />
       </main>
       {showScrollToTop && (
         <button
