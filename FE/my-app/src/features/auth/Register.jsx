@@ -31,11 +31,11 @@ const Register = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-    if (!formData.password) newErrors.password = 'Password is required';
-    else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    if (!formData.email.trim()) newErrors.email = 'Email là bắt buộc';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email không hợp lệ';
+    if (!formData.password) newErrors.password = 'Mật khẩu là bắt buộc';
+    else if (formData.password.length < 6) newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Mật khẩu không khớp';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -46,24 +46,24 @@ const Register = () => {
 
     setIsLoading(true);
     try {
-      console.log('Registration data:', formData);
+      console.log('Dữ liệu đăng ký:', formData);
       await register(formData);
-      setToastMessage('Registration successful! Please check your email to verify your account.');
+      setToastMessage('Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản của bạn.');
       setTimeout(() => {
         navigate('/login', { 
           replace: true, 
-          state: { toastMessage: 'Account created successfully! Please sign in.' }
+          state: { toastMessage: 'Tài khoản đã được tạo thành công! Vui lòng đăng nhập.' }
         });
       }, 2000);
     } catch (error) {
-      setErrors({ form: error.message || 'Registration failed. Please try again.' });
+      setErrors({ form: error.message || 'Đăng ký thất bại. Vui lòng thử lại.' });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleContinueWith = () => {
-    console.log('Continue with Google');
+    console.log('Tiếp tục với Google');
   };
 
   return (
@@ -86,8 +86,8 @@ const Register = () => {
                 <path d="M2 12L12 17L22 12" />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
-            <p className="text-gray-300">Join us and start your journey</p>
+            <h1 className="text-3xl font-bold text-white mb-2">Tạo Tài Khoản</h1>
+            <p className="text-gray-300">Đến với chúng tôi - Đến với bụng đói</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -99,7 +99,7 @@ const Register = () => {
 
             {/* Email Input */}
             <div className="group">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Địa chỉ Email</label>
               <div className="relative">
                 <input
                   type="email"
@@ -108,7 +108,7 @@ const Register = () => {
                   onChange={handleChange}
                   disabled={isLoading}
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/15"
-                  placeholder="Enter your email"
+                  placeholder="Nhập email của bạn"
                 />
                 <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-purple-500 to-blue-500 transform scale-x-0 group-focus-within:scale-x-100 transition-transform duration-300"></div>
               </div>
@@ -117,7 +117,7 @@ const Register = () => {
 
             {/* Password Input */}
             <div className="group">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Mật khẩu</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -126,7 +126,7 @@ const Register = () => {
                   onChange={handleChange}
                   disabled={isLoading}
                   className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/15"
-                  placeholder="Create a password"
+                  placeholder="Tạo mật khẩu"
                 />
                 <button
                   type="button"
@@ -151,7 +151,7 @@ const Register = () => {
 
             {/* Confirm Password Input */}
             <div className="group">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Xác nhận Mật khẩu</label>
               <div className="relative">
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
@@ -160,7 +160,7 @@ const Register = () => {
                   onChange={handleChange}
                   disabled={isLoading}
                   className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/15"
-                  placeholder="Confirm your password"
+                  placeholder="Xác nhận mật khẩu của bạn"
                 />
                 <button
                   type="button"
@@ -188,13 +188,13 @@ const Register = () => {
               <div className="flex items-center space-x-2 text-xs">
                 <div className={`w-2 h-2 rounded-full ${formData.password.length >= 6 ? 'bg-green-400' : 'bg-gray-500'} transition-colors`}></div>
                 <span className={`${formData.password.length >= 6 ? 'text-green-400' : 'text-gray-400'} transition-colors`}>
-                  At least 6 characters
+                  Ít nhất 6 ký tự
                 </span>
               </div>
               <div className="flex items-center space-x-2 text-xs">
                 <div className={`w-2 h-2 rounded-full ${formData.password && formData.confirmPassword && formData.password === formData.confirmPassword ? 'bg-green-400' : 'bg-gray-500'} transition-colors`}></div>
                 <span className={`${formData.password && formData.confirmPassword && formData.password === formData.confirmPassword ? 'text-green-400' : 'text-gray-400'} transition-colors`}>
-                  Passwords match
+                  Mật khẩu khớp
                 </span>
               </div>
             </div>
@@ -211,10 +211,10 @@ const Register = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Creating Account...
+                  Đang tạo tài khoản...
                 </div>
               ) : (
-                'Create Account'
+                'Tạo Tài Khoản'
               )}
             </button>
           </form>
@@ -226,7 +226,7 @@ const Register = () => {
                 <div className="w-full border-t border-white/20"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-slate-900/50 text-gray-400">Or continue with</span>
+                <span className="px-4 bg-slate-900/50 text-gray-400">Hoặc tiếp tục với</span>
               </div>
             </div>
           </div>
@@ -244,17 +244,17 @@ const Register = () => {
               <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
               <path fill="none" d="M0 0h48v48H0z" />
             </svg>
-            Continue with Google
+            Tiếp tục với Google
           </button>
 
           {/* Sign In Link */}
           <p className="mt-6 text-center text-gray-300">
-            Already have an account?{' '}
+            Đã có tài khoản?{' '}
             <Link
               to="/login"
               className="text-purple-400 hover:text-purple-300 font-medium hover:underline transition-colors"
             >
-              Sign in here
+              Đăng nhập tại đây
             </Link>
           </p>
         </div>

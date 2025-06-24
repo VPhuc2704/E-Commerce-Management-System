@@ -32,23 +32,23 @@ const ForgotPassword = () => {
 
   const validateEmail = () => {
     const newErrors = {};
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Email is invalid";
+    if (!formData.email.trim()) newErrors.email = "Email là bắt buộc";
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Email không hợp lệ";
     return newErrors;
   };
 
   const validateCode = () => {
     const newErrors = {};
-    if (!formData.code.trim()) newErrors.code = "Verification code is required";
-    else if (!/^\d{6}$/.test(formData.code)) newErrors.code = "Code must be 6 digits";
+    if (!formData.code.trim()) newErrors.code = "Mã xác minh là bắt buộc";
+    else if (!/^\d{6}$/.test(formData.code)) newErrors.code = "Mã phải có 6 chữ số";
     return newErrors;
   };
 
   const validateNewPassword = () => {
     const newErrors = {};
-    if (!formData.newPassword.trim()) newErrors.newPassword = "New password is required";
-    else if (formData.newPassword.length < 6) newErrors.newPassword = "Password must be at least 6 characters";
-    if (formData.newPassword !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+    if (!formData.newPassword.trim()) newErrors.newPassword = "Mật khẩu mới là bắt buộc";
+    else if (formData.newPassword.length < 6) newErrors.newPassword = "Mật khẩu phải có ít nhất 6 ký tự";
+    if (formData.newPassword !== formData.confirmPassword) newErrors.confirmPassword = "Mật khẩu không khớp";
     return newErrors;
   };
 
@@ -91,7 +91,7 @@ const ForgotPassword = () => {
       }, 1500);
     } catch (error) {
       setIsLoading(false);
-      setErrors({ submit: error.message || "Invalid verification code. Try again." });
+      setErrors({ submit: error.message || "Mã xác minh không hợp lệ. Thử lại." });
     }
   };
 
@@ -120,7 +120,7 @@ const ForgotPassword = () => {
         setIsLoading(false);
         delete window.resetToken;
         navigate("/login", { 
-          state: { toastMessage: "Password reset successfully! Please login with your new password." }
+          state: { toastMessage: "Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới." }
         });
       }, 1500);
     } catch (error) {
@@ -130,24 +130,24 @@ const ForgotPassword = () => {
   };
 
   const handleContinueWith = () => {
-    console.log("Continue with Google");
+    console.log("Tiếp tục với Google");
     // Placeholder for Google OAuth login
   };
 
   const getStepTitle = () => {
     switch(step) {
-      case 1: return "Forgot Password";
-      case 2: return "Verify Your Email";
-      case 3: return "Reset Password";
-      default: return "Forgot Password";
+      case 1: return "Quên Mật Khẩu";
+      case 2: return "Xác Minh Email";
+      case 3: return "Đặt Lại Mật Khẩu";
+      default: return "Quên Mật Khẩu";
     }
   };
 
   const getStepDescription = () => {
     switch(step) {
-      case 1: return "Enter your email to receive a verification code";
-      case 2: return "Check your email and enter the 6-digit code";
-      case 3: return "Create your new secure password";
+      case 1: return "Nhập email của bạn để nhận mã xác minh";
+      case 2: return "Kiểm tra email và nhập mã 6 chữ số";
+      case 3: return "Tạo mật khẩu mới an toàn";
       default: return "";
     }
   };
@@ -201,7 +201,7 @@ const ForgotPassword = () => {
             {/* Step 1: Email Input */}
             {step === 1 && (
               <div className="group">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Địa chỉ Email</label>
                 <div className="relative">
                   <input
                     type="email"
@@ -210,7 +210,7 @@ const ForgotPassword = () => {
                     onChange={handleChange}
                     disabled={isLoading}
                     className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/15"
-                    placeholder="Enter your email address"
+                    placeholder="Nhập địa chỉ email của bạn"
                   />
                   <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-purple-500 to-blue-500 transform scale-x-0 group-focus-within:scale-x-100 transition-transform duration-300"></div>
                 </div>
@@ -221,7 +221,7 @@ const ForgotPassword = () => {
             {/* Step 2: Code Input */}
             {step === 2 && (
               <div className="group">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Verification Code</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Mã Xác Minh</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -236,7 +236,7 @@ const ForgotPassword = () => {
                   <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-purple-500 to-blue-500 transform scale-x-0 group-focus-within:scale-x-100 transition-transform duration-300"></div>
                 </div>
                 {errors.code && <p className="mt-1 text-sm text-red-400">{errors.code}</p>}
-                <p className="text-xs text-gray-400 mt-2">Didn't receive the code? Check your spam folder or try again.</p>
+                <p className="text-xs text-gray-400 mt-2">Không nhận được mã? Kiểm tra thư mục spam hoặc thử lại.</p>
               </div>
             )}
 
@@ -244,7 +244,7 @@ const ForgotPassword = () => {
             {step === 3 && (
               <>
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Mật Khẩu Mới</label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -253,7 +253,7 @@ const ForgotPassword = () => {
                       onChange={handleChange}
                       disabled={isLoading}
                       className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/15"
-                      placeholder="Enter new password"
+                      placeholder="Nhập mật khẩu mới"
                     />
                     <button
                       type="button"
@@ -277,7 +277,7 @@ const ForgotPassword = () => {
                 </div>
 
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Xác Nhận Mật Khẩu</label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
@@ -286,7 +286,7 @@ const ForgotPassword = () => {
                       onChange={handleChange}
                       disabled={isLoading}
                       className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/15"
-                      placeholder="Confirm new password"
+                      placeholder="Xác nhận mật khẩu mới"
                     />
                     <button
                       type="button"
@@ -323,12 +323,12 @@ const ForgotPassword = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Processing...
+                  Đang xử lý...
                 </div>
               ) : (
-                step === 1 ? "Send Verification Code" : 
-                step === 2 ? "Verify Code" : 
-                "Reset Password"
+                step === 1 ? "Gửi Mã Xác Minh" : 
+                step === 2 ? "Xác Minh Mã" : 
+                "Đặt Lại Mật Khẩu"
               )}
             </button>
           </form>
@@ -342,7 +342,7 @@ const ForgotPassword = () => {
                     <div className="w-full border-t border-white/20"></div>
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-slate-900/50 text-gray-400">Or continue with</span>
+                    <span className="px-4 bg-slate-900/50 text-gray-400">Hoặc tiếp tục với</span>
                   </div>
                 </div>
               </div>
@@ -357,26 +357,25 @@ const ForgotPassword = () => {
                   <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
                   <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
                   <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-                  <path fill="none" d="M0 0h48v48H0z" />
+                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.419 24 c0 1.24 0 0h48l48H0z0"/>
                 </svg>
-                Continue with Google
+                Tiêu tục với Google
               </button>
             </>
           )}
 
           {/* Back to Login */}
           <p className="mt-6 text-center text-gray-300">
-            Remember your password?{' '}
+            Nhớ mật khẩu của bạn?{' '}
             <Link
               to="/login"
               className="text-purple-400 hover:text-purple-300 font-medium hover:underline transition-colors"
             >
-              Back to Login
+              Quay lại Đăng Nhập
             </Link>
           </p>
 
-          {/* Resend Code Option - Only show on step 2 */}
+          {/* Resend Code Option - Chỉ hiện ở bước 2 */}
           {step === 2 && (
             <div className="mt-4 text-center">
               <button
@@ -386,7 +385,7 @@ const ForgotPassword = () => {
                 }}
                 className="text-sm text-gray-400 hover:text-purple-400 transition-colors hover:underline"
               >
-                Didn't receive the code? Try again
+                Không nhận được mã? Thử lại
               </button>
             </div>
           )}

@@ -37,9 +37,9 @@ const Login = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.email) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-    if (!formData.password) newErrors.password = 'Password is required';
+    if (!formData.email) newErrors.email = 'Email là bắt buộc';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email không hợp lệ';
+    if (!formData.password) newErrors.password = 'Mật khẩu là bắt buộc';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -58,7 +58,7 @@ const Login = () => {
   };
 
   const handleContinueWith = () => {
-    console.log('Continue with Google');
+    console.log('Tiếp tục với Google');
   };
 
   return (
@@ -81,8 +81,8 @@ const Login = () => {
                 <path d="M2 12L12 17L22 12" />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-            <p className="text-gray-300">Sign in to continue your journey</p>
+            <h1 className="text-3xl font-bold text-white mb-2">Chào Mừng Bạn Trở Lại!</h1>
+            <p className="text-gray-300">Đăng nhập để tiếp tục đồng hành</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -94,7 +94,7 @@ const Login = () => {
 
             {/* Email Input */}
             <div className="group">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Địa chỉ Email</label>
               <div className="relative">
                 <input
                   type="email"
@@ -103,7 +103,7 @@ const Login = () => {
                   onChange={handleChange}
                   disabled={isLoading || loading}
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/15"
-                  placeholder="Enter your email"
+                  placeholder="Nhập email của bạn"
                 />
                 <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-purple-500 to-blue-500 transform scale-x-0 group-focus-within:scale-x-100 transition-transform duration-300"></div>
               </div>
@@ -112,7 +112,7 @@ const Login = () => {
 
             {/* Password Input */}
             <div className="group">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Mật khẩu</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -121,7 +121,7 @@ const Login = () => {
                   onChange={handleChange}
                   disabled={isLoading || loading}
                   className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/15"
-                  placeholder="Enter your password"
+                  placeholder="Nhập mật khẩu của bạn"
                 />
                 <button
                   type="button"
@@ -164,13 +164,13 @@ const Login = () => {
                     )}
                   </div>
                 </div>
-                <span className="ml-2 text-sm text-gray-300">Remember me</span>
+                <span className="ml-2 text-sm text-gray-300">Ghi nhớ tôi</span>
               </label>
               <Link
                 to="/forgot-password"
                 className="text-sm text-purple-400 hover:text-purple-300 transition-colors hover:underline"
               >
-                Forgot password?
+                Quên mật khẩu?
               </Link>
             </div>
 
@@ -186,10 +186,10 @@ const Login = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Signing in...
+                  Đang đăng nhập...
                 </div>
               ) : (
-                'Sign In'
+                'Đăng Nhập'
               )}
             </button>
           </form>
@@ -201,7 +201,7 @@ const Login = () => {
                 <div className="w-full border-t border-white/20"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-slate-900/50 text-gray-400">Or continue with</span>
+                <span className="px-4 bg-slate-900/50 text-gray-400">Hoặc tiếp tục với</span>
               </div>
             </div>
           </div>
@@ -219,17 +219,17 @@ const Login = () => {
               <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
               <path fill="none" d="M0 0h48v48H0z" />
             </svg>
-            Continue with Google
+            Tiếp tục với Google
           </button>
 
           {/* Sign Up Link */}
           <p className="mt-6 text-center text-gray-300">
-            Don't have an account?{' '}
+            Chưa có tài khoản?{' '}
             <Link
               to="/register"
               className="text-purple-400 hover:text-purple-300 font-medium hover:underline transition-colors"
             >
-              Create one now
+              Tạo tài khoản ngay
             </Link>
           </p>
         </div>

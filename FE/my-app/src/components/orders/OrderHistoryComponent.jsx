@@ -13,7 +13,7 @@ const OrderHistoryComponent = ({ orders = [] }) => {
         PENDING: { label: 'Chờ xác nhận', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
         CONFIRMED: { label: 'Đang xử lý', color: 'bg-blue-100 text-blue-700', icon: Package },
         SHIPPING: { label: 'Đang giao', color: 'bg-purple-100 text-purple-700', icon: Truck },
-        COMPLETED: { label: 'Đã hoàn thành', color: 'bg-green-100 text-green-700', icon: CheckCircle },
+        DELIVERED: { label: 'Đã hoàn thành', color: 'bg-green-100 text-green-700', icon: CheckCircle },
         CANCELLED: { label: 'Đã hủy', color: 'bg-red-100 text-red-700', icon: XCircle }
     };
 

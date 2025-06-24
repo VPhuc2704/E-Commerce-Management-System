@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Footer from '../components/layout/Footer';
+import AboutUs from '../components/quick links/AboutUs';
+import Contact from '../components/quick links/Contact';
+import PrivacyPolicy from '../components/quick links/PrivacyPolicy';
+import TermsOfService from '../components/quick links/TermsOfService';
 import { productService } from '../services/productService';
 import { feedbackService } from '../services/feedbackService';
 
@@ -11,7 +15,6 @@ import traicayImg from '../assets/images/traicay.jpg';
 
 // Reusable component for dish items (matching HomePage style)
 const DishItem = ({ name, price, feedback = {}, imageUrl, soldQuantity, id }) => {
-
   const rawRating = Number(feedback?.rating);
   const rating = isNaN(rawRating) ? 0 : Math.min(Math.max(rawRating, 0), 5);
 
@@ -100,7 +103,6 @@ const LoggedInHomePage = ({ user }) => {
   ];
 
   const BASE_URL = import.meta.env.VITE_API_URL;
-
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -446,6 +448,10 @@ const LoggedInHomePage = ({ user }) => {
             )}
           </section>
         )}
+        <AboutUs />
+        <Contact />
+        <PrivacyPolicy />
+        <TermsOfService />
       </main>
       {showScrollToTop && (
         <button
@@ -465,12 +471,12 @@ const LoggedInHomePage = ({ user }) => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={3}
-                d="M5 10l7-7m0 0l7 7m-7-7v18"
+                d="M5 12l7-7m0 0l7 7m-7-7v18"
               />
             </svg>
           </div>
           <div className="absolute inset-0 rounded-full border-2 border-white/30 scale-0 group-hover:scale-150 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-          <div className="absolute right-full mr-3 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap shadow-lg">
+          <div className="absolute right-full mr-3 top 1/2 transform -translate-y-1/2 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap shadow-lg">
             Quay về đầu trang
             <div className="absolute left-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-l-gray-900"></div>
           </div>

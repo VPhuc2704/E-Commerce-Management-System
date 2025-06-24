@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Footer from '../components/layout/Footer';
+import AboutUs from '../components/quick links/AboutUs';
+import Contact from '../components/quick links/Contact';
+import PrivacyPolicy from '../components/quick links/PrivacyPolicy';
+import TermsOfService from '../components/quick links/TermsOfService';
 import '../features/home/home.css';
 import { productService } from '../services/productService';
 import { feedbackService } from '../services/feedbackService';
-
 import comtamImg from '../assets/images/comtam.jpg';
 import goicuonImg from '../assets/images/goicuon.jpg';
 import traicayImg from '../assets/images/traicay.jpg';
-
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -109,6 +111,42 @@ const HomePage = () => {
     };
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    const fetchProductsByCategory = async () => {
+      if (selectedCategory?.id) {
+        try {
+          const productsData = await productService.getProductsByCategory(selectedCategory.id);
+          const productsWithRatings = await Promise.all(
+            productsData.map(async (product) => {
+              try {
+                const feedback = await feedbackService.getFeedbacksByProduct(product.id);
+                const ratings = feedback.map(fb => fb.rating);
+                const avgRating = ratings.length > 0
+                  ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+                  : 0;
+                return { ...product, feedback: { rating: avgRating } };
+              } catch (err) {
+                console.warn('Lỗi feedback sản phẩm:', product.id, err.message);
+                return { ...product, feedback: { rating: 0 } };
+              }
+            })
+          );
+          setProducts(productsWithRatings);
+        } catch (error) {
+          console.error('Error fetching products:', error);
+          setProducts([]);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    if (selectedCategory) {
+      fetchProductsByCategory();
+    }
+  }, [selectedCategory]);
+
 
   useEffect(() => {
     const fetchAllProducts = async () => {
@@ -257,6 +295,19 @@ const HomePage = () => {
           <div className="absolute inset-0 bg-pattern opacity-10"></div>
           <h2 className="text-3xl font-bold text-coral-600 mb-6 text-center">Danh Mục Sản Phẩm</h2>
           <div className="flex justify-center flex-wrap gap-4 relative z-20">
+            <button
+              onClick={() => {
+                setSelectedCategory(null);
+                setCurrentPage(1);
+              }}
+              className={`px-6 py-3 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-all duration-300 font-medium ${!selectedCategory
+                  ? 'bg-indigo-600 text-white shadow-lg transform scale-105'
+                  : 'bg-white text-gray-800 hover:bg-gray-100 hover:shadow-md hover:transform hover:scale-102'
+                }`}
+              style={{ zIndex: 20 }}
+            >
+              Tất Cả
+            </button>
             {categories.map((category) => (
               <button
                 key={category.id}
@@ -320,6 +371,10 @@ const HomePage = () => {
             </div>
           </section>
         )}
+        <AboutUs />
+        <Contact />
+        <PrivacyPolicy />
+        <TermsOfService />
       </main>
       {showScrollToTop && (
         <button
