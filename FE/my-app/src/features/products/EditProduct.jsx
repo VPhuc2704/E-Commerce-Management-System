@@ -30,7 +30,7 @@ const EditProduct = ({ product, onClose, onUpdate }) => {
     const file = fileInputRef.current.files[0];
 
     try {
-      const result = await updateProduct(product.id, product, file);
+      const result = await updateProduct(product.id, editedProduct, file);
       alert("Cập nhật sản phẩm thành công!");
       onUpdate(result.data);
       onClose();
