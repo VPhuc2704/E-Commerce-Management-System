@@ -407,7 +407,7 @@ const LoggedInHomePage = ({ user }) => {
                     name={item.name}
                     price={item.price}
                     feedback={item.feedback}
-                    imageUrl={`${BASE_URL}/${item.image}`}
+                    imageUrl={`${BASE_URL}${item.image}`}
                     soldQuantity={item.soldQuantity}
                     id={item.id}
                   />

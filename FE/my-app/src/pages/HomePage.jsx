@@ -113,6 +113,42 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
+    const fetchProductsByCategory = async () => {
+      if (selectedCategory?.id) {
+        try {
+          const productsData = await productService.getProductsByCategory(selectedCategory.id);
+          const productsWithRatings = await Promise.all(
+            productsData.map(async (product) => {
+              try {
+                const feedback = await feedbackService.getFeedbacksByProduct(product.id);
+                const ratings = feedback.map(fb => fb.rating);
+                const avgRating = ratings.length > 0
+                  ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+                  : 0;
+                return { ...product, feedback: { rating: avgRating } };
+              } catch (err) {
+                console.warn('Lỗi feedback sản phẩm:', product.id, err.message);
+                return { ...product, feedback: { rating: 0 } };
+              }
+            })
+          );
+          setProducts(productsWithRatings);
+        } catch (error) {
+          console.error('Error fetching products:', error);
+          setProducts([]);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    if (selectedCategory) {
+      fetchProductsByCategory();
+    }
+  }, [selectedCategory]);
+
+
+  useEffect(() => {
     const fetchAllProducts = async () => {
       try {
         const allProducts = await productService.getAllProducts();
@@ -259,6 +295,19 @@ const HomePage = () => {
           <div className="absolute inset-0 bg-pattern opacity-10"></div>
           <h2 className="text-3xl font-bold text-coral-600 mb-6 text-center">Danh Mục Sản Phẩm</h2>
           <div className="flex justify-center flex-wrap gap-4 relative z-20">
+            <button
+              onClick={() => {
+                setSelectedCategory(null);
+                setCurrentPage(1);
+              }}
+              className={`px-6 py-3 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-all duration-300 font-medium ${!selectedCategory
+                  ? 'bg-indigo-600 text-white shadow-lg transform scale-105'
+                  : 'bg-white text-gray-800 hover:bg-gray-100 hover:shadow-md hover:transform hover:scale-102'
+                }`}
+              style={{ zIndex: 20 }}
+            >
+              Tất Cả
+            </button>
             {categories.map((category) => (
               <button
                 key={category.id}

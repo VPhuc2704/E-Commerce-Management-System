@@ -204,7 +204,11 @@ export const useProductDetails = (id) => {
             showNotification('Đặt hàng thành công nhưng không thể điều hướng đến chi tiết đơn hàng.');
           }
         } else if (response.redirectUrl) {
-          window.location.href = response.redirectUrl;
+          // window.location.href = response.redirectUrl;
+          showNotification('Đang chuyển hướng đến cổng thanh toán...');
+          setTimeout(() => {
+            window.location.href = response.redirectUrl;
+          }, 1500);
         }
         window.dispatchEvent(new Event('cartUpdated'));
       } else {

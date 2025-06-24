@@ -113,11 +113,8 @@ const orderService = {
         localStorage.setItem("lastOrderId", result.order.id);
       }
 
-      if (result.redirectUrl) {
-        window.location.href = result.redirectUrl;
-      } else {
-        return { order: result.order };
-      }
+      return result;
+
     } catch (error) {
       console.error("Lỗi khi đặt hàng:", error);
       return { error: error.message || "Không thể tạo đơn hàng" };
