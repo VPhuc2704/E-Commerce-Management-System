@@ -1,6 +1,7 @@
 package org.javaweb.entity;
 
-import org.javaweb.enums.paymentStatus;
+import org.javaweb.enums.PaymentMethod;
+import org.javaweb.enums.PaymentStatus;
 
 import javax.persistence.*;
 
@@ -11,15 +12,16 @@ public class PaymentEntity extends BaseEntity{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "paymentmethod")
-    private String paymentMethod;
-
-    @Column(name = "amount")
-    private Double amount;
+    private PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private paymentStatus paymentStatus;
+    private PaymentStatus paymentStatus;
+
+    @Column(name = "amount")
+    private Double amount;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", unique = true)
@@ -35,12 +37,20 @@ public class PaymentEntity extends BaseEntity{
         this.id = id;
     }
 
-    public String getPaymentMethod() {
+    public PaymentMethod getPaymentMethod() {
         return paymentMethod;
     }
 
-    public void setPaymentMethod(String paymentMethod) {
+    public void setPaymentMethod(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
     }
 
     public Double getAmount() {
@@ -51,11 +61,11 @@ public class PaymentEntity extends BaseEntity{
         this.amount = amount;
     }
 
-    public paymentStatus getPaymentStatus() {
-        return paymentStatus;
+    public OrderEntity getOrders() {
+        return orders;
     }
 
-    public void setPaymentStatus(paymentStatus paymentStatus) {
-        this.paymentStatus = paymentStatus;
+    public void setOrders(OrderEntity orders) {
+        this.orders = orders;
     }
 }

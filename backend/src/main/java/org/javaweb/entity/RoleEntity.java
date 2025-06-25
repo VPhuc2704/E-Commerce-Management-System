@@ -1,7 +1,7 @@
 package org.javaweb.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import org.javaweb.enums.roleCode;
+import org.javaweb.enums.RoleCode;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ public class RoleEntity extends BaseEntity{
 
     @Enumerated(EnumType.STRING)
     @Column(name = "code", nullable = false, unique = true)
-    private roleCode code;
+    private RoleCode code;
 
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
     @JsonBackReference
@@ -43,12 +43,12 @@ public class RoleEntity extends BaseEntity{
         this.name = name;
     }
 
-    public void setCode(roleCode code) {
+    public void setCode(RoleCode code) {
         this.code = code;
     }
 
 
-    public roleCode getCode() {
+    public RoleCode getCode() {
         return code;
     }
 
@@ -64,7 +64,7 @@ public class RoleEntity extends BaseEntity{
         // constructor mặc định, có thể để trống
     }
 
-    public RoleEntity(roleCode code) {
+    public RoleEntity(RoleCode code) {
         this.code = code;
     }
 }

@@ -1,141 +1,124 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 
-// Giả lập cơ sở dữ liệu tài khoản
-const mockAccounts = [
-  { email: 'user@example.com', password: 'user123', name: 'Regular User', role: 'USER', id: 'user-001' },
-  { email: 'admin@example.com', password: 'admin123', name: 'Admin User', role: 'ADMIN', id: 'admin-001' },
-];
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { jwtDecode } from "jwt-decode"
+import authService from "../services/authService"
 
 /**
  * Custom hook for handling authentication
  * @returns {Object} Authentication methods and state
  */
 const useAuth = () => {
-  const navigate = useNavigate();
   const [user, setUser] = useState(() => {
-    const token = localStorage.getItem('authToken');
-    return token ? JSON.parse(localStorage.getItem('userData') || '{}') : null;
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+    const userDataStr = localStorage.getItem("userData")
+    return userDataStr ? JSON.parse(userDataStr) : null
+  })
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-  // Check if we have a token in localStorage
+  // Check if we have a accsessToken in localStorage
   const checkAuthStatus = () => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
+    const accessToken = localStorage.getItem("accessToken")
+    if (accessToken) {
       try {
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-        const shouldUpdate = JSON.stringify(user) !== JSON.stringify(userData);
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}")
+        const shouldUpdate = JSON.stringify(user) !== JSON.stringify(userData)
         if (shouldUpdate) {
-          setUser(userData);
+          setUser(userData)
         }
-        return userData;
+        return userData
       } catch (err) {
-        console.error('Failed to parse stored user data:', err);
-        logout();
-        return null;
+        console.error("Failed to parse stored user data:", err)
+        logout()
+        return null
       }
     }
-    return null;
-  };
+    return null
+  }
 
   useEffect(() => {
-    const currentUser = checkAuthStatus();
-    if (currentUser && ['/login', '/'].includes(window.location.pathname)) {
-      navigate('/home', { replace: true });
+    const currentUser = checkAuthStatus()
+    if (currentUser) {
+      // Nếu là admin, chuyển hướng đến trang admin dashboard
+      if (currentUser.roles && currentUser.roles.includes("ROLE_ADMIN")) {
+        if (["/login", "/", "/home"].includes(window.location.pathname)) {
+          navigate("/admin/dashboard", { replace: true })
+        }
+      }
+      // Nếu là user thường, chuyển hướng đến trang home
+      else if (["/login", "/"].includes(window.location.pathname)) {
+        navigate("/home", { replace: true })
+      }
     }
-  }, []);
+  }, [])
 
   // Login function
   const login = async (email, password) => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
 
     try {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // Tìm tài khoản trong mockAccounts
-          const account = mockAccounts.find(
-            (acc) => acc.email === email && acc.password === password
-          );
+      const data = await authService.login(email, password)
 
-          if (account) {
-            const userData = {
-              id: account.id,
-              name: account.name,
-              email: account.email,
-              role: account.role,
-            };
-            const token = 'fake-jwt-token-' + Math.random();
-            localStorage.setItem('authToken', token);
-            localStorage.setItem('userData', JSON.stringify(userData));
-            setUser(userData);
-            setLoading(false);
-            navigate('/home', { replace: true });
-            resolve({ user: userData, token });
-          } else {
-            const error = new Error('Invalid credentials');
-            setError(error.message);
-            setLoading(false);
-            reject(error);
-          }
-        }, 1000);
-      });
-    } catch (err) {
-      setError(err.message || 'Login failed');
-      setLoading(false);
-      throw err;
+      if (!data.accessToken || typeof data.accessToken !== "string") {
+        throw new Error("Invalid or missing access token")
+      }
+
+      const decoded = jwtDecode(data.accessToken)
+
+      const userData = {
+        email: decoded.email || "",
+        roles: decoded.roles || [],
+      }
+
+      localStorage.setItem("accessToken", data.accessToken)
+      localStorage.setItem("refreshToken", data.refreshToken)
+      localStorage.setItem("userData", JSON.stringify(userData))
+
+      setUser(userData)
+      setLoading(false)
+
+      // Chuyển hướng dựa trên vai trò
+      if (decoded.roles.includes("ROLE_ADMIN")) {
+        navigate("/admin/dashboard", { replace: true })
+      } else {
+        navigate("/home", { replace: true })
+      }
+
+      return { user: userData, token: data.accessToken }
+    } catch (error) {
+      setError(error.message)
+      setLoading(false)
+      throw error
     }
-  };
+  }
 
   // Register function
   const register = async (userData) => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
 
     try {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // Kiểm tra email đã tồn tại
-          if (mockAccounts.some((acc) => acc.email === userData.email)) {
-            const error = new Error('Email is already registered');
-            setError(error.message);
-            setLoading(false);
-            reject(error);
-            return;
-          }
-
-          const newUser = {
-            id: 'new-' + Math.random().toString(36).substring(2, 9),
-            name: userData.name,
-            email: userData.email,
-            password: userData.password,
-            role: 'USER', // Mặc định là USER khi đăng ký
-          };
-
-          // Thêm vào mockAccounts (trong thực tế, bạn sẽ gửi API để lưu vào DB)
-          mockAccounts.push(newUser);
-
-          setLoading(false);
-          resolve({ user: newUser });
-          navigate('/login');
-        }, 1000);
-      });
-    } catch (err) {
-      setError(err.message || 'Registration failed');
-      setLoading(false);
-      throw err;
+      const data = await authService.register(userData)
+      setLoading(false)
+      navigate("/login", { replace: true })
+      return data
+    } catch (error) {
+      setError(error.message || "Đăng ký thất bại")
+      setLoading(false)
+      throw error
     }
-  };
+  }
 
   // Logout function
-  const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-    setUser(null);
-    navigate('/', { replace: true });
-  };
+  const logout = async () => {
+    authService.logout()
+    localStorage.removeItem("accessToken")
+    localStorage.removeItem("refreshToken")
+    localStorage.removeItem("userData")
+    setUser(null)
+    navigate("/login", { replace: true })
+  }
 
   return {
     user,
@@ -146,7 +129,7 @@ const useAuth = () => {
     logout,
     checkAuthStatus,
     isAuthenticated: !!user,
-  };
-};
-
-export default useAuth;
+    roles: user?.roles || [],
+  }
+}
+export default useAuth

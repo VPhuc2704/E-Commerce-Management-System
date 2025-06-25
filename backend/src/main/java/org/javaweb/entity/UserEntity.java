@@ -2,6 +2,7 @@ package org.javaweb.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "user")
@@ -33,6 +35,9 @@ public class UserEntity extends BaseEntity implements UserDetails {
     @Column(name = "address")
     private String address;
 
+    @Column(name = "isverified", nullable = false)
+    private Boolean isverified = false;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JsonBackReference
     @JoinTable(
@@ -41,9 +46,9 @@ public class UserEntity extends BaseEntity implements UserDetails {
             inverseJoinColumns = @JoinColumn(name ="role_id", referencedColumnName = "id", nullable = false)) // khóa ngoại đến Role
     private List<RoleEntity> roles = new ArrayList<>();
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "users", cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "users", cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<CartEntity> listCart = new ArrayList<>();
+    private CartEntity carts;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "users",  cascade = CascadeType.ALL)
     @JsonIgnore
@@ -52,7 +57,9 @@ public class UserEntity extends BaseEntity implements UserDetails {
     @Override
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList();
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.getCode().getNameCode()))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -142,13 +149,12 @@ public class UserEntity extends BaseEntity implements UserDetails {
     public void setRoles(List<RoleEntity> roles) {
         this.roles = roles;
     }
-
-    public List<CartEntity> getListCart() {
-        return listCart;
+    public CartEntity getCarts() {
+        return carts;
     }
 
-    public void setListCart(List<CartEntity> listCart) {
-        this.listCart = listCart;
+    public void setCarts(CartEntity carts) {
+        this.carts = carts;
     }
 
     public List<OrderEntity> getListOrder() {
@@ -157,6 +163,14 @@ public class UserEntity extends BaseEntity implements UserDetails {
 
     public void setListOrder(List<OrderEntity> listOrder) {
         this.listOrder = listOrder;
+    }
+
+    public Boolean getIsverified() {
+        return isverified;
+    }
+
+    public void setIsverified(Boolean isverified) {
+        this.isverified = isverified;
     }
 
     public UserEntity(){}

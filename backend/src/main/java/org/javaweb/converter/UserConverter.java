@@ -15,4 +15,14 @@ public class UserConverter {
         UserDTO userDTO = modelMapper.map(userEntity, UserDTO.class);
         return userDTO;
     }
+
+    public UserEntity convertToUserEntity(UserDTO userDTO) {
+        UserEntity userEntity = modelMapper.map(userDTO, UserEntity.class);
+        return userEntity;
+    }
+
+    public void updateUserEntityFromDTO(UserDTO userDTO, UserEntity userEntity) {
+        modelMapper.map(userDTO, userEntity);
+    }
+
 }

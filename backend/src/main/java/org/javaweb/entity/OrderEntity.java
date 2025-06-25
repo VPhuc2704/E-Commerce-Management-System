@@ -1,6 +1,6 @@
 package org.javaweb.entity;
 
-import org.javaweb.enums.orderStatus;
+import org.javaweb.enums.OrderStatus;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -18,16 +18,16 @@ public class OrderEntity extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private orderStatus status;
+    private OrderStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserEntity users;
 
-    @OneToOne(mappedBy = "orders", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "orders", cascade = CascadeType.ALL,  fetch = FetchType.LAZY)
     private PaymentEntity payment;
 
-    @OneToMany(mappedBy = "orders", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "orders", cascade = CascadeType.ALL,  fetch = FetchType.LAZY, orphanRemoval = true)
     private List<OrderItemEntity> listOrderItems = new ArrayList<>();
 
     @Override
@@ -56,11 +56,11 @@ public class OrderEntity extends BaseEntity {
         this.totalAmount = totalAmount;
     }
 
-    public orderStatus getStatus() {
+    public OrderStatus getStatus() {
         return status;
     }
 
-    public void setStatus(orderStatus status) {
+    public void setStatus(OrderStatus status) {
         this.status = status;
     }
 

@@ -25,14 +25,16 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService {
         UserEntity userEntity = userRepository.findByEmail(email)
                 .orElseThrow(()-> new UsernameNotFoundException("User not exists by Username or Email"));
 
+
         List<GrantedAuthority> authorities = userEntity.getRoles().stream()
             .map(role -> new SimpleGrantedAuthority(role.getCode().getNameCode()))
             .collect(Collectors.toList());
 
-        return new org.springframework.security.core.userdetails.User(
-                email,
-                userEntity.getPassword(),
-                authorities
-        );
+//        return new org.springframework.security.core.userdetails.User(
+//                email,
+//                userEntity.getPassword(),
+//                authorities
+//        );
+        return userEntity;
     }
 }

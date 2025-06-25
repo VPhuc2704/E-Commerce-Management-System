@@ -6,19 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 public class UserDTO {
-    private Long id;
     private String email;
     private String fullname;
     private String numberphone;
     private String address;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getEmail() {
         return email;

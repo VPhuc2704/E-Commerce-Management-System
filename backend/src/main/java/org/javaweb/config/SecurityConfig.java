@@ -1,5 +1,7 @@
 package org.javaweb.config;
 
+import org.hibernate.validator.constraints.URL;
+import org.javaweb.constant.EndpointAPI;
 import org.javaweb.repository.UserRepository;
 import org.javaweb.security.JwtAuthenticationEntryPoint;
 import org.javaweb.security.JwtAuthenticationFilter;
@@ -16,12 +18,21 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.CorsConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.net.URLStreamHandlerFactory;
+import java.util.Arrays;
+import java.util.List;
 
 
 @Configuration
@@ -31,8 +42,8 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter authenticationFilter;
     private final UserDetailsService userDetailsService;
     
-    @Value("${api.prefix}")
-    private String apiPrefix;
+//    @Value("${api.prefix}")
+//    private String apiPrefix;
 
     public SecurityConfig(JwtAuthenticationEntryPoint authenticationEntryPoint, JwtAuthenticationFilter authenticationFilter, UserDetailsService userDetailsService) {
         this.authenticationEntryPoint = authenticationEntryPoint;
@@ -44,18 +55,17 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http.csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests((authorize) -> {
-//                    authorize.requestMatchers(HttpMethod.POST, "/api/**").hasRole("ADMIN");
-//                    authorize.requestMatchers(HttpMethod.PUT, "/api/**").hasRole("ADMIN");
-//                    authorize.requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN");
-//                    authorize.requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("ADMIN", "USER")s;
-//                    authorize.requestMatchers(HttpMethod.PATCH, "/api/**").hasAnyRole("ADMIN", "USER");
-//                    authorize.antMatchers(HttpMethod.GET, "/api/**").permitAll();
-                    authorize.antMatchers(String.format("%s/auth/login", apiPrefix)).permitAll();
-                    authorize.antMatchers(String.format("%s/auth/register", apiPrefix)).permitAll();
-                    authorize.antMatchers(String.format("%s/auth/refreshtoken", apiPrefix)).permitAll();
-                    authorize.antMatchers(HttpMethod.OPTIONS, "/**").permitAll();
+                    authorize.antMatchers(EndpointAPI.ADMIN_ENDPOINTS).hasRole("ADMIN");
+                    authorize.antMatchers(EndpointAPI.PUBLIC_ENDPOINTS).permitAll();
+                    authorize.antMatchers(EndpointAPI.AUTHENTICATED_ENDPOINTS).authenticated();
                     authorize.anyRequest().authenticated();
+
                 }).httpBasic(Customizer.withDefaults());
 
         http.exceptionHandling( exception -> exception
@@ -84,5 +94,17 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource(){
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("http://localhost:5173");
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 
 }

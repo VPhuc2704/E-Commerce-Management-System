@@ -1,104 +1,218 @@
-import React from 'react';
-  import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-  import useAuth from '../hooks/useAuth';
-  import Navbar from '../components/layout/Navbar';
-  import ProtectedRoutes from '../routes/ProtectedRoutes';
-  import ErrorBoundary from '../components/common/ErrorBoundary';
-  import HomePage from '../pages/HomePage';
-  import AboutPage from '../pages/AboutPage';
-  import Login from '../features/auth/Login';
-  import Register from '../features/auth/Register';
-  import ForgotPassword from '../features/auth/ForgotPassword';
-  import LoggedInHomePage from '../pages/LoggedInHomePage';
-  import ProductListing from '../pages/ProductListing';
-  import ProductDetails from '../pages/ProductDetails';
-  import AdminProductManagement from '../pages/AdminProductManagement';
+"use client"
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom"
+import useAuth from "../hooks/useAuth"
+import Navbar from "../components/layout/Navbar"
+import ProtectedRoutes from "../routes/ProtectedRoutes"
+import AdminLayout from "../components/common/AdminLayout"
+import ErrorBoundary from "../components/common/ErrorBoundary"
+import HomePage from "../pages/HomePage"
+import AboutPage from "../pages/AboutPage"
+import Login from "../features/auth/Login"
+import Register from "../features/auth/Register"
+import ForgotPassword from "../features/auth/ForgotPassword"
+import LoggedInHomePage from "../pages/LoggedInHomePage"
+import ProductListing from "../pages/ProductListing"
+import ProductDetails from "../pages/ProductDetails"
+import AdminProductManagement from "../pages/AdminProductManagement"
+import CartPage from "../pages/CartPage"
+import OrderHistory from "../pages/OrderHistory"
+import AdminOrderManagement from "../pages/AdminOrderManagement"
+import AdminDashboard from "../pages/AdminDashboard"
+import VerifyPage from "../pages/VerifyPage"
+import ProfilePage from "../pages/ProfilePage" // Sử dụng ProfilePage thật thay vì Profile
 
-// Placeholder components for new routes
-const ProfilePage = () => <div className="min-h-screen p-4">Profile Page (Placeholder)</div>;
-const CartPage = () => <div className="min-h-screen p-4">Cart Page (Placeholder)</div>;
-const SearchPage = () => <div className="min-h-screen p-4">Search Page (Placeholder)</div>;
+// Xóa placeholder component này vì chúng ta đã có ProfilePage thật
+// const ProfilePage = () => <div className="min-h-screen p-4">Profile Page (Placeholder)</div>
 
 // GuestOnlyRoute Component
 const GuestOnlyRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth()
 
   if (isAuthenticated) {
-    return <Navigate to="/home" replace />;
+    return <Navigate to="/home" replace />
   }
 
-  return children;
-};
+  return children
+}
 
 // Layout Component to conditionally render Navbar
 const Layout = ({ children }) => {
-  const location = useLocation(); // Ensure useLocation is available
-  const hideNavbarRoutes = ['/login', '/register', '/forgot-password'];
+  const location = useLocation()
+  const { user } = useAuth()
+  const isAdmin = user?.roles?.includes("ROLE_ADMIN")
+  const hideNavbarRoutes = ["/login", "/register", "/verify", "/forgot-password"]
+  const adminRoutes = ["/admin/dashboard", "/admin/products", "/admin/orders"]
+
+  // Không hiển thị Navbar cho admin hoặc các route đặc biệt
+  const shouldHideNavbar =
+    hideNavbarRoutes.includes(location.pathname) ||
+    (isAdmin && adminRoutes.some((route) => location.pathname.startsWith(route)))
 
   return (
     <>
-      {!hideNavbarRoutes.includes(location.pathname) && <Navbar />}
+      {!shouldHideNavbar && <Navbar />}
       {children}
     </>
-  );
-};
+  )
+}
+
+// Component con để xử lý routes
+const RoutesContent = () => {
+  const { user } = useAuth()
+  const isAdmin = user?.roles?.includes("ROLE_ADMIN")
+
+  // Nếu là admin đã đăng nhập và đang ở trang chủ, chuyển hướng đến dashboard
+  if (isAdmin && window.location.pathname === "/home") {
+    return <Navigate to="/admin/dashboard" replace />
+  }
+
+  return (
+    <ErrorBoundary>
+      <Routes>
+        {/* Public routes for guests */}
+        <Route
+          path="/"
+          element={
+            <Layout>
+              <HomePage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/about"
+          element={
+            <Layout>
+              <AboutPage />
+            </Layout>
+          }
+        />
+
+        {/* Guest-only routes (without Navbar) */}
+        <Route
+          path="/login"
+          element={
+            <GuestOnlyRoute>
+              <Login />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <GuestOnlyRoute>
+              <Register />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="/verify"
+          element={
+            <GuestOnlyRoute>
+              <VerifyPage />
+            </GuestOnlyRoute>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <GuestOnlyRoute>
+              <ForgotPassword />
+            </GuestOnlyRoute>
+          }
+        />
+
+        {/* Protected routes for authenticated users */}
+        <Route
+          element={
+            <ErrorBoundary>
+              <ProtectedRoutes />
+            </ErrorBoundary>
+          }
+        >
+          {/* Không hiển thị các route này cho admin */}
+          {!isAdmin && (
+            <>
+              <Route
+                path="/home"
+                element={
+                  <Layout>
+                    <LoggedInHomePage user={user} />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/products"
+                element={
+                  <Layout>
+                    <ProductListing />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/product-details/:id"
+                element={
+                  <Layout>
+                    <ProductDetails />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <Layout>
+                    <ProfilePage user={user} />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/cart"
+                element={
+                  <Layout>
+                    <CartPage />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/orders"
+                element={
+                  <Layout>
+                    <OrderHistory />
+                  </Layout>
+                }
+              />
+              
+            </>
+          )}
+        </Route>
+
+        {/* Admin-only routes với AdminLayout riêng biệt */}
+        <Route
+          element={
+            <ErrorBoundary>
+              <ProtectedRoutes adminOnly={true} />
+            </ErrorBoundary>
+          }
+        >
+          <Route element={<AdminLayout user={user} />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/products" element={<AdminProductManagement user={user} />} />
+            <Route path="/admin/orders" element={<AdminOrderManagement />} />
+          </Route>
+        </Route>
+
+        {/* Catch-all route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </ErrorBoundary>
+  )
+}
 
 const AppRoutes = () => {
   return (
     <Router>
-      <ErrorBoundary>
-        <Routes>
-          {/* Public routes for guests */}
-          <Route path="/" element={<Layout><HomePage /></Layout>} />
-          <Route path="/about" element={<Layout><AboutPage /></Layout>} />
-          <Route path="/search" element={<Layout><SearchPage /></Layout>} />
-
-          {/* Guest-only routes (without Navbar) */}
-          <Route
-            path="/login"
-            element={
-              <GuestOnlyRoute>
-                <Login />
-              </GuestOnlyRoute>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <GuestOnlyRoute>
-                <Register />
-              </GuestOnlyRoute>
-            }
-          />
-          <Route
-            path="/forgot-password"
-            element={
-              <GuestOnlyRoute>
-                <ForgotPassword />
-              </GuestOnlyRoute>
-            }
-          />
-
-          {/* Protected routes for authenticated users */}
-          <Route element={<ErrorBoundary><ProtectedRoutes /></ErrorBoundary>}>
-            <Route path="/home" element={<Layout><LoggedInHomePage /></Layout>} />
-            <Route path="/products" element={<Layout><ProductListing /></Layout>} />
-            <Route path="/product/:id" element={<Layout><ProductDetails /></Layout>} />
-            <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
-            <Route path="/cart" element={<Layout><CartPage /></Layout>} />
-          </Route>
-
-          {/* Admin-only routes */}
-          <Route element={<ErrorBoundary><ProtectedRoutes adminOnly={true} /></ErrorBoundary>}>
-            <Route path="/admin/products" element={<Layout><AdminProductManagement /></Layout>} />
-          </Route>
-
-          {/* Catch-all route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </ErrorBoundary>
+      <RoutesContent />
     </Router>
-  );
-};
+  )
+}
 
-export default AppRoutes;
+export default AppRoutes
