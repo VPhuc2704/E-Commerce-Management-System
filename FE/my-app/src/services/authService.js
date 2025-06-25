@@ -1,5 +1,9 @@
 // Base API URL - replace with your actual API URL
-const API_URL = "http://localhost:8081/api/auth"
+
+const BASE_URL = import.meta.env.VITE_API_URL;
+
+
+const API_URL = `${BASE_URL}/api/auth`
 
 // Helper to handle API responses
 const handleResponse = async (response) => {

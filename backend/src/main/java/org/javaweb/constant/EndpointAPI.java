@@ -12,19 +12,25 @@ public class EndpointAPI {
             "/api/auth/logout",
             "/api/products/**",
             "/api/categories/name",
-            "/api/cart/**",
             "/api/vnpayment/return",
-            "/api/orders/**"
+            "/api/orders/**",
+            "/img/*",
+            "/reviews/*",
+            "/api/reviews/products/*"
+
 
 //            "/**" // Cho phép OPTIONS cho CORS
     };
     public static final String[] AUTHENTICATED_ENDPOINTS = {
             "/api/user/",
             "/api/user/**",
+            "/api/cart/**",
+            "/api/reviews/product/*"
     };
     public static final String[] ADMIN_ENDPOINTS = {
             "/api/admin/products/**",
             "/api/orders/admin/status",
+            "/api/admin/userAll/",
     };
 
 }

@@ -3,43 +3,60 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Footer from '../components/layout/Footer';
 import { useProductDetails } from '../hooks/useProductDetails';
+import { useProductFeedbacks } from '../hooks/useProductFeedbacks';
+import { useCart } from '../hooks/useCart';
+import { X, Package } from "lucide-react";
 
-const ProductCard = ({ product }) => (
-  <Link to={`/product-details/${product.id}`} className="no-underline hover:no-underline group">
-    <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-5 hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 flex items-center space-x-4 hover:border-indigo-200">
-      <div className="relative overflow-hidden rounded-xl">
-        <img
-          src={product.imageUrl || '/assets/images/default.jpg'}
-          alt={product.name}
-          className="w-20 h-20 object-cover group-hover:scale-110 transition-transform duration-300"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-      </div>
-      <div className="flex-grow">
-        <h4 className="text-sm font-bold text-gray-800 group-hover:text-indigo-600 transition-colors duration-300 mb-1">{product.name}</h4>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-indigo-600 font-semibold text-sm">{product.price.toLocaleString('vi-VN')} VNĐ</p>
-            <p className="text-emerald-600 text-xs font-medium">Đã bán: {product.soldCount}</p>
-          </div>
-          <div className="text-amber-400 text-sm">
-            {'★'.repeat(product.rating) + '☆'.repeat(5 - product.rating)}
+const BASE_URL = import.meta.env.VITE_API_URL;
+
+const ProductCard = ({ product }) => {
+  const formatPrice = (price) => {
+    if (!price) return '0';
+    return price.toLocaleString('vi-VN');
+  };
+  const baseUrl = import.meta.env.VITE_API_URL;;
+  const imageUrl = `${baseUrl}${product.image}`;
+  return (
+    <Link to={`/product-details/${product.id}`} className="no-underline hover:no-underline group">
+      <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-5 hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 flex items-center space-x-4 hover:border-indigo-200">
+        <div className="relative overflow-hidden rounded-xl">
+          <img
+            src={imageUrl || '/assets/images/default.jpg'}
+            alt={product.name}
+            className="w-20 h-20 object-cover group-hover:scale-110 transition-transform duration-300"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
+        <div className="flex-grow">
+          <h4 className="text-sm font-bold text-gray-800 group-hover:text-indigo-600 transition-colors duration-300 mb-1">{product.name}</h4>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-indigo-600 font-semibold text-sm">{formatPrice(product.price)} VNĐ</p>
+              <p className="text-emerald-600 text-xs font-medium">Đã bán: {product.soldQuantity || 0}</p>
+            </div>
+            <div className="text-amber-400 text-sm">
+              {'★'.repeat(product.rating || 0) + '☆'.repeat(5 - (product.rating || 0))}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </Link>
-);
+    </Link>
+  );
+};
 
 const Notification = ({ message, isVisible, onClose }) => {
   React.useEffect(() => {
+    let timer;
     if (isVisible) {
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         onClose();
-      }, 3000);
-      return () => clearTimeout(timer);
+        console.log('Notification auto-closed at:', new Date().toISOString());
+      }, 3000); // 3 giây
     }
-  }, [isVisible, onClose]);
+    return () => {
+      if (timer) clearTimeout(timer); // Dọn dẹp timer khi unmount hoặc isVisible thay đổi
+    };
+  }, [isVisible, onClose]); // Dependency array chỉ phụ thuộc vào isVisible và onClose
 
   if (!isVisible) return null;
 
@@ -86,12 +103,24 @@ const ProductDetails = () => {
     handleBuyNow,
     paymentMethod,
     setPaymentMethod,
-  } = useProductDetails(id, navigate);
-  
+    feedbacks,
+    loading,
+    error,
+  } = useProductDetails(id);
+
   const [showAllFeedbacks, setShowAllFeedbacks] = useState(false);
+  const toggleShowAllFeedbacks = () => setShowAllFeedbacks(!showAllFeedbacks);
+
+  const displayedFeedbacks = showAllFeedbacks ? feedbacks : feedbacks.slice(0, 3);
 
   const handleStarClick = (rating) => {
     setFeedbackRating(rating);
+  };
+
+  const formatPrice = (price) => {
+    const number = Number(price);
+    if (isNaN(number)) return '0';
+    return number.toLocaleString('vi-VN');
   };
 
   if (!product) {
@@ -105,8 +134,6 @@ const ProductDetails = () => {
     );
   }
 
-  const displayedFeedbacks = showAllFeedbacks ? product.feedbacks : product.feedbacks.slice(0, 3);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 flex flex-col relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -118,7 +145,7 @@ const ProductDetails = () => {
       <Notification
         message={notification.message}
         isVisible={notification.isVisible}
-        onClose={() => setNotification(prev => ({ ...prev, isVisible: false }))}
+        onClose={() => setNotification(prev => ({ ...prev, isVisible: false, message: '' }))} // Xóa thông điệp khi đóng
       />
 
       <main className="flex-grow container mx-auto px-6 py-8 relative z-10">
@@ -128,17 +155,17 @@ const ProductDetails = () => {
               <div className="lg:w-1/2 relative group">
                 <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 p-4">
                   <img
-                    src={product.imageUrl || '/assets/images/default.jpg'}
+                    src={`${BASE_URL}${product.image}` || '/assets/images/default.jpg'}
                     alt={product.name}
-                    className="w-full h-80 object-cover rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-80 object-cover rounded-xl shadow-lg group-hover:scale-105扁transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
                 </div>
                 <div className="absolute bottom-13 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-emerald-900 to-green-600 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg">
-                  Bán chạy #{product.soldCount}
+                  Bán chạy #{product.soldQuantity}
                 </div>
                 <div className="absolute -top-2 -left-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-300">
-                  {product.category}
+                  {product.type}
                 </div>
               </div>
 
@@ -151,30 +178,34 @@ const ProductDetails = () => {
                     <div className="flex items-center space-x-6 mb-4">
                       <div className="flex items-center space-x-2">
                         <div className="text-amber-400 text-2xl">
-                          {'★'.repeat(product.rating)}
+                          {'★'.repeat(Math.round(product.rating || 0))}
                         </div>
                         <div className="text-gray-300 text-2xl">
-                          {'☆'.repeat(5 - product.rating)}
+                          {'☆'.repeat(5 - Math.round(product.rating || 0))}
                         </div>
                       </div>
                       <span className="text-gray-600 font-medium">({product.rating}/5)</span>
                     </div>
                     <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-2xl shadow-lg mb-6">
                       <div className="text-3xl font-black mb-2">
-                        {product.price.toLocaleString('vi-VN')} VNĐ
+                        {formatPrice(product.price)} VNĐ
                       </div>
+                      {product.originalPrice && product.originalPrice !== product.price && (
+                        <div className="text-sm line-through text-indigo-200 mb-1">
+                          {formatPrice(product.originalPrice)} VNĐ
+                        </div>
+                      )}
                       <div className="text-indigo-100 text-sm">
                         Giá đã bao gồm VAT
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-gray-50 p-6 rounded-2xl border-l-4 border-indigo-500">
                     <h3 className="text-lg font-bold text-gray-900 mb-3">Mô tả sản phẩm</h3>
                     <p className="text-gray-700 leading-relaxed">{product.description}</p>
                   </div>
 
-                  {/* Khung điều khiển đã chuyển sang bên trái */}
                   <div className="mt-8 bg-white p-5 rounded-2xl shadow-inner border border-gray-100">
                     <div className="flex items-center space-x-3 mb-4">
                       <label className="text-gray-700 font-semibold text-sm">Số lượng:</label>
@@ -203,7 +234,7 @@ const ProductDetails = () => {
                         </button>
                       </div>
                     </div>
-                  
+
                     <div className="flex gap-3">
                       <button
                         onClick={handleAddToCart}
@@ -258,13 +289,15 @@ const ProductDetails = () => {
           </section>
 
           <section className="xl:col-span-2 bg-gray-50 p-8 rounded-3xl shadow-inner border border-gray-100 mt-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Phản hồi từ khách hàng ({product.feedbacks.length})</h2>
-            {product.feedbacks.length > 0 ? (
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Phản hồi từ khách hàng ({feedbacks.length})</h2>
+            {loading && <p className="text-center">Đang tải phản hồi...</p>}
+            {error && <p className="text-center text-red-600">{error}</p>}
+            {!loading && !error && feedbacks.length > 0 && (
               <div className="space-y-6">
                 {displayedFeedbacks.map((feedback) => (
                   <div key={feedback.id} className="border-b border-gray-200 pb-6">
                     <div className="flex items-center space-x-4 mb-3">
-                      <span className="font-semibold text-gray-900">{feedback.user}</span>
+                      <span className="font-semibold text-gray-900">{feedback.userName}</span>
                       <div className="flex items-center space-x-1">
                         <div className="text-amber-400">
                           {'★'.repeat(feedback.rating)}
@@ -273,30 +306,29 @@ const ProductDetails = () => {
                           {'☆'.repeat(5 - feedback.rating)}
                         </div>
                       </div>
-                      <span className="text-gray-500 text-sm">{feedback.date}</span>
+                      <span className="text-gray-500 text-sm">{new Date(feedback.createdDate).toLocaleString()}</span>
                     </div>
                     <p className="text-gray-700 leading-relaxed">{feedback.comment}</p>
                     {feedback.imageUrl && (
                       <img
-                        src={feedback.imageUrl}
+                        src={`${BASE_URL}${feedback.imageUrl}`}
                         alt={`Feedback from ${feedback.user}`}
                         className="w-24 h-24 object-cover rounded-xl mt-3 shadow-sm hover:scale-105 transition-transform duration-300"
                       />
                     )}
                   </div>
                 ))}
-                {product.feedbacks.length > 3 && !showAllFeedbacks && (
+                {feedbacks.length > 3 && (
                   <button
-                    onClick={() => setShowAllFeedbacks(true)}
+                    onClick={toggleShowAllFeedbacks}
                     className="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-xl font-semibold hover:bg-indigo-700 transition-colors duration-200"
                   >
-                    Xem thêm
+                    {showAllFeedbacks ? 'Ẩn bớt' : 'Xem thêm'}
                   </button>
                 )}
               </div>
-            ) : (
-              <p className="text-gray-500 italic">Chưa có phản hồi nào.</p>
             )}
+            {!loading && !error && feedbacks.length === 0 && <p className="text-gray-500 italic">Chưa có phản hồi nào.</p>}
           </section>
 
           {hasPurchasedAndConfirmed && (
@@ -363,100 +395,156 @@ const ProductDetails = () => {
       </main>
 
       {buyNowModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl p-6 max-w-md w-full"
-          >
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Đặt hàng ngay</h3>
-            <div className="flex items-center gap-4 mb-4">
-              <img
-                src={buyNowModal.imageUrl}
-                alt={buyNowModal.name}
-                className="w-16 h-16 object-cover rounded-lg"
-              />
-              <div>
-                <p className="font-semibold">{buyNowModal.name}</p>
-                <p>{buyNowModal.price.toLocaleString('vi-VN')} VNĐ</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setBuyNowModal(false)}
+          />
+
+          {/* Modal chính */}
+          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden bg-white rounded-2xl shadow-2xl">
+            {/* Header */}
+            <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6 text-white">
+              <button
+                onClick={() => setBuyNowModal(false)}
+                className="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-white/20 rounded-full">
+                  <Package size={24} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Xác nhận đặt hàng</h2>
+                  <p className="text-blue-100">Vui lòng kiểm tra kỹ thông tin đơn hàng</p>
+                </div>
               </div>
             </div>
 
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-1">Số lượng</label>
-              <input
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={handleQuantityChange}
-                className="w-full border rounded-lg p-2"
-              />
-            </div>
+            {/* Nội dung modal */}
+            <div className="flex flex-col lg:flex-row max-h-[calc(90vh-120px)] overflow-hidden">
+              {/* Bên trái: Sản phẩm đã chọn */}
+              <div className="lg:w-2/5 bg-gray-50 p-6 lg:p-8 overflow-y-auto">
+                <h3 className="text-lg font-semibold text-gray-800 mb-6">Chi tiết đơn hàng</h3>
+                <div className="space-y-4">
+                  <div className="flex gap-4 p-4 bg-white rounded-xl shadow-sm border">
+                    <img
+                      src={buyNowModal.imageUrl ? `${BASE_URL}${buyNowModal.imageUrl}` : '/assets/images/default.jpg'}
+                      alt={buyNowModal.name}
+                      className="w-16 h-16 object-cover rounded-lg"
+                    />
+                    <div className="flex-1">
+                      <p className="font-semibold">{buyNowModal.name}</p>
+                      <p className="text-sm text-gray-500">Đơn giá: {formatPrice(buyNowModal.price)}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-sm text-gray-500">Số lượng:</span>
+                        <button
+                          onClick={() => handleQuantityChange({ target: { value: (parseInt(quantity) - 1).toString() } })}
+                          className="px-2"
+                        >
+                          −
+                        </button>
+                        <span>{quantity}</span>
+                        <button
+                          onClick={() => handleQuantityChange({ target: { value: (parseInt(quantity) + 1).toString() } })}
+                          className="px-2"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <p className="text-sm font-semibold text-indigo-600 mt-1">
+                        Thành tiền: {formatPrice(quantity * buyNowModal.price)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right font-bold mt-4">Tổng tiền: {formatPrice(quantity * buyNowModal.price)}</div>
+                </div>
 
-            <div className="mb-4">
-              <h4 className="font-semibold text-gray-900 mb-2">Thông tin người dùng</h4>
-              {!isUserInfoValid && (
-                <p className="text-red-600 text-sm mb-2">Vui lòng điền đầy đủ thông tin!</p>
-              )}
-              <input
-                type="email"
-                placeholder="Email"
-                value={userInfo.email}
-                onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
-                className="w-full border rounded-lg p-2 mb-2 bg-gray-100 cursor-not-allowed"
-                disabled
-              />
-              <input
-                type="text"
-                placeholder="Họ và tên"
-                value={userInfo.fullname}
-                onChange={(e) => setUserInfo({ ...userInfo, fullname: e.target.value })}
-                className="w-full border rounded-lg p-2 mb-2 bg-gray-100 cursor-not-allowed"
-                disabled
-              />
-              <input
-                type="text"
-                placeholder="Số điện thoại"
-                value={userInfo.numberphone}
-                onChange={(e) => setUserInfo({ ...userInfo, numberphone: e.target.value })}
-                className="w-full border rounded-lg p-2 mb-2"
-              />
-              <input
-                type="text"
-                placeholder="Địa chỉ giao hàng"
-                value={userInfo.address}
-                onChange={(e) => setUserInfo({ ...userInfo, address: e.target.value })}
-                className="w-full border rounded-lg p-2 mb-2"
-              />
-            </div>
+                {/* Phương thức thanh toán */}
+                <div className="mt-6">
+                  <h4 className="font-semibold mb-3">Phương thức thanh toán</h4>
+                  <label className="flex items-center mb-2">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="VNPAY"
+                      checked={paymentMethod === 'VNPAY'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="mr-2"
+                    />
+                    VNPAY - Thanh toán online
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="COD"
+                      checked={paymentMethod === 'COD'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="mr-2"
+                    />
+                    COD - Thanh toán khi nhận hàng
+                  </label>
+                </div>
+              </div>
 
-            <div className="mb-4">
-              <label className="block text-gray-700 font-semibold mb-2">Phương thức thanh toán</label>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full border rounded-lg p-2 mb-4"
-              >
-                <option value="VNPAY">VNPAY</option>
-                <option value="COD">COD (Thanh toán khi nhận hàng)</option>
-              </select>
-            </div>
+              {/* Bên phải: Thông tin khách hàng */}
+              <div className="lg:w-3/5 p-6 lg:p-8 overflow-y-auto">
+                <h3 className="text-lg font-semibold text-gray-800 mb-6">Thông tin khách hàng</h3>
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={userInfo.fullname}
+                    disabled
+                    className="w-full bg-gray-100 p-3 rounded border"
+                    placeholder="Họ và tên"
+                  />
+                  <input
+                    type="email"
+                    value={userInfo.email}
+                    disabled
+                    className="w-full bg-gray-100 p-3 rounded border"
+                    placeholder="Email"
+                  />
+                  <input
+                    type="text"
+                    value={userInfo.numberphone}
+                    onChange={(e) => setUserInfo({ ...userInfo, numberphone: e.target.value })}
+                    className="w-full p-3 rounded border"
+                    placeholder="Số điện thoại"
+                  />
+                  <input
+                    type="text"
+                    value={userInfo.address}
+                    onChange={(e) => setUserInfo({ ...userInfo, address: e.target.value })}
+                    className="w-full p-3 rounded border"
+                    placeholder="Địa chỉ giao hàng"
+                  />
+                  {!isUserInfoValid && (
+                    <p className="text-red-600 text-sm">Vui lòng điền đầy đủ thông tin!</p>
+                  )}
+                </div>
 
-            <div className="flex gap-4">
-              <button
-                onClick={() => setBuyNowModal(null)}
-                className="bg-gray-300 text-gray-900 px-4 py-2 rounded-lg"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handlePlaceOrder}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg"
-              >
-                Đặt hàng
-              </button>
+                {/* Button */}
+                <div className="flex gap-4 mt-6">
+                  <button
+                    onClick={() => setBuyNowModal(null)}
+                    className="flex-1 px-4 py-3 bg-gray-100 rounded-lg text-gray-700 hover:bg-gray-200"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handlePlaceOrder}
+                    className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                  >
+                    Xác nhận đặt hàng
+                  </button>
+                </div>
+              </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
 

@@ -1,66 +1,66 @@
-"use client";
-
 import { useState, useEffect } from "react";
+import profileService from "../services/profileService";
 
 export const useProfileData = (user) => {
   const [userInfo, setUserInfo] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    avatar: "",
+    fullname: "",
+    email: user?.email || "",
+    numberphone: "",
+    address: "",
     bio: "",
+    avatar: "",
   });
-
-  const [addresses, setAddresses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let isMounted = true;
-    console.log("useProfileData useEffect triggered with user:", user);
-
-    const fetchUserData = async () => {
-      console.log("Starting to fetch user data...");
-      setIsLoading(true);
+    const fetchData = async () => {
       try {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        if (isMounted) {
-          setUserInfo({
-            name: "",
-            email: user?.email || "",
-            phone: "",
-            avatar: "",
-            bio: "",
-          });
+        setIsLoading(true);
+        const savedUserInfo = localStorage.getItem("userInfo");
+        if (savedUserInfo) {
+          setUserInfo(JSON.parse(savedUserInfo));
         }
 
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        if (isMounted) {
-          setAddresses([]);
-        }
+        const userData = await profileService.getUserInfo(user);
+        setUserInfo(userData);
+        localStorage.setItem("userInfo", JSON.stringify(userData));
       } catch (error) {
-        console.error("Error fetching profile data:", error);
+        console.error("Lỗi khi tải dữ liệu hồ sơ:", error);
+        setUserInfo({
+          fullname: "",
+          email: user?.email || "",
+          numberphone: "",
+          address: "",
+          bio: "",
+          avatar: "",
+        });
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-          console.log("isLoading set to false, current state:", { userInfo, addresses, isLoading });
-        }
+        setIsLoading(false);
       }
     };
 
-    fetchUserData();
-
-    return () => {
-      isMounted = false;
-      console.log("useProfileData useEffect cleanup");
-    };
+    if (user) {
+      fetchData();
+    } else {
+      setIsLoading(false);
+    }
   }, [user]);
 
-  console.log("Returning useProfileData:", { userInfo, addresses, isLoading });
   return {
     userInfo,
     setUserInfo,
-    addresses,
-    setAddresses,
     isLoading,
+    refetch: async () => {
+      try {
+        setIsLoading(true);
+        const userData = await profileService.getUserInfo(user);
+        setUserInfo(userData);
+        localStorage.setItem("userInfo", JSON.stringify(userData));
+      } catch (error) {
+        console.error('Error refetching profile data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
   };
 };

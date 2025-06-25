@@ -1,199 +1,285 @@
-import { mockUserData, mockAddresses } from "../mockdata/productData"
+import { API_BASE_URL } from '../constants/productConstants';
 
-const profileService = {
-  // Get user profile data
-  getUserProfile: async (userId) => {
+class ProfileService {
+  async getUserInfo(user) {
     try {
-      // Simulate API call
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({
-            name: "Nguyễn Văn A",
-            email: "nguyenvana@example.com",
-            phone: "0901234567",
-            avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-            bio: "Yêu thích ẩm thực Việt Nam và các món ăn đường phố châu Á.",
-          })
-        }, 500)
-      })
-    } catch (error) {
-      throw new Error("Không thể tải thông tin người dùng")
-    }
-  },
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.warn('Người dùng chưa đăng nhập');
+        return null;
+      }
 
-  // Update user profile
-  updateProfile: async (profileData) => {
+      const response = await fetch(`${API_BASE_URL}/user/`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to fetch user info');
+      }
+
+      const userData = await response.json();
+      return {
+        fullname: userData.name || userData.fullname || "",
+        email: userData.email || user?.email || "",
+        numberphone: userData.phone || userData.numberphone || "",
+        address: userData.address || "",
+        bio: userData.bio || userData.description || "",
+        avatar: userData.avatar || userData.profileImage || ""
+      };
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+      throw error;
+    }
+  }
+
+  async updateUserInfo(userInfo) {
     try {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (Math.random() > 0.1) {
-            resolve(profileData)
-          } else {
-            reject(new Error("Cập nhật thất bại"))
-          }
-        }, 800)
-      })
-    } catch (error) {
-      throw new Error("Không thể cập nhật thông tin")
-    }
-  },
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
-  // Change password
-  updatePassword: async (passwordData) => {
+      const payload = {
+        fullname: userInfo.name || userInfo.fullname || "",
+        email: userInfo.email || "",
+        numberphone: userInfo.phone || userInfo.numberphone || "",
+        address: userInfo.address || "",
+        bio: userInfo.bio || ""
+      };
+
+      const response = await fetch(`${API_BASE_URL}/user/`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to update user info');
+      }
+
+      const updatedUser = await response.json();
+      return {
+        fullname: updatedUser.name || updatedUser.fullname || "",
+        email: updatedUser.email || userInfo.email || "",
+        numberphone: updatedUser.phone || updatedUser.numberphone || "",
+        address: updatedUser.address || "",
+        bio: updatedUser.bio || updatedUser.description || "",
+        avatar: updatedUser.avatar || updatedUser.profileImage || ""
+      };
+    } catch (error) {
+      console.error('Error updating user info:', error);
+      throw error;
+    }
+  }
+
+  async updateAvatar(avatarFile) {
     try {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (passwordData.newPassword.length < 6) {
-            reject(new Error("Mật khẩu phải có ít nhất 6 ký tự"))
-            return
-          }
-          if (passwordData.newPassword !== passwordData.confirmPassword) {
-            reject(new Error("Mật khẩu xác nhận không khớp"))
-            return
-          }
-          if (Math.random() > 0.1) {
-            resolve({ success: true })
-          } else {
-            reject(new Error("Cập nhật mật khẩu thất bại"))
-          }
-        }, 800)
-      })
-    } catch (error) {
-      throw new Error("Không thể thay đổi mật khẩu")
-    }
-  },
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
-  // Get user addresses
-  getUserAddresses: async (userId) => {
+      const formData = new FormData();
+      formData.append('avatar', avatarFile);
+
+      const response = await fetch(`${API_BASE_URL}/user/avatar`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to update avatar');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      throw error;
+    }
+  }
+
+  async getAddresses() {
     try {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve([
-            {
-              id: 1,
-              name: "Nhà riêng",
-              recipient: "Nguyễn Văn A",
-              phone: "0901234567",
-              address: "123 Đường Lê Lợi, Phường Bến Nghé, Quận 1",
-              city: "TP. Hồ Chí Minh",
-              isDefault: true,
-            },
-            {
-              id: 2,
-              name: "Văn phòng",
-              recipient: "Nguyễn Văn A",
-              phone: "0909876543",
-              address: "456 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1",
-              city: "TP. Hồ Chí Minh",
-              isDefault: false,
-            },
-          ])
-        }, 1000)
-      })
-    } catch (error) {
-      throw new Error("Không thể tải danh sách địa chỉ")
-    }
-  },
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
-  // Add new address
-  addAddress: async (userId, addressData) => {
+      const response = await fetch(`${API_BASE_URL}/user/addresses`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to fetch addresses');
+      }
+
+      const addresses = await response.json();
+      return Array.isArray(addresses) ? addresses : [];
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+      return [];
+    }
+  }
+
+  async addAddress(address) {
     try {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (Math.random() > 0.1) {
-            // 90% success rate
-            resolve({
-              ...addressData,
-              id: Date.now(),
-              isDefault: false,
-            })
-          } else {
-            reject(new Error("Thêm địa chỉ thất bại"))
-          }
-        }, 500)
-      })
-    } catch (error) {
-      throw new Error("Không thể thêm địa chỉ mới")
-    }
-  },
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
-  // Update address
-  updateAddress: async (userId, addressId, addressData) => {
+      const response = await fetch(`${API_BASE_URL}/user/addresses`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(address)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to add address');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error adding address:', error);
+      throw error;
+    }
+  }
+
+  async updateAddress(addressId, address) {
     try {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (Math.random() > 0.1) {
-            // 90% success rate
-            resolve({ ...addressData, id: addressId })
-          } else {
-            reject(new Error("Cập nhật địa chỉ thất bại"))
-          }
-        }, 500)
-      })
-    } catch (error) {
-      throw new Error("Không thể cập nhật địa chỉ")
-    }
-  },
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
-  // Delete address
-  deleteAddress: async (addressId) => {
+      const response = await fetch(`${API_BASE_URL}/user/addresses/${addressId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(address)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to update address');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating address:', error);
+      throw error;
+    }
+  }
+
+  async deleteAddress(addressId) {
     try {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (Math.random() > 0.1) {
-            // 90% success rate
-            resolve({ success: true })
-          } else {
-            reject(new Error("Xóa địa chỉ thất bại"))
-          }
-        }, 500)
-      })
-    } catch (error) {
-      throw new Error("Không thể xóa địa chỉ")
-    }
-  },
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
-  // Set default address
-  setDefaultAddress: async (addressId) => {
+      const response = await fetch(`${API_BASE_URL}/user/addresses/${addressId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to delete address');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting address:', error);
+      return [];
+    }
+  }
+
+  async changePassword(oldPassword, newPassword) {
     try {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (Math.random() > 0.1) {
-            // 90% success rate
-            resolve({ success: true })
-          } else {
-            reject(new Error("Cập nhật địa chỉ mặc định thất bại"))
-          }
-        }, 500)
-      })
-    } catch (error) {
-      throw new Error("Không thể đặt địa chỉ mặc định")
-    }
-  },
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
-  // Update getUserInfo method to use mock data
-  getUserInfo: async (user) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          name: user?.name || mockUserData.name,
-          email: user?.email || mockUserData.email,
-          phone: user?.phone || mockUserData.phone,
-          address: user?.address || mockUserData.address,
-          bio: user?.bio || mockUserData.bio,
+      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          oldPassword,
+          newPassword
         })
-      }, 500)
-    })
-  },
+      });
 
-  // Update getAddresses method to use mock data
-  getAddresses: async () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(mockAddresses)
-      }, 1000)
-    })
-  },
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to change password');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error changing password:', error);
+      throw error;
+    }
+  }
+
+  async setDefaultAddress(addressId) {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/user/addresses/${addressId}/default`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to set default address');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error setting default address:', error);
+      throw error;
+    }
+  }
 }
 
-export default profileService
+const profileService = new ProfileService();
+export default profileService;

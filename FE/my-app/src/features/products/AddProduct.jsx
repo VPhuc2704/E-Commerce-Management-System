@@ -1,93 +1,52 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { motion } from "framer-motion"
+import { CATEGORIES } from "../../constants/productConstants"
+import { DEFAULT_PRODUCT } from "../../types/product"
+import { useProductApi } from '../../hooks/useProductApi';
 
 const AddProduct = ({ onClose, onAdd }) => {
-  const [formData, setFormData] = useState({
-    name: "",
-    category: "electronics",
-    originalPrice: "",
-    description: "",
-    imageUrl: "",
-    stock: "",
-    specifications: "",
-  })
-
-  const [errors, setErrors] = useState({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const categories = [
-    { value: "electronics", label: "Điện tử" },
-    { value: "clothing", label: "Thời trang" },
-    { value: "accessories", label: "Phụ kiện" },
-  ]
-
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }))
-    }
-  }
-
-  const validateForm = () => {
-    const newErrors = {}
-
-    if (!formData.name.trim()) newErrors.name = "Tên sản phẩm là bắt buộc"
-    if (!formData.description.trim()) newErrors.description = "Mô tả sản phẩm là bắt buộc"
-    if (!formData.originalPrice || formData.originalPrice <= 0) newErrors.originalPrice = "Giá phải lớn hơn 0"
-    if (!formData.stock || formData.stock < 0) newErrors.stock = "Số lượng không được âm"
-    if (!formData.imageUrl.trim()) newErrors.imageUrl = "URL hình ảnh là bắt buộc"
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+  const { addProduct } = useProductApi();
+  const [product, setProduct] = useState(DEFAULT_PRODUCT)
+  const [imagePreview, setImagePreview] = useState(product.image)
+  const fileInputRef = useRef(null)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    if (!validateForm()) return
-
-    setIsSubmitting(true)
+    const file = fileInputRef.current.files[0];
 
     try {
-      const productData = {
-        ...formData,
-        originalPrice: Number.parseFloat(formData.originalPrice),
-        stock: Number.parseInt(formData.stock),
-      }
-
-      const response = await fetch("http://localhost:5000/api/products", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        body: JSON.stringify(productData),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        onAdd(data)
-        alert("Thêm sản phẩm thành công!")
-        onClose()
-      } else {
-        alert("Lỗi khi thêm sản phẩm: " + data.message)
-      }
+      const result = await addProduct(product, file);
+      alert("Thêm sản phẩm thành công!");
+      onAdd(result.data);
+      onClose();
     } catch (error) {
-      console.error("Failed to add product:", error)
-      alert("Lỗi khi thêm sản phẩm.")
-    } finally {
-      setIsSubmitting(false)
+      alert("Thêm sản phẩm thất bại: " + error.message);
+    }
+  }
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setProduct((prev) => ({
+      ...prev,
+      [name]:
+        name === "price" || name === "quantity" || name === "categoryId"
+          ? Number(value)
+          : value,
+    }))
+  }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const previewUrl = URL.createObjectURL(file)
+      setImagePreview(previewUrl)
+      const relativePath = `/img/${file.name}`
+      setProduct((prev) => ({
+        ...prev,
+        image: relativePath,
+      }))
     }
   }
 
@@ -102,7 +61,7 @@ const AddProduct = ({ onClose, onAdd }) => {
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
       >
         <div className="p-8">
           <div className="flex items-center justify-between mb-6">
@@ -124,171 +83,146 @@ const AddProduct = ({ onClose, onAdd }) => {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Tên sản phẩm *</label>
+              <div className="col-span-1">
+                <label className="block mb-2 text-sm font-medium text-gray-700">Tên sản phẩm *</label>
                 <input
                   type="text"
                   name="name"
-                  value={formData.name}
+                  value={product.name}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${
-                    errors.name ? "border-red-500 bg-red-50" : "border-gray-200 hover:border-gray-300"
-                  }`}
-                  placeholder="Nhập tên sản phẩm"
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Nhập tên"
                 />
-                {errors.name && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    {errors.name}
-                  </p>
-                )}
+              </div>
+
+              <div className="col-span-1">
+                <label className="block mb-2 text-sm font-medium text-gray-700">Loại món *</label>
+                <input
+                  type="text"
+                  name="type"
+                  value={product.type}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="VD: Đồ nướng, Món chay"
+                />
+              </div>
+
+              <div className="col-span-2">
+                <label className="block mb-2 text-sm font-medium text-gray-700">Mô tả sản phẩm *</label>
+                <textarea
+                  name="description"
+                  value={product.description}
+                  onChange={handleChange}
+                  required
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Mô tả ngắn gọn về món ăn"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Danh mục</label>
+                <label className="block mb-2 text-sm font-medium text-gray-700">Giá bán (VNĐ) *</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="\d*"
+                  name="price"
+                  value={product.price ?? ''}
+                  onChange={(e) =>
+                    setProduct((prev) => ({
+                      ...prev,
+                      price: e.target.value === '' ? '' : Number(e.target.value),
+                    }))
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="0"
+                  min="0"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-700">Tồn kho *</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="\d*"
+                  name="quantity"
+                  value={product.quantity ?? ''}
+                  onChange={(e) =>
+                    setProduct((prev) => ({
+                      ...prev,
+                      quantity: e.target.value === '' ? '' : Number(e.target.value),
+                    }))
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="0"
+                  min="0"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-700">Danh mục *</label>
                 <select
-                  name="category"
-                  value={formData.category}
+                  name="categoryId"
+                  value={product.categoryId}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all hover:border-gray-300"
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500"
                 >
-                  {categories.map((category) => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
+                  <option value="">-- Chọn danh mục --</option>
+                  {CATEGORIES.filter(c => c.value).map(c => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
                   ))}
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Giá bán (VNĐ) *</label>
-                <input
-                  type="number"
-                  name="originalPrice"
-                  value={formData.originalPrice}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${
-                    errors.originalPrice ? "border-red-500 bg-red-50" : "border-gray-200 hover:border-gray-300"
-                  }`}
-                  placeholder="0"
-                  min="0"
-                />
-                {errors.originalPrice && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    {errors.originalPrice}
-                  </p>
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <label className="text-sm font-medium text-gray-700">Hình ảnh sản phẩm</label>
+                {imagePreview && (
+                  <div className="w-40 h-40 mx-auto rounded-lg overflow-hidden border">
+                    <img
+                      src={imagePreview.startsWith("blob:") || imagePreview.startsWith("http")
+                        ? imagePreview
+                        : `${BASE_URL}${imagePreview}`}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 )}
-              </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Số lượng tồn kho *</label>
-                <input
-                  type="number"
-                  name="stock"
-                  value={formData.stock}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${
-                    errors.stock ? "border-red-500 bg-red-50" : "border-gray-200 hover:border-gray-300"
-                  }`}
-                  placeholder="0"
-                  min="0"
-                />
-                {errors.stock && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    {errors.stock}
-                  </p>
-                )}
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">URL hình ảnh *</label>
-                <input
-                  type="url"
-                  name="imageUrl"
-                  value={formData.imageUrl}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${
-                    errors.imageUrl ? "border-red-500 bg-red-50" : "border-gray-200 hover:border-gray-300"
-                  }`}
-                  placeholder="https://example.com/image.jpg"
-                />
-                {errors.imageUrl && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    {errors.imageUrl}
-                  </p>
-                )}
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Mô tả sản phẩm *</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows={4}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none ${
-                    errors.description ? "border-red-500 bg-red-50" : "border-gray-200 hover:border-gray-300"
-                  }`}
-                  placeholder="Nhập mô tả chi tiết sản phẩm"
-                />
-                {errors.description && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    {errors.description}
-                  </p>
-                )}
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Thông số kỹ thuật</label>
-                <textarea
-                  name="specifications"
-                  value={formData.specifications}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none hover:border-gray-300"
-                  placeholder="Nhập thông số kỹ thuật (tùy chọn)"
-                />
+                <div className="flex flex-col md:flex-row gap-4 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current.click()}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition"
+                  >
+                    Chọn ảnh từ máy tính
+                  </button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <input
+                    type="text"
+                    name="image"
+                    value={product.image}
+                    onChange={(e) => {
+                      handleChange(e)
+                      setImagePreview(e.target.value)
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Hoặc dán link ảnh"
+                  />
+                </div>
               </div>
             </div>
 
@@ -296,35 +230,15 @@ const AddProduct = ({ onClose, onAdd }) => {
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
+                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition"
               >
                 Hủy
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-xl transition-all font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition"
               >
-                {isSubmitting ? (
-                  <>
-                    <svg className="animate-spin w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    Đang thêm...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    Thêm sản phẩm
-                  </>
-                )}
+                Thêm sản phẩm
               </button>
             </div>
           </form>

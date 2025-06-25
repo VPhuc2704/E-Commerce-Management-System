@@ -14,9 +14,14 @@ import static org.javaweb.enums.OrderStatus.PENDING;
 
 @Component
 public class OrderFactory {
-    public OrderEntity createOrderEntity(UserEntity userEntity, List<CartItemEntity> selectedItems ) {
+    public OrderEntity createOrderEntity(UserEntity userEntity,
+                                         List<CartItemEntity> selectedItems,
+                                         String shippingAddress,
+                                         String recipientPhone ) {
         OrderEntity orderEntity = new OrderEntity();
         orderEntity.setUsers(userEntity);
+        orderEntity.setShippingAddress(shippingAddress);
+        orderEntity.setRecipientPhone(recipientPhone);
         orderEntity.setCreatedDate(LocalDateTime.now());
         orderEntity.setStatus(PENDING);
         List<OrderItemEntity> orderItems = new ArrayList<>();
@@ -38,9 +43,14 @@ public class OrderFactory {
 
         return orderEntity;
     }
-    public OrderEntity createOrderEntityBuyNow(UserEntity userEntity, List<OrderItemEntity> orderItems) {
+    public OrderEntity createOrderEntityBuyNow(UserEntity userEntity,
+                                               List<OrderItemEntity> orderItems,
+                                               String shippingAddress,
+                                               String recipientPhone) {
         OrderEntity orderEntity = new OrderEntity();
         orderEntity.setUsers(userEntity);
+        orderEntity.setShippingAddress(shippingAddress);
+        orderEntity.setRecipientPhone(recipientPhone);
         orderEntity.setCreatedDate(LocalDateTime.now());
         orderEntity.setStatus(PENDING);
 

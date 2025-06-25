@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/")
@@ -30,5 +32,14 @@ public class UserController {
         UserDTO updateUser = userService.updateUser(email, userDTO);
         return ResponseEntity.ok(updateUser);
     }
+
+    @GetMapping("admin/userAll/")
+    public ResponseEntity<List<UserDTO>> getALlUser(){
+        List<UserDTO> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
+
+
 }
 

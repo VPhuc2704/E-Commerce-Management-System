@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { jwtDecode } from "jwt-decode"
@@ -17,7 +16,7 @@ const useAuth = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  // Check if we have a accsessToken in localStorage
+  // Check if we have an accessToken in localStorage
   const checkAuthStatus = () => {
     const accessToken = localStorage.getItem("accessToken")
     if (accessToken) {
@@ -50,8 +49,13 @@ const useAuth = () => {
       else if (["/login", "/"].includes(window.location.pathname)) {
         navigate("/home", { replace: true })
       }
+    } else {
+      // Nếu không có người dùng xác thực, chuyển hướng về / nếu đang ở /home hoặc các tuyến đường admin
+      if (["/home", "/admin/dashboard", "/admin/products", "/admin/orders"].includes(window.location.pathname)) {
+        navigate("/", { replace: true })
+      }
     }
-  }, [])
+  }, [navigate, user])
 
   // Login function
   const login = async (email, password) => {
@@ -69,6 +73,9 @@ const useAuth = () => {
       const userData = {
         email: decoded.email || "",
         roles: decoded.roles || [],
+        fullname: decoded.fullname || "",
+        numberphone: decoded.numberphone || "",
+        address: decoded.address || "",
       }
 
       localStorage.setItem("accessToken", data.accessToken)
@@ -116,8 +123,12 @@ const useAuth = () => {
     localStorage.removeItem("accessToken")
     localStorage.removeItem("refreshToken")
     localStorage.removeItem("userData")
+    localStorage.removeItem("userInfo")
+    localStorage.removeItem("lastOrderId")
+    localStorage.removeItem("cart")
+    localStorage.removeItem("orders")
     setUser(null)
-    navigate("/login", { replace: true })
+    navigate("/", { replace: true })
   }
 
   return {

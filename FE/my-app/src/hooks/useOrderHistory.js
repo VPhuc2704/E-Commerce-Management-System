@@ -1,27 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import orderService from "../services/orderService";
+import { useOrderApi } from '../hooks/useOrderApi';
 
 export const useOrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const { getAllOrders } = useOrderApi();
+
   useEffect(() => {
     const fetchOrders = async () => {
-      console.log("Starting to fetch orders...");
-      setLoading(true);
       try {
-        const orderData = await orderService.getOrders();
-        console.log("Orders fetched:", orderData);
-        setOrders(orderData);
+        const data = await getAllOrders();
+        setOrders(data);
         setError(null);
       } catch (err) {
         console.error("Error fetching orders:", err);
         setError("Không thể tải danh sách đơn hàng");
       } finally {
-        console.log("Setting loading to false...");
         setLoading(false);
       }
     };
@@ -42,11 +41,11 @@ export const useOrderHistory = () => {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  const refreshOrders = async () => {
+  const refreshOrders = useCallback(async () => {
     try {
       setLoading(true);
-      const orderData = await orderService.getOrders();
-      setOrders(orderData);
+      const data = await getAllOrders();
+      setOrders(data);
       setError(null);
     } catch (err) {
       setError("Không thể tải danh sách đơn hàng");
@@ -54,9 +53,8 @@ export const useOrderHistory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAllOrders]);
 
-  console.log("Returning useOrderHistory:", { orders, loading, error });
   return {
     orders,
     loading,

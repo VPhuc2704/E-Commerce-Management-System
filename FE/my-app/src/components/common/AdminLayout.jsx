@@ -57,13 +57,27 @@ const AdminLayout = ({ user }) => {
         </svg>
       ),
     },
+    {
+      name: "Quản lý người dùng",
+      path: "/admin/users",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+          />
+        </svg>
+      ),
+    },
   ]
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken")
     localStorage.removeItem("refreshToken")
     localStorage.removeItem("userData")
-    navigate("/login")
+    navigate("/")
   }
 
   return (
@@ -109,16 +123,14 @@ const AdminLayout = ({ user }) => {
               >
                 <Link
                   to={item.path}
-                  className={`group flex items-center gap-3 p-4 rounded-xl transition-all duration-300 ${
-                    location.pathname === item.path
-                      ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg transform scale-105"
-                      : "hover:bg-white/10 hover:transform hover:scale-105"
-                  }`}
+                  className={`group flex items-center gap-3 p-4 rounded-xl transition-all duration-300 ${location.pathname === item.path
+                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg transform scale-105"
+                    : "hover:bg-white/10 hover:transform hover:scale-105"
+                    }`}
                 >
                   <div
-                    className={`p-2 rounded-lg transition-all duration-300 ${
-                      location.pathname === item.path ? "bg-white/20" : "bg-white/10 group-hover:bg-white/20"
-                    }`}
+                    className={`p-2 rounded-lg transition-all duration-300 ${location.pathname === item.path ? "bg-white/20" : "bg-white/10 group-hover:bg-white/20"
+                      }`}
                   >
                     {item.icon}
                   </div>

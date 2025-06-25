@@ -1,6 +1,5 @@
 package org.javaweb.customexceptions;
 
-import jdk.nashorn.internal.runtime.regexp.joni.exception.ErrorMessages;
 import org.javaweb.constant.ApiResponse;
 import org.javaweb.exceptions.*;
 import org.javaweb.model.dto.ErrorDTO;
@@ -12,13 +11,10 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.xml.crypto.Data;
 import java.util.Collections;
-import java.util.Date;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.zip.DataFormatException;
@@ -45,7 +41,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorDetais, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler({DataFormatException.class, BadCredentialsException.class})
+    @ExceptionHandler({
+            DataFormatException.class,
+            BadCredentialsException.class})
     public ResponseEntity<ErrorDTO> handleDataFormatException(Exception  ex, HttpServletRequest request){
         ErrorDTO errorDetais = new ErrorDTO();
         errorDetais.getTimestamp();

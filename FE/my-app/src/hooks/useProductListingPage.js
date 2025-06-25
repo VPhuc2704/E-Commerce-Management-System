@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { addToCart, placeOrder } from '../services/productService';
 
+
 export const useProductListingPage = () => {
   const [buyNowModal, setBuyNowModal] = useState(null); // { id, name, price, imageUrl }
   const [quantity, setQuantity] = useState(1);
@@ -35,7 +36,7 @@ export const useProductListingPage = () => {
       id: product.id,
       name: product.name,
       price: product.originalPrice, // Giá đã là VNĐ
-      imageUrl: product.imageUrl || '/img/default.jpg',
+      imageUrl: product.image ? `${BASE_URL}${product.image}` : '/img/default.jpg',
     });
     setQuantity(1); // Reset số lượng
     setPaymentMethod('VNPAY'); // Reset phương thức

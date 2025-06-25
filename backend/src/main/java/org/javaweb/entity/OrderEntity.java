@@ -20,6 +20,12 @@ public class OrderEntity extends BaseEntity {
     @Column(name = "status")
     private OrderStatus status;
 
+    @Column(name = "shippingAddress" )
+    private String shippingAddress;
+
+    @Column(name = "recipientPhone")
+    private String recipientPhone;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserEntity users;
@@ -54,6 +60,22 @@ public class OrderEntity extends BaseEntity {
 
     public void setTotalAmount(Double totalAmount) {
         this.totalAmount = totalAmount;
+    }
+
+    public String getShippingAddress() {
+        return shippingAddress;
+    }
+
+    public void setShippingAddress(String shippingAddress) {
+        this.shippingAddress = shippingAddress;
+    }
+
+    public String getRecipientPhone() {
+        return recipientPhone;
+    }
+
+    public void setRecipientPhone(String recipientPhone) {
+        this.recipientPhone = recipientPhone;
     }
 
     public OrderStatus getStatus() {

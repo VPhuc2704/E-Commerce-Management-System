@@ -1,11 +1,15 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useOrderHistory } from '../hooks/useOrderHistory';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 // Component hiển thị một sản phẩm trong đơn hàng
 const OrderItem = ({ item }) => (
   <div className="flex items-center space-x-4 mb-3">
     <img
-      src={item.imageUrl}
+      src={`${BASE_URL}${item.imageUrl}`}
       alt={item.productName}
       className="w-16 h-16 object-cover rounded-lg shadow-sm"
     />
@@ -33,8 +37,11 @@ const UserInfo = ({ user }) => (
 );
 
 // Component hiển thị một đơn hàng
-const OrderCard = ({ order }) => (
-  <li
+const OrderCard = ({ order, onViewDetails }) => (
+  <motion.li
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -20 }}
     className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-6 border border-white/20 hover:shadow-2xl transition-all duration-300"
   >
     <div className="flex justify-between items-center mb-4">
@@ -48,13 +55,12 @@ const OrderCard = ({ order }) => (
         </p>
       </div>
       <span
-        className={`text-sm font-medium px-3 py-1 rounded-full ${
-          order.status === 'PENDING'
-            ? 'bg-yellow-100 text-yellow-700'
-            : order.status === 'COMPLETED'
+        className={`text-sm font-medium px-3 py-1 rounded-full ${order.status === 'PENDING'
+          ? 'bg-yellow-100 text-yellow-700'
+          : order.status === 'COMPLETED'
             ? 'bg-green-100 text-green-700'
             : 'bg-red-100 text-red-700'
-        }`}
+          }`}
       >
         {order.status === 'PENDING' ? 'Chờ xác nhận' : order.status === 'COMPLETED' ? 'Đã hoàn thành' : order.status}
       </span>
@@ -74,25 +80,51 @@ const OrderCard = ({ order }) => (
       <p className="text-lg font-semibold text-indigo-600">
         Tổng tiền: {order.totalAmount.toLocaleString('vi-VN')} VNĐ
       </p>
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => onViewDetails(order.id)}
+        className="mt-4 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold shadow-md transition-all duration-300"
+      >
+        Xem chi tiết
+      </motion.button>
     </div>
-  </li>
+  </motion.li>
 );
 
 const OrderHistory = () => {
-  const { orders } = useOrderHistory();
+  const { orders, loading, error } = useOrderHistory();
+  const navigate = useNavigate();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang tải...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-center p-8 text-red-600">{error}</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 p-6">
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Lịch sử đơn hàng</h1>
-      {orders.length > 0 ? (
-        <ul className="space-y-6">
-          {orders.map(order => (
-            <OrderCard key={order.id} order={order} />
-          ))}
-        </ul>
-      ) : (
-        <div className="text-center text-gray-600">Không có đơn hàng nào.</div>
-      )}
+      <AnimatePresence>
+        {orders.length > 0 ? (
+          <ul className="space-y-6">
+            {orders.map(order => (
+              <OrderCard key={order.id} order={order} onViewDetails={() => navigate(`/order-details/${order.id}`)} />
+            ))}
+          </ul>
+        ) : (
+          <div className="text-center text-gray-600">Không có đơn hàng nào.</div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

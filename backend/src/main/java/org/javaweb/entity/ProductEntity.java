@@ -31,6 +31,9 @@ public class ProductEntity extends BaseEntity{
     @Column(name="type")
     private String type;
 
+    @Column(name="sold_quantity")
+    private Integer soldQuantity = 0;
+
     @Enumerated(EnumType.STRING)
     @Column(name="status")
     private ProductStatus status;
@@ -101,6 +104,14 @@ public class ProductEntity extends BaseEntity{
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public Integer getSoldQuantity() {
+        return soldQuantity;
+    }
+
+    public void setSoldQuantity(Integer soldQuantity) {
+        this.soldQuantity = soldQuantity;
     }
 
     public ProductStatus getStatus() {

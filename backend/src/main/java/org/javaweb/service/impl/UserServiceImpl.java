@@ -1,22 +1,23 @@
 package org.javaweb.service.impl;
 
+import org.javaweb.constant.ApiResponse;
 import org.javaweb.converter.UserConverter;
 import org.javaweb.entity.UserEntity;
 import org.javaweb.model.dto.UserDTO;
 import org.javaweb.repository.UserRepository;
 import org.javaweb.service.UserService;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private ModelMapper modelMapper;
     @Autowired
     private UserConverter userConverter;
 
@@ -41,5 +42,11 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(userEntity);
         return  userConverter.convertToUserDTO(userEntity);
+    }
+
+    @Override
+    public List<UserDTO> getAllUsers() {
+        List<UserEntity> listUser = userRepository.findAll();
+        return listUser.stream().map(userConverter::convertToUserDTO).collect(Collectors.toList());
     }
 }

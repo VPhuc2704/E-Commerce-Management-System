@@ -54,6 +54,7 @@ public class ErrorDTO {
     public Map<String, String> getDetails() {
         return details;
     }
+
     public Map<String, String> getDetails(UserDTO userDTO) {
         return details;
     }

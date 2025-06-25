@@ -86,6 +86,7 @@ public class AuthUserServiceImpl implements AuthUserService {
     @Transactional
     public UserEntity createUser(AuthRequestDTO authRequestDTO) {
         String email = authRequestDTO.getEmail();
+
         if (userRepository.existsByEmail(email)) {
             throw new DataIntegrityViolationException("Email already exists");
         }

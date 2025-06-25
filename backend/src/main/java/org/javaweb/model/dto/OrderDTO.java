@@ -9,6 +9,8 @@ public class OrderDTO {
     private Long id;
     private LocalDateTime createdDate;
     private Double totalAmount;
+    private String shippingAddress;
+    private String recipientPhone;
     private String status;
     private UserDTO user;
     private List<OrderItemDTO> items;
@@ -36,6 +38,22 @@ public class OrderDTO {
 
     public void setTotalAmount(Double totalAmount) {
         this.totalAmount = totalAmount;
+    }
+
+    public String getShippingAddress() {
+        return shippingAddress;
+    }
+
+    public void setShippingAddress(String shippingAddress) {
+        this.shippingAddress = shippingAddress;
+    }
+
+    public String getRecipientPhone() {
+        return recipientPhone;
+    }
+
+    public void setRecipientPhone(String recipientPhone) {
+        this.recipientPhone = recipientPhone;
     }
 
     public String getStatus() {

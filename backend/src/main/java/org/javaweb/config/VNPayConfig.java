@@ -15,10 +15,11 @@ import java.util.*;
 @Configuration
 public class VNPayConfig {
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static String vnp_ReturnUrl = "http://localhost:8081/api/vnpayment/return";
+    public static String vnp_ReturnUrl = "http://localhost:5173/payment-result";
     public static String vnp_TmnCode = "6SG4WPJ6";
     public static String secretKey = "3YJQWE6F8O3RDULCD8EHUDALCN3TMRUM";
     public static String vnp_ApiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
+    public static String vnp_IpnUrl = "http://localhost:8081/api/vnpayment/return";
 
     public static String md5(String message) {
         String digest = null;
@@ -58,20 +59,17 @@ public class VNPayConfig {
 
     // Util for VNPAY
     public static String hashAllFields(Map<String, String> fields) {
-        List fieldNames = new ArrayList(fields.keySet());
+        List<String> fieldNames = new ArrayList<>(fields.keySet());
         Collections.sort(fieldNames);
         StringBuilder sb = new StringBuilder();
-        Iterator itr = fieldNames.iterator();
-        while (itr.hasNext()) {
-            String fieldName = (String) itr.next();
-            String fieldValue = (String) fields.get(fieldName);
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                sb.append(fieldName);
-                sb.append("=");
-                sb.append(fieldValue);
-            }
-            if (itr.hasNext()) {
-                sb.append("&");
+        for (int i = 0; i < fieldNames.size(); i++) {
+            String fieldName = fieldNames.get(i);
+            String fieldValue = fields.get(fieldName);
+            if (fieldValue != null && !fieldValue.isEmpty()) {
+                sb.append(fieldName).append("=").append(fieldValue);
+                if (i < fieldNames.size() - 1) {
+                    sb.append("&");
+                }
             }
         }
         return hmacSHA512(secretKey, sb.toString());
@@ -123,6 +121,15 @@ public class VNPayConfig {
         return sb.toString();
     }
 
+    public static Map<String, String> getVNPayResponseParams(HttpServletRequest request) {
+        Map<String, String> params = new HashMap<>();
+        request.getParameterMap().forEach((key, values) -> {
+            if (key.startsWith("vnp_") && values.length > 0) {
+                params.put(key, values[0]);
+            }
+        });
+        return params;
+    }
 
 
 }
