@@ -15,6 +15,7 @@ import LoggedInHomePage from "../pages/LoggedInHomePage";
 import ProductListing from "../pages/ProductListing";
 import ProductDetails from "../pages/ProductDetails";
 import AdminProductManagement from "../pages/AdminProductManagement";
+import AdminUserManagement from "../pages/AdminUserManagement";
 import CartPage from "../pages/CartPage";
 import OrderHistory from "../pages/OrderHistory";
 import AdminOrderManagement from "../pages/AdminOrderManagement";
@@ -100,6 +101,7 @@ const RoutesContent = () => {
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/products" element={<AdminProductManagement user={user} />} />
             <Route path="/admin/orders" element={<AdminOrderManagement />} />
+            <Route path="/admin/users" element={<AdminUserManagement />} />
           </Route>
         </Route>
 

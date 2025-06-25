@@ -11,6 +11,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class UserServiceImpl implements UserService {
     @Autowired
@@ -39,5 +42,11 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(userEntity);
         return  userConverter.convertToUserDTO(userEntity);
+    }
+
+    @Override
+    public List<UserDTO> getAllUsers() {
+        List<UserEntity> listUser = userRepository.findAll();
+        return listUser.stream().map(userConverter::convertToUserDTO).collect(Collectors.toList());
     }
 }
