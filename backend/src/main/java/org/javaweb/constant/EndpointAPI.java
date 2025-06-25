@@ -30,6 +30,7 @@ public class EndpointAPI {
     public static final String[] ADMIN_ENDPOINTS = {
             "/api/admin/products/**",
             "/api/orders/admin/status",
+            "/api/admin/userAll/",
     };
 
 }
