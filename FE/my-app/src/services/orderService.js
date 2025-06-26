@@ -143,8 +143,8 @@ const orderService = {
 
       const updates = await response.json();
       return updates.map((update) => ({
-        id: update.id || `update-${Math.random().toString(36).substr(2, 9)}`,
-        orderId: update.orderId,
+        id: update.id,
+        orderId: update.id,
         status: update.status,
         timestamp: update.timestamp || new Date().toISOString(),
       }));
