@@ -89,12 +89,12 @@ const Navbar = () => {
             <div className="flex items-center space-x-3 flex-shrink-0">
               <div className="relative group">
                 <div className="absolute -inset-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
-                <img
+                {/* <img
                   src={logo}
                   alt="Logo"
                   className="relative h-12 w-auto cursor-pointer transition-transform duration-300 hover:scale-110"
                   onClick={() => navigate('/')}
-                />
+                /> */}
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
@@ -275,8 +275,8 @@ const Navbar = () => {
                     </span>
                   </div>
                   <div className="text-sm">
-                    <p className="font-medium text-gray-800">Welcome back!</p>
-                    <p className="text-gray-600">{user.fullname || 'User'}</p>
+                    {/* <p className="font-medium text-gray-800">Welcome back!</p> */}
+                    <p className="text-gray-800">{user.fullname || 'User'}</p>
                   </div>
                 </div>
               )}

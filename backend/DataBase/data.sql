@@ -69,3 +69,7 @@ INSERT INTO user (email, password, fullname, numberphone, address, isverified) V
 
     
 INSERT INTO `user_role` VALUES (1,1);
+
+
+
+

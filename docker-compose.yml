@@ -6,6 +6,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: 27042004
       MYSQL_DATABASE: ecommerce_db
+      LANG: C.UTF_8
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     ports:
       - "3307:3306"
