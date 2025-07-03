@@ -32,6 +32,7 @@ services:
       TZ: Asia/Ho_Chi_Minh 
     volumes:
       - ./backend/uploads/img:/uploads/img
+      - ./backend/uploads/video:/uploads/reviews
     networks:
       - app-network
 
