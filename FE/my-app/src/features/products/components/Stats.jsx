@@ -19,7 +19,7 @@ const Stats = ({ products }) => (
             color="green"
             icon={ActiveIcon}
         />
-        <StatCard
+        {/* <StatCard
             title="Tổng tồn kho"
             value={products.reduce((sum, p) => sum + p.quantity, 0)}
             color="yellow"
@@ -30,7 +30,7 @@ const Stats = ({ products }) => (
             value={`${(products.reduce((sum, p) => sum + (p.price || 0) * (p.quantity || 0), 0) / 1000000).toFixed(1)}M`}
             color="purple"
             icon={ValueIcon}
-        />
+        /> */}
     </motion.div>
 )
 

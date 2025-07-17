@@ -95,9 +95,9 @@ const StatusBadge = ({ status }) => (
 
 const StockBadge = ({ storges }) => (
     <div className="absolute top-3 left-3">
-        <span className="bg-black/70 text-white px-2 py-1 rounded-lg text-xs">
+        {/* <span className="bg-black/70 text-white px-2 py-1 rounded-lg text-xs">
             Kho: {storges}
-        </span>
+        </span> */}
     </div>
 )
 

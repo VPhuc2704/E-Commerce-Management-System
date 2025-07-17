@@ -26,7 +26,6 @@ const EditProduct = ({ product, onClose, onUpdate }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    // onUpdate(editedProduct, selectedImageFile);
     const file = fileInputRef.current.files[0];
 
     try {

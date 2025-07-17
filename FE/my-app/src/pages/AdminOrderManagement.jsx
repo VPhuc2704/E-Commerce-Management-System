@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOrderApi } from "../hooks/useOrderApi";
-import { useNotification } from "../hooks/useNotification"; // Thêm useNotification
-import orderService from "../services/orderService"; // Thêm orderService
+import { useNotification } from "../hooks/useNotification";
+import orderService from "../services/orderService";
 import OrderList from "../components/orders/OrderList";
 import OrderDetailsModal from "../components/orders/OrderDetailsModal";
 import SearchFilter from "../components/orders/SearchFilter";
@@ -22,7 +22,7 @@ const AdminOrderManagement = () => {
   const itemsPerPage = 10;
 
   const { getAllOrders, getOrdersByStatus, getOrderDetails } = useOrderApi();
-  const { showNotification } = useNotification(); // Sử dụng useNotification
+  const { showNotification } = useNotification();
 
   // Load orders
   const loadOrders = async () => {
@@ -48,7 +48,7 @@ const AdminOrderManagement = () => {
   }, [filterStatus]);
 
   useEffect(() => {
-    setCurrentPage(1); // ✅ Chỉ reset khi filter thay đổi
+    setCurrentPage(1); //Chỉ reset khi filter thay đổi
   }, [filterStatus]);
 
   // Update order status
