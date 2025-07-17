@@ -20,10 +20,17 @@ import { Bar } from 'react-chartjs-2';
 
 
 const AdminDashboard = () => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = (today.getMonth() + 1).toString().padStart(2, '0');
+  const dd = today.getDate().toString().padStart(2, '0');
+  const firstDayOfMonth = `${yyyy}-${mm}-01`;
+  const currentDay = `${yyyy}-${mm}-${dd}`;
+
   const [orders, setOrders] = useState([])
   const [filterType, setFilterType] = useState("day")
-  const [startDate, setStartDate] = useState("2025-05-01")
-  const [endDate, setEndDate] = useState("2025-06-30")
+  const [startDate, setStartDate] = useState(firstDayOfMonth)
+  const [endDate, setEndDate] = useState(currentDay)
   const [filteredData, setFilteredData] = useState({ totalRevenue: 0, orderCount: 0, topProducts: [] })
   const { getAllOrders, getOrdersByStatus, getOrderDetails } = useOrderApi();
 
@@ -53,38 +60,64 @@ const AdminDashboard = () => {
         return orderDate >= start && orderDate <= end && order.status === "SHIPPED"
       })
 
-      console.log("✅ Đơn hàng sau lọc:", filteredOrders)
+      let grouped = {};
+      if (filterType === "month") {
+        filteredOrders.forEach(order => {
+          const d = new Date(order.createdDate);
+          const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(order);
+        });
+      } else if (filterType === "quarter") {
+        filteredOrders.forEach(order => {
+          const d = new Date(order.createdDate);
+          const quarter = Math.floor(d.getMonth() / 3) + 1;
+          const key = `${d.getFullYear()}-Q${quarter}`;
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(order);
+        });
+      } else {
+        // Theo ngày
+        filteredOrders.forEach(order => {
+          const d = new Date(order.createdDate);
+          const key = d.toLocaleDateString('vi-VN');
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(order);
+        });
+      }
 
-      const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.totalAmount, 0)
-      const orderCount = filteredOrders.length
+      // Tính tổng doanh thu, số đơn hàng, top sản phẩm cho từng nhóm
+      let totalRevenue = 0;
+      let orderCount = 0;
+      const productMap = {};
 
-      const productMap = {}
-      filteredOrders.forEach((order) => {
-        console.log("🔍 Chi tiết đơn:", order.items)
-        order.items.forEach((item) => {
-          if (!productMap[item.productId]) {
-            productMap[item.productId] = {
-              name: item.productName,
-              quantity: 0,
-              revenue: 0
+      Object.values(grouped).forEach(orderList => {
+        orderList.forEach(order => {
+          totalRevenue += order.totalAmount;
+          orderCount += 1;
+          order.items.forEach(item => {
+            if (!productMap[item.productId]) {
+              productMap[item.productId] = {
+                name: item.productName,
+                quantity: 0,
+                revenue: 0
+              }
             }
-          }
-          productMap[item.productId].quantity += item.quantity
-          productMap[item.productId].revenue += item.quantity * item.price
-        })
-      })
+            productMap[item.productId].quantity += item.quantity
+            productMap[item.productId].revenue += item.quantity * item.price
+          })
+        });
+      });
 
       const topProducts = Object.values(productMap)
         .sort((a, b) => b.quantity - a.quantity)
-        .slice(0, 5)
+        .slice(0, 5);
 
-      console.log("📊 Top sản phẩm bán chạy:", topProducts)
-
-      setFilteredData({ totalRevenue, orderCount, topProducts })
+      setFilteredData({ totalRevenue, orderCount, topProducts, grouped });
     }
 
     filterOrders()
-  }, [orders, startDate, endDate, filterType]) // ← thêm filterType vào dependency
+  }, [orders, startDate, endDate, filterType])
 
   function calculateMovingAverage(data, windowSize = 7) {
     const result = [];
@@ -98,19 +131,19 @@ const AdminDashboard = () => {
   }
 
   // Dữ liệu cho biểu đồ doanh thu với UI cải thiện
-  const labels = orders.map((order) => new Date(order.createdDate).toLocaleDateString('vi-VN'));
-  const data = orders.map((order) => order.totalAmount);
-  const movingAvgData = calculateMovingAverage(data);
+  const chartLabels = filteredData.grouped ? Object.keys(filteredData.grouped) : orders.map((order) => new Date(order.createdDate).toLocaleDateString('vi-VN'));
+  const chartValues = filteredData.grouped ? Object.values(filteredData.grouped).map(orderList => orderList.reduce((sum, order) => sum + order.totalAmount, 0)) : orders.map((order) => order.totalAmount);
+  const movingAvgData = calculateMovingAverage(chartValues);
 
   const chartData = {
-    labels: labels,
+    labels: chartLabels,
     datasets: [
       {
         label: "Doanh thu (VNĐ)",
-        data: data,
+        data: chartValues,
         fill: true,
-        backgroundColor: "rgba(99, 102, 241, 0.2)", // vùng tô miền
-        borderColor: "rgb(99, 102, 241)", // đường chính
+        backgroundColor: "rgba(99, 102, 241, 0.2)",
+        borderColor: "rgb(99, 102, 241)",
         tension: 0.4,
         pointRadius: 0,
         borderWidth: 3,
@@ -119,7 +152,7 @@ const AdminDashboard = () => {
         label: "Đường gaint (trung bình 7 ngày)",
         data: movingAvgData,
         fill: false,
-        borderColor: "rgb(34, 197, 94)", // xanh lá
+        borderColor: "rgb(34, 197, 94)",
         borderDash: [5, 5],
         tension: 0.4,
         pointRadius: 0,
@@ -260,12 +293,12 @@ const AdminDashboard = () => {
   // Hàm xuất báo cáo CSV
   const exportToCSV = () => {
     const csvContent = [
-      ["Ngày", "Tổng doanh thu (VNĐ)", "Số đơn hàng"],
-      ...orders.map((order) => [
-        new Date(order.createdDate).toLocaleDateString('vi-VN'),
-        order.totalAmount,
-        1
-      ]),
+      [filterType === 'day' ? "Ngày" : filterType === 'month' ? "Tháng" : "Quý", "Tổng doanh thu (VNĐ)", "Số đơn hàng"],
+      ...(filteredData.grouped ? Object.entries(filteredData.grouped).map(([key, orderList]) => [
+        key,
+        orderList.reduce((sum, order) => sum + order.totalAmount, 0),
+        orderList.length
+      ]) : []),
       ["Tổng", filteredData.totalRevenue, filteredData.orderCount],
     ]
       .map((row) => row.join(","))
