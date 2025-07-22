@@ -1,5 +1,4 @@
 package org.javaweb.customexceptions;
-
 import org.javaweb.constant.ApiResponse;
 import org.javaweb.exceptions.*;
 import org.javaweb.model.dto.ErrorDTO;

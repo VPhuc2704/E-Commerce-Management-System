@@ -82,19 +82,19 @@ const Navbar = () => {
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
         ? 'bg-white/95 backdrop-blur-md shadow-xl border-b border-gray-200/20'
         : 'bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm shadow-lg'
-      }`}>
+        }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo Section */}
             <div className="flex items-center space-x-3 flex-shrink-0">
               <div className="relative group">
                 <div className="absolute -inset-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
-                <img
+                {/* <img
                   src={logo}
                   alt="Logo"
                   className="relative h-12 w-auto cursor-pointer transition-transform duration-300 hover:scale-110"
                   onClick={() => navigate('/')}
-                />
+                /> */}
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
@@ -177,9 +177,8 @@ const Navbar = () => {
                             {notifications.map((notif) => (
                               <li
                                 key={notif.id}
-                                className={`p-3 rounded-lg transition-all duration-200 ${
-                                  notif.read ? 'bg-gray-100' : 'bg-blue-50 hover:bg-blue-100'
-                                } cursor-pointer`}
+                                className={`p-3 rounded-lg transition-all duration-200 ${notif.read ? 'bg-gray-100' : 'bg-blue-50 hover:bg-blue-100'
+                                  } cursor-pointer`}
                                 onClick={() => handleNotificationClick(notif)}
                               >
                                 <p className="text-sm text-gray-800">{notif.message}</p>
@@ -276,8 +275,8 @@ const Navbar = () => {
                     </span>
                   </div>
                   <div className="text-sm">
-                    <p className="font-medium text-gray-800">Welcome back!</p>
-                    <p className="text-gray-600">{user.fullname || 'User'}</p>
+                    {/* <p className="font-medium text-gray-800">Welcome back!</p> */}
+                    <p className="text-gray-800">{user.fullname || 'User'}</p>
                   </div>
                 </div>
               )}

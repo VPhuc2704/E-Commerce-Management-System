@@ -1,6 +1,8 @@
 import { motion } from "framer-motion"
 import { CATEGORIES } from "../../../constants/productConstants"
 
+const BaseURL = import.meta.env.VITE_API_URL;
+
 const ProductGrid = ({ products, onEdit, onDelete }) => {
     if (!products.length) {
         return <EmptyState />
@@ -36,7 +38,7 @@ const ProductCard = ({ product, index, onEdit, onDelete }) => (
     >
         <div className="relative">
             <img
-                src={`http://localhost:8081${product.image}` || "/placeholder.svg"}
+                src={`${BaseURL}${product.image}` || "/placeholder.svg"}
                 alt={product.name}
                 className="w-full h-48 object-cover"
             />
@@ -93,9 +95,9 @@ const StatusBadge = ({ status }) => (
 
 const StockBadge = ({ storges }) => (
     <div className="absolute top-3 left-3">
-        <span className="bg-black/70 text-white px-2 py-1 rounded-lg text-xs">
+        {/* <span className="bg-black/70 text-white px-2 py-1 rounded-lg text-xs">
             Kho: {storges}
-        </span>
+        </span> */}
     </div>
 )
 

@@ -126,7 +126,7 @@ const ProfileInfo = ({
             </div>
             <div>
               <p className="text-blue-600 font-semibold text-sm">Ngày tham gia</p>
-              <p className="text-gray-900 font-bold text-lg">25/05/2023</p>
+              <p className="text-gray-900 font-bold text-lg">5/05/2025</p>
             </div>
           </div>
         </div>
