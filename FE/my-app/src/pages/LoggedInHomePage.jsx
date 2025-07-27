@@ -12,6 +12,8 @@ import comtamImg from '../assets/images/comtam.jpg';
 import goicuonImg from '../assets/images/goicuon.jpg';
 import traicayImg from '../assets/images/traicay.jpg';
 
+
+// Reusable component for dish items (matching HomePage style)
 const DishItem = ({ name, price, feedback = {}, imageUrl, soldQuantity, id }) => {
   const rawRating = Number(feedback?.rating);
   const rating = isNaN(rawRating) ? 0 : Math.min(Math.max(rawRating, 0), 5);

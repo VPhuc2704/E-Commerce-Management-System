@@ -9,9 +9,7 @@ import java.nio.file.Paths;
 public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String uploadPath = Paths.get(System.getProperty("user.dir"), "uploads", "img").toUri().toString();
-
-        registry.addResourceHandler("/img/**")
-                .addResourceLocations(uploadPath);
+         registry.addResourceHandler("/img/**")
+                .addResourceLocations("file:/uploads/img/");
     }
 }

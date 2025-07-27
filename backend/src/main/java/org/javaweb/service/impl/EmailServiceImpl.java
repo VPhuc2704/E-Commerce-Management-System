@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -14,10 +15,13 @@ public class EmailServiceImpl implements EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
+    @Value("${app.frontend-domain}")
+    private String frontendDomain;
+
     @Override
     public void sendEmail(String toEmail, String token) {
         String subject = "Xác thực tài khoản";
-        String link = "http://localhost:5173/verify?token=" + token;
+        String link = frontendDomain + "/verify?token=" + token;
 
         String content =
                 "<html>" +

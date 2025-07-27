@@ -1,0 +1,54 @@
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: 27042004
+      MYSQL_DATABASE: ecommerce_db
+      LANG: C.UTF_8
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+    container_name: backend-server
+    depends_on:
+      - mysql
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ecommerce_db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 27042004
+      SPRING_PROFILES_ACTIVE: prod
+      TZ: Asia/Ho_Chi_Minh 
+    volumes:
+      - ./backend/uploads/img:/uploads/img
+      - ./backend/uploads/video:/uploads/reviews
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./FE/my-app
+    container_name: frontend-server
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - app-network
+
+volumes:
+  mysql-data:
+
+networks:
+  app-network:

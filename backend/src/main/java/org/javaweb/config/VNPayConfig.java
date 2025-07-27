@@ -1,6 +1,8 @@
 package org.javaweb.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -12,14 +14,24 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-@Configuration
+@Component
 public class VNPayConfig {
+    @Value("${app.domain}")
+    private String domain;
+
+    @Value("${app.frontend-domain}")
+    private String frontendDomain;
+
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static String vnp_ReturnUrl = "http://localhost:5173/payment-result";
+    public String vnp_ReturnUrl(){
+        return frontendDomain + "/payment-result";
+    }
     public static String vnp_TmnCode = "6SG4WPJ6";
     public static String secretKey = "3YJQWE6F8O3RDULCD8EHUDALCN3TMRUM";
     public static String vnp_ApiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
-    public static String vnp_IpnUrl = "http://localhost:8081/api/vnpayment/return";
+    public String vnp_IpnUrl(){
+        return domain + "/api/vnpayment/return";
+    }
 
     public static String md5(String message) {
         String digest = null;

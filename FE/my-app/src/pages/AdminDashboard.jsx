@@ -39,7 +39,7 @@ const AdminDashboard = () => {
     const fetchOrders = async () => {
       try {
         const order = await getAllOrders();
-        console.log("✅ Dữ liệu đơn hàng:", order); // 👈 log dữ liệu
+        console.log(" Dữ liệu đơn hàng:", order); // log dữ liệu
         setOrders(order);
       } catch (error) {
         console.error("Lỗi khi lấy đơn hàng:", error);

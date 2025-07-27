@@ -275,8 +275,8 @@ const Navbar = () => {
                     </span>
                   </div>
                   <div className="text-sm">
-                    <p className="font-medium text-gray-800">Welcome back!</p>
-                    <p className="text-gray-600">{user.fullname || 'User'}</p>
+                    {/* <p className="font-medium text-gray-800">Welcome back!</p> */}
+                    <p className="text-gray-800">{user.fullname || 'User'}</p>
                   </div>
                 </div>
               )}
